@@ -69,9 +69,6 @@ fun LyricoApp() {
                     },
                     onLyricsResult = {
                         backStackEntry.savedStateHandle.remove<String>("selectedLyrics")
-                    },
-                    onSaveSuccess = {
-                        navController.popBackStack()
                     }
                 )
             }

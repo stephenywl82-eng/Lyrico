@@ -1,7 +1,10 @@
 package com.lonx.lyrico.viewmodel
 
+import android.app.RecoverableSecurityException
 import android.content.Context
+import android.content.IntentSender
 import android.net.Uri
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.net.toUri
@@ -31,7 +34,8 @@ data class EditMetadataUiState(
     val currentLyrics: LyricsResult? = null,
     val coverUri: Uri? = null,
     val isSaving: Boolean = false,
-    val saveSuccess: Boolean? = null
+    val saveSuccess: Boolean? = null,
+    val permissionRequest: IntentSender? = null
 )
 
 class EditMetadataViewModel(
@@ -138,6 +142,21 @@ class EditMetadataViewModel(
         _uiState.update { it.copy(saveSuccess = null) }
     }
 
+    fun onPermissionResult(granted: Boolean) {
+        clearPermissionRequest()
+        if (granted) {
+            saveMetadata()
+        } else {
+            _uiState.update {
+                it.copy(saveSuccess = false)
+            }
+        }
+    }
+
+    fun clearPermissionRequest() {
+        _uiState.update { it.copy(permissionRequest = null) }
+    }
+
     fun saveMetadata() {
         val songInfo = _uiState.value.songInfo ?: return
         val audioTagData = _uiState.value.editingTagData ?: return
@@ -147,11 +166,11 @@ class EditMetadataViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, saveSuccess = null) }
-            val success = withContext(Dispatchers.IO) {
-                try {
+            try {
+                val success = withContext(Dispatchers.IO) {
                     // 第一步：写入文件（音频标签）
                     val fileSuccess = writeMetadataToFile(songInfo.filePath, audioTagData)
-                    
+
                     if (fileSuccess) {
                         // 第二步：立即更新数据库（避免等待列表重扫）
                         Log.d(TAG, "文件标签已保存，立即更新数据库")
@@ -162,12 +181,24 @@ class EditMetadataViewModel(
                         Log.e(TAG, "文件标签保存失败")
                         false
                     }
-                } catch (e: Exception) {
+                }
+                _uiState.update { it.copy(isSaving = false, saveSuccess = success) }
+            } catch (e: Exception) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
+                    if (e is RecoverableSecurityException) {
+                        Log.w(TAG, "需要用户授权才能写入文件", e)
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                permissionRequest = e.userAction.actionIntent.intentSender
+                            )
+                        }
+                    }
+                } else {
                     Log.e(TAG, "保存元数据失败", e)
-                    false
+                    _uiState.update { it.copy(isSaving = false, saveSuccess = false) }
                 }
             }
-            _uiState.update { it.copy(isSaving = false, saveSuccess = success) }
         }
     }
 
@@ -196,6 +227,8 @@ class EditMetadataViewModel(
                 
                 true
             } ?: false
+        } catch (e: RecoverableSecurityException) {
+            throw e
         } catch (e: Exception) {
             Log.e(TAG, "写入文件失败", e)
             false

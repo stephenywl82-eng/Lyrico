@@ -1,8 +1,9 @@
 package com.lonx.lyrico.screens
 
-import androidx.compose.foundation.Image
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,16 +17,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import com.lonx.lyrico.data.SongDataHolder
 import com.lonx.lyrico.ui.theme.*
@@ -33,6 +31,7 @@ import com.lonx.lyrico.viewmodel.EditMetadataViewModel
 import com.lonx.lyrics.model.SongSearchResult
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import android.app.Activity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +42,6 @@ fun EditMetadataScreen(
     onSearchClick: (String) -> Unit,
     onSearchResult: () -> Unit,
     onLyricsResult: () -> Unit,
-    onSaveSuccess: () -> Unit,
     viewModel: EditMetadataViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -52,6 +50,25 @@ fun EditMetadataScreen(
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val requestPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.onPermissionResult(true)
+        } else {
+            viewModel.onPermissionResult(false)
+        }
+    }
+
+    LaunchedEffect(uiState.permissionRequest) {
+        uiState.permissionRequest?.let { intentSender ->
+            requestPermissionLauncher.launch(
+                IntentSenderRequest.Builder(intentSender).build()
+            )
+            viewModel.clearPermissionRequest()
+        }
+    }
 
     LaunchedEffect(Unit) {
         SongDataHolder.selectedSongInfo?.let {
@@ -77,7 +94,7 @@ fun EditMetadataScreen(
             true -> {
                 scope.launch {
                     snackbarHostState.showSnackbar("保存成功")
-                    onSaveSuccess()
+//                    onSaveSuccess()
                 }
             }
             false -> {
