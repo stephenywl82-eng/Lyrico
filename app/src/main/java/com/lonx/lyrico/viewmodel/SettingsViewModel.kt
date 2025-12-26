@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val scannedFolders: List<String> = emptyList(),
     val lyricDisplayMode: LyricDisplayMode = LyricDisplayMode.WORD_BY_WORD
 )
 
@@ -23,37 +22,6 @@ class SettingsViewModel(
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            combine(
-                settingsManager.scannedFolders,
-                settingsManager.lyricDisplayMode
-            ) { folders, mode ->
-                _uiState.update {
-                    it.copy(
-                        scannedFolders = folders.toList(),
-                        lyricDisplayMode = mode
-                    )
-                }
-            }.collect {}
-        }
-    }
-
-    fun addScannedFolder(folderPath: String) {
-        viewModelScope.launch {
-            val updatedFolders = _uiState.value.scannedFolders.toMutableSet()
-            updatedFolders.add(folderPath)
-            settingsManager.saveScannedFolders(updatedFolders)
-        }
-    }
-
-    fun removeScannedFolder(folderPath: String) {
-        viewModelScope.launch {
-            val updatedFolders = _uiState.value.scannedFolders.toMutableSet()
-            updatedFolders.remove(folderPath)
-            settingsManager.saveScannedFolders(updatedFolders)
-        }
-    }
 
     fun setLyricDisplayMode(mode: LyricDisplayMode) {
         viewModelScope.launch {

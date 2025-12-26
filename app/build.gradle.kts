@@ -61,15 +61,10 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.datastore.preferences) // Add this line
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.documentfile)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.room.paging)
     implementation(libs.xxpermissions)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.work.runtime)
-    implementation(libs.androidx.paging.runtime)
-    implementation(libs.androidx.paging.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -79,4 +74,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(project(":audiotag"))
     implementation(project(":lyrics"))
+    implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 }

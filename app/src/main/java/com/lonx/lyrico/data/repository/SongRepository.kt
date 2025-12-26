@@ -23,7 +23,6 @@ class SongRepository(
     private val songDao = database.songDao()
     private companion object {
         const val TAG = "SongRepository"
-        const val COVER_CACHE_DIR = "covers"
     }
 
     /**
@@ -60,8 +59,6 @@ class SongRepository(
                 if (existingSong != null && existingSong.fileLastModified == fileLastModified) {
                     return@withContext existingSong
                 }
-                // If song exists, we might need to delete old cover before saving new one
-                deleteCoverFile(existingSong?.coverPath)
             }
 
             Log.d(TAG, "读取歌曲元数据: ${songFile.fileName}")
@@ -69,12 +66,8 @@ class SongRepository(
             val audioData = context.contentResolver.openFileDescriptor(
                 songFile.filePath.toUri(), "r"
             )?.use { pfd ->
-                AudioTagReader.read(pfd, readPictures = true)
+                AudioTagReader.read(pfd, readPictures = false)
             } ?: return@withContext null
-
-            val coverPath = audioData.pictures.firstOrNull()?.data?.let {
-                saveCoverToFile(it, songFile.filePath)
-            }
 
             val songEntity = SongEntity(
                 filePath = songFile.filePath,
@@ -90,7 +83,6 @@ class SongRepository(
                 sampleRate = audioData.sampleRate,
                 channels = audioData.channels,
                 rawProperties = audioData.rawProperties.toString(),
-                coverPath = coverPath,
                 fileLastModified = fileLastModified,
                 dbUpdateTime = System.currentTimeMillis()
             )
@@ -133,15 +125,6 @@ class SongRepository(
                 val existingSong = songDao.getSongByPath(filePath)
                     ?: return@withContext false
 
-                val newCoverBytes = audioTagData.pictures.firstOrNull()?.data
-                var newCoverPath = existingSong.coverPath
-
-                if (newCoverBytes != null) {
-                    // Delete old cover and save new one
-                    deleteCoverFile(existingSong.coverPath)
-                    newCoverPath = saveCoverToFile(newCoverBytes, filePath)
-                }
-
                 val updatedSong = existingSong.copy(
                     title = audioTagData.title ?: existingSong.title,
                     artist = audioTagData.artist ?: existingSong.artist,
@@ -150,7 +133,6 @@ class SongRepository(
                     date = audioTagData.date ?: existingSong.date,
                     lyrics = audioTagData.lyrics ?: existingSong.lyrics,
                     rawProperties = audioTagData.rawProperties.toString(),
-                    coverPath = newCoverPath,
                     dbUpdateTime = System.currentTimeMillis()
                 )
 
@@ -165,8 +147,6 @@ class SongRepository(
 
     suspend fun deleteSong(filePath: String) = withContext(Dispatchers.IO) {
         try {
-            val song = songDao.getSongByPath(filePath)
-            deleteCoverFile(song?.coverPath)
             songDao.deleteByFilePath(filePath)
             Log.d(TAG, "歌曲已删除: $filePath")
         } catch (e: Exception) {
@@ -179,7 +159,6 @@ class SongRepository(
     }
 
     suspend fun clearAll() = withContext(Dispatchers.IO) {
-        clearCoverCache()
         songDao.clear()
         Log.d(TAG, "所有歌曲数据已清空")
     }
@@ -202,42 +181,6 @@ class SongRepository(
         } catch (e: Exception) {
             Log.w(TAG, "无法获取文件修改时间: $filePath", e)
             0L
-        }
-    }
-    
-    private fun saveCoverToFile(coverData: ByteArray, songFilePath: String): String? {
-        return try {
-            val fileName = "cover_${songFilePath.hashCode()}.jpg"
-            val coverCacheDir = File(context.cacheDir, COVER_CACHE_DIR).apply { mkdirs() }
-            val file = File(coverCacheDir, fileName)
-            file.writeBytes(coverData)
-            file.absolutePath
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to save cover to file for $songFilePath", e)
-            null
-        }
-    }
-
-    private fun deleteCoverFile(coverPath: String?) {
-        if (coverPath == null) return
-        try {
-            val file = File(coverPath)
-            if (file.exists()) {
-                file.delete()
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to delete cover file: $coverPath", e)
-        }
-    }
-    
-    private fun clearCoverCache() {
-        try {
-            val coverDir = File(context.cacheDir, COVER_CACHE_DIR)
-            if (coverDir.exists()) {
-                coverDir.deleteRecursively()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to clear cover cache", e)
         }
     }
 }

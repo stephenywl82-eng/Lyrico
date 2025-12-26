@@ -1,6 +1,5 @@
 package com.lonx.lyrico.viewmodel
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -8,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.data.repository.SongRepository
-import com.lonx.lyrico.utils.BackgroundScanManager
 import com.lonx.lyrico.utils.MusicScanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -38,9 +36,7 @@ data class SongListUiState(
 @OptIn(FlowPreview::class)
 class SongListViewModel(
     private val musicScanner: MusicScanner,
-    private val songRepository: SongRepository,
-    private val backgroundScanManager: BackgroundScanManager,
-    @Suppress("unused") private val context: Context
+    private val songRepository: SongRepository
 ) : ViewModel() {
 
     private val TAG = "SongListViewModel"
@@ -153,23 +149,10 @@ class SongListViewModel(
         triggerScan(forceFullScan)
     }
 
-    fun startBackgroundScan() {
-        Log.d(TAG, "启动定期后台扫描任务")
-        backgroundScanManager.startBackgroundScan(
-            forceFullScan = false,
-            initialDelayMinutes = 5,
-            backoffDelayMinutes = 30
-        )
-    }
 
-    fun stopBackgroundScan() {
-        Log.d(TAG, "停止后台扫描任务")
-        backgroundScanManager.cancelBackgroundScan()
-    }
 
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "SongListViewModel 已清理")
-        stopBackgroundScan()
     }
 }

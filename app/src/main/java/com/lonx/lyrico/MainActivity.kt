@@ -1,30 +1,27 @@
 package com.lonx.lyrico
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
 import com.lonx.lyrico.ui.theme.LyricoTheme
 import com.lonx.lyrico.utils.PermissionUtil
-import com.lonx.lyrico.viewmodel.SettingsViewModel
+import androidx.lifecycle.lifecycleScope
+import com.lonx.lyrico.viewmodel.SongListViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 open class MainActivity : ComponentActivity() {
 
     @JvmField
     protected var hasPermission = false
-    private val settingsViewModel: SettingsViewModel by inject()
-
-    private lateinit var openDirectoryLauncher: ActivityResultLauncher<Uri?>
+    private val songListViewModel: SongListViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,20 +42,16 @@ open class MainActivity : ComponentActivity() {
                             Toast.makeText(this@MainActivity, "已拒绝权限", Toast.LENGTH_SHORT).show()
                             return
                         }
-
+                        
+                        hasPermission = true
+                        // Trigger a scan after permission is granted, with a small delay
+                        lifecycleScope.launch {
+                            delay(500) // Delay to allow MediaStore to update
+                            songListViewModel.refreshSongs(forceFullScan = true)
+                        }
                     }
 
-
                 })
-        }
-        openDirectoryLauncher = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
-            uri?.let {
-                // Persist access permissions for the URI
-                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                contentResolver.takePersistableUriPermission(it, takeFlags)
-
-                settingsViewModel.addScannedFolder(it.toString())
-            }
         }
 
         enableEdgeToEdge()

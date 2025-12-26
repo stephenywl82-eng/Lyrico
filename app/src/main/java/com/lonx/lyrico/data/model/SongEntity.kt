@@ -38,7 +38,6 @@ data class SongEntity(
     val sampleRate: Int = 0,
     val channels: Int = 0,
     val rawProperties: String? = null,
-    val coverPath: String? = null,
     val fileLastModified: Long = 0,
     val dbUpdateTime: Long = System.currentTimeMillis()
 ) {
@@ -61,7 +60,6 @@ data class SongEntity(
         if (sampleRate != other.sampleRate) return false
         if (channels != other.channels) return false
         if (rawProperties != other.rawProperties) return false
-        if (coverPath != other.coverPath) return false
         if (fileLastModified != other.fileLastModified) return false
 
         return true
@@ -81,7 +79,6 @@ data class SongEntity(
         result = 31 * result + sampleRate
         result = 31 * result + channels
         result = 31 * result + (rawProperties?.hashCode() ?: 0)
-        result = 31 * result + (coverPath?.hashCode() ?: 0)
         result = 31 * result + fileLastModified.hashCode()
         return result
     }

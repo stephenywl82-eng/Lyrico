@@ -39,7 +39,6 @@ fun LyricoApp() {
             .background(MaterialTheme.colorScheme.background)
     ) {
         val showSearch = remember { mutableStateOf(false) }
-        val searchQuery = remember { mutableStateOf("") }
         NavHost(navController = navController, startDestination = Screen.SongList.route) {
             composable(Screen.SongList.route) {
                 SongListScreen(

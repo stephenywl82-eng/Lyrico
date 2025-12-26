@@ -14,14 +14,9 @@ val Context.dataStore by preferencesDataStore(name = "settings")
 class SettingsManager(private val context: Context) {
 
     private object PreferencesKeys {
-        val SCANNED_FOLDERS = stringSetPreferencesKey("scanned_folders")
         val LYRIC_DISPLAY_MODE = stringPreferencesKey("lyric_display_mode")
     }
 
-    val scannedFolders: Flow<Set<String>> = context.dataStore.data
-        .map { preferences ->
-            preferences[PreferencesKeys.SCANNED_FOLDERS] ?: emptySet()
-        }
 
     val lyricDisplayMode: Flow<LyricDisplayMode> = context.dataStore.data
         .map { preferences ->
@@ -30,11 +25,6 @@ class SettingsManager(private val context: Context) {
             )
         }
 
-    suspend fun saveScannedFolders(folders: Set<String>) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.SCANNED_FOLDERS] = folders
-        }
-    }
 
     suspend fun saveLyricDisplayMode(mode: LyricDisplayMode) {
         context.dataStore.edit { preferences ->

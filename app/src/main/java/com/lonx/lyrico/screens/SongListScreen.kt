@@ -5,20 +5,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SwapVert
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,19 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil.compose.AsyncImage
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.ui.theme.Gray200
 import com.lonx.lyrico.ui.theme.Gray400
-import com.lonx.lyrico.utils.BitmapUtils
 import com.lonx.lyrico.viewmodel.SongInfo
 import com.lonx.lyrico.viewmodel.SongListViewModel
 import com.lonx.lyrico.viewmodel.SortBy
@@ -58,15 +51,8 @@ fun SongListScreen(
     val searchQuery by viewModel.searchQuery.collectAsState()
     val sortInfo by viewModel.sortInfo.collectAsState()
     val songs by viewModel.songs.collectAsState()
-    val lifecycleOwner = LocalLifecycleOwner.current
     var showSortMenu by remember { mutableStateOf(false) }
 
-    // Lifecycle management for background tasks
-    DisposableEffect(lifecycleOwner) {
-        onDispose {
-            viewModel.stopBackgroundScan()
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -177,10 +163,7 @@ fun SongListScreen(
                                         rawProperties = emptyMap()
                                     )
                                 },
-                                // Also use efficient decoding here for safety, though the next screen might need full quality
-                                coverBitmap = song.coverPath?.let { path ->
-                                    runCatching { BitmapUtils.decodeSampledBitmapFromFile(path, 512, 512) }.getOrNull()
-                                }
+                                coverBitmap = null // Set to null, the next screen will load it via Coil
                             )
                             onSongClick(songInfo)
                         }
@@ -215,33 +198,15 @@ fun SongListItem(
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
                     .background(Gray200)
             ) {
-                val density = LocalDensity.current
-                val imageSizePx = remember(density) { with(density) { 48.dp.toPx().toInt() } }
+                AsyncImage(
+                    model = song.filePath.toUri(),
+                    contentDescription = song.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = rememberVectorPainter(Icons.Default.MusicNote),
+                    error = rememberVectorPainter(Icons.Default.MusicNote)
+                )
 
-                val bitmap: android.graphics.Bitmap? = remember(song.coverPath) {
-                    song.coverPath?.let { path ->
-                        BitmapUtils.decodeSampledBitmapFromFile(path, imageSizePx, imageSizePx)
-                    }
-                }
-
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = song.title,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = "No Cover",
-                        tint = Gray400,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(10.dp) // 调整 Icon padding 以适应小尺寸
-                    )
-                }
-                
                 // 格式角标 (保持但字体缩小)
                 Box(
                     modifier = Modifier
@@ -377,4 +342,3 @@ private fun SortMenu(
         }
     }
 }
-
