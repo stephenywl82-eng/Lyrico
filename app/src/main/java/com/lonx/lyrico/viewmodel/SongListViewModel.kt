@@ -1,22 +1,30 @@
 package com.lonx.lyrico.viewmodel
 
+import android.app.Application
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.os.Parcelable
+import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.data.repository.SongRepository
+import com.lonx.lyrico.utils.MusicContentObserver
 import com.lonx.lyrico.utils.MusicScanner
+import com.lonx.lyrico.utils.SettingsManager
 import java.text.Collator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -40,7 +48,9 @@ data class SongListUiState(
 @OptIn(FlowPreview::class)
 class SongListViewModel(
     private val musicScanner: MusicScanner,
-    private val songRepository: SongRepository
+    private val songRepository: SongRepository,
+    private val settingsManager: SettingsManager,
+    application: Application
 ) : ViewModel() {
 
     private val TAG = "SongListViewModel"
@@ -54,6 +64,10 @@ class SongListViewModel(
     val sortInfo: StateFlow<SortInfo> = _sortInfo.asStateFlow()
 
     private val _allSongs = MutableStateFlow<List<SongEntity>>(emptyList())
+
+    private val contentResolver = application.contentResolver
+    private var musicContentObserver: MusicContentObserver? = null
+    private val incrementalScanRequest = MutableSharedFlow<Unit>(replay = 0)
 
     val songs: StateFlow<List<SongEntity>> = combine(
         _allSongs,
@@ -102,12 +116,36 @@ class SongListViewModel(
 
     init {
         Log.d(TAG, "SongListViewModel 初始化")
-        // Just collect songs from the database. The UI is responsible for triggering the initial scan.
         viewModelScope.launch {
             songRepository.getAllSongs().collect { songList ->
                 _allSongs.value = songList
             }
         }
+        registerMusicObserver()
+
+        viewModelScope.launch {
+            incrementalScanRequest
+                .debounce(2000L) // 2秒防抖
+                .collect {
+                    Log.d(TAG, "防抖后触发增量扫描")
+                    triggerIncrementalScan()
+                }
+        }
+    }
+
+    private fun registerMusicObserver() {
+        musicContentObserver = MusicContentObserver(viewModelScope, Handler(Looper.getMainLooper())) {
+            Log.d(TAG, "MediaStore 变更, 请求增量扫描")
+            viewModelScope.launch {
+                incrementalScanRequest.emit(Unit)
+            }
+        }
+        contentResolver.registerContentObserver(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            true,
+            musicContentObserver!!
+        )
+        Log.d(TAG, "MusicContentObserver registered.")
     }
 
     fun onSortChange(newSortInfo: SortInfo) {
@@ -152,6 +190,10 @@ class SongListViewModel(
                     songRepository.scanAndSaveSongs(songFiles, forceFullScan = forceFullScan)
                 }
 
+                if (forceFullScan) {
+                    settingsManager.saveLastScanTime(System.currentTimeMillis())
+                }
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -168,15 +210,32 @@ class SongListViewModel(
         }
     }
 
-    fun refreshSongs(forceFullScan: Boolean = false) {
-        Log.d(TAG, "用户手动刷新歌曲列表 (forceFullScan=$forceFullScan)")
-        triggerScan(forceFullScan)
+    private fun triggerIncrementalScan() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, loadingMessage = "检测到文件变化，正在更新...") }
+            songRepository.incrementalScan()
+            _uiState.update { it.copy(isLoading = false) }
+        }
     }
 
-
+    fun refreshSongs(forceFullScan: Boolean = false) {
+        Log.d(TAG, "用户手动刷新歌曲列表 (forceFullScan=$forceFullScan)")
+        if (forceFullScan) {
+            triggerScan(true)
+        } else {
+            // Manually requested incremental scan should also be debounced
+            viewModelScope.launch {
+                incrementalScanRequest.emit(Unit)
+            }
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
+        musicContentObserver?.let {
+            contentResolver.unregisterContentObserver(it)
+            Log.d(TAG, "MusicContentObserver unregistered.")
+        }
         Log.d(TAG, "SongListViewModel 已清理")
     }
 }

@@ -10,8 +10,12 @@ import com.lonx.audiotag.rw.AudioTagReader
 import com.lonx.lyrico.data.LyricoDatabase
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.data.model.SongFile
+import com.lonx.lyrico.utils.MusicScanner
+import com.lonx.lyrico.utils.SettingsManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -20,11 +24,28 @@ import java.io.File
  */
 class SongRepository(
     private val database: LyricoDatabase,
-    private val context: Context
+    private val context: Context,
+    private val musicScanner: MusicScanner,
+    private val settingsManager: SettingsManager
 ) {
     private val songDao = database.songDao()
     private companion object {
         const val TAG = "SongRepository"
+    }
+    suspend fun incrementalScan() = withContext(Dispatchers.Default) {
+        val lastScanTime = settingsManager.getLastScanTime()
+        val changedFiles = musicScanner.scanMusicFiles(emptyList())
+            .filter { it.lastModified > lastScanTime } // 只处理修改时间更新的文件
+            .toList()
+
+        if (changedFiles.isNotEmpty()) {
+            withContext(Dispatchers.IO) {
+                changedFiles.forEach { songFile ->
+                    readAndSaveSongMetadata(songFile, forceUpdate = true)
+                }
+            }
+            settingsManager.saveLastScanTime(System.currentTimeMillis())
+        }
     }
 
     /**

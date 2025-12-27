@@ -25,10 +25,10 @@ val appModule = module {
     
     // 数据库和存储库
     single { LyricoDatabase.getInstance(androidContext()) }
-    single { SongRepository(get(), androidContext()) }
+    single { SongRepository(get(), androidContext(), get(), get()) }
     
     // ViewModels
-    viewModel { SongListViewModel(get(), get()) }
+    viewModel { SongListViewModel(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { EditMetadataViewModel(get(), androidContext()) }
