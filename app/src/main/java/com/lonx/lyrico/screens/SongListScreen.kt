@@ -101,7 +101,8 @@ fun SongListScreen(
                 ) { song ->
                     SongListItem(
                         song = song,
-                        navigator = navigator
+                        navigator = navigator,
+                        modifier = Modifier.animateItem()
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
@@ -137,10 +138,11 @@ fun SongListScreen(
 @Composable
 fun SongListItem(
     song: SongEntity,
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = {
                 navigator.navigate(
