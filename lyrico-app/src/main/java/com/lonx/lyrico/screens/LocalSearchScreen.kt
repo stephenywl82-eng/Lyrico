@@ -15,14 +15,8 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.sp
+import com.lonx.lyrico.ui.components.searchBar.SearchBar
+import com.lonx.lyrico.ui.components.searchBar.SearchBarConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,39 +53,14 @@ fun LocalSearchScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
 
-                TextField(
+                SearchBar(
                     value = uiState.searchQuery,
                     onValueChange = { viewModel.onSearchQueryChanged(it) },
-                    placeholder = { Text("搜索标题/歌手/专辑...", fontSize = 14.sp) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .height(50.dp),
-                    shape = CircleShape,
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                            alpha = 0.5f
-                        )
+                    modifier = Modifier.padding(start = 8.dp),
+                    config = SearchBarConfig(
+                        placeholderTextString = "搜索标题/歌手/专辑..."
                     ),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = {
-                        if (uiState.searchQuery.isNotBlank()) {
-                            viewModel.search()
-                        }
-                    })
+                    onSearch = { viewModel.search() },
                 )
             }
             // Results

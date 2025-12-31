@@ -6,10 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -21,11 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.data.model.LyricsSearchResult
+import com.lonx.lyrico.ui.components.searchBar.SearchBar
+import com.lonx.lyrico.ui.components.searchBar.SearchBarConfig
 import com.lonx.lyrico.viewmodel.SearchViewModel
 import com.lonx.lyrics.model.SongSearchResult
 import com.ramcosta.composedestinations.annotation.Destination
@@ -71,44 +69,14 @@ fun SearchResultsScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
 
-                TextField(
+                SearchBar(
                     value = uiState.searchKeyword,
                     onValueChange = { viewModel.onKeywordChanged(it) },
-                    placeholder = { Text("搜索歌词...", fontSize = 14.sp) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp),
-                    shape = CircleShape,
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(
-                            alpha = 0.5f
-                        )
+                    modifier = Modifier.padding(start = 8.dp),
+                    config = SearchBarConfig(
+                        placeholderTextString = "搜索歌词..."
                     ),
-                    singleLine = true,
-                    textStyle = MaterialTheme.typography.bodyMedium,
-                    leadingIcon = {
-                        Icon(
-                            Icons.Default.Search,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    },
-                    trailingIcon = if (uiState.searchKeyword.isNotEmpty()) {
-                        {
-                            IconButton(
-                                onClick = { viewModel.onKeywordChanged("") },
-                                modifier = Modifier.size(20.dp)
-                            ) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear")
-                            }
-                        }
-                    } else null,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    keyboardActions = KeyboardActions(onSearch = { viewModel.search() })
+                    onSearch = { viewModel.search() },
                 )
             }
 
