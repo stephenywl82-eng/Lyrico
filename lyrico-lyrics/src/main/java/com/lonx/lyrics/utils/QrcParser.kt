@@ -1,5 +1,6 @@
 package com.lonx.lyrics.utils
 
+import android.util.Log
 import com.lonx.lyrics.model.LyricsResult
 import com.lonx.lyrics.model.LyricsData
 import com.lonx.lyrics.model.LyricsLine
@@ -64,8 +65,7 @@ object QrcParser {
 
         // 解析翻译和罗马音（先解析出原始列表）
         val rawTransList = if (!lyricsData.translated.isNullOrBlank()) parseLrcFormat(lyricsData.translated) else null
-        val rawRomaList = if (!lyricsData.romanization.isNullOrBlank()) parseLrcFormat(lyricsData.romanization) else null
-
+        val rawRomaList = if (!lyricsData.romanization.isNullOrBlank()) parseQrcFormatAsLineByLine(lyricsData.romanization) else null
         // 将翻译/罗马音 对齐 到原文的时间轴上
         // 这样返回的 transList 长度将和 origList 完全一致，且一一对应
         val alignedTransList = alignTranslations(origList, rawTransList)
@@ -111,7 +111,56 @@ object QrcParser {
     }
 
     /**
-     * 核心修复：对齐算法
+     * 解析 QRC 格式作为逐行歌词 (用于罗马音)
+     */
+    private fun parseQrcFormatAsLineByLine(text: String): List<LyricsLine>? {
+        if (text.isBlank()) return null
+
+        var content = text
+        val xmlMatcher = QRC_XML_PATTERN.matcher(text)
+        if (xmlMatcher.find()) {
+            content = xmlMatcher.group(1) ?: ""
+        }
+        if (content.isBlank()) return null
+
+        val resultList = ArrayList<LyricsLine>()
+        val lines = content.lines()
+        // Regex to remove word-level timings like (123,456)
+        val wordTimingPattern = Pattern.compile("\\(\\d+,\\d+\\)")
+
+        for (rawLine in lines) {
+            val line = rawLine.trim()
+            if (line.isEmpty()) continue
+
+            // Skip metadata tags like [ti: ...]
+            val tagMatcher = TAG_PATTERN.matcher(line)
+            if (tagMatcher.matches()) {
+                continue
+            }
+
+            val lineMatcher = QRC_LINE_PATTERN.matcher(line)
+            if (lineMatcher.matches()) {
+                val lineStart = lineMatcher.group(1)!!.toLong()
+                val lineDuration = lineMatcher.group(2)!!.toLong()
+                val lineEnd = lineStart + lineDuration
+                val lineContent = lineMatcher.group(3) ?: ""
+
+                // Strip word timings to get plain text
+                val plainText = wordTimingPattern.matcher(lineContent).replaceAll("").trim()
+
+                // To avoid multiple spaces, replace them with a single space
+                val cleanedText = plainText.replace(Regex("\\s+"), " ")
+
+                if (cleanedText.isNotEmpty()) {
+                    val words = listOf(LyricsWord(lineStart, lineEnd, cleanedText))
+                    resultList.add(LyricsLine(lineStart, lineEnd, words))
+                }
+            }
+        }
+        return resultList.ifEmpty { null }
+    }
+
+    /**
      * 遍历原文的每一行，在翻译列表中寻找时间最接近的一行。
      *
      * @param originalLines 原文列表（基准）
@@ -131,9 +180,9 @@ object QrcParser {
             var bestMatchIndex = -1
             var minDiff = Long.MAX_VALUE
 
-            // 时间匹配阈值：允许 1.5秒 的误差。
-            // 如果翻译和原文相差超过 1.5秒，通常认为这不是同一句（除非是纯音乐段落后的第一句，但通常够用了）
-            val TIME_THRESHOLD = 1500L
+            // 时间匹配阈值：允许 0.5秒 的误差。
+            // 如果翻译和原文相差超过 0.5秒，通常认为这不是同一句（除非是纯音乐段落后的第一句，但通常够用了）
+            val TIME_THRESHOLD = 500L
 
             // 不需要每次都遍历整个 transLines，但为了代码简单和健壮性，这里使用全遍历+剪枝
             // 实际数据量很小，不会有性能问题

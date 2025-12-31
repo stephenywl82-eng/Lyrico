@@ -19,6 +19,8 @@ class SettingsManager(private val context: Context) {
         val LAST_SCAN_TIME = longPreferencesKey("last_scan_time")
         val SORT_BY = stringPreferencesKey("sort_by")
         val SORT_ORDER = stringPreferencesKey("sort_order")
+
+        val SEPARATOR = stringPreferencesKey("separator")
     }
 
 
@@ -32,6 +34,16 @@ class SettingsManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.SORT_BY] = sortInfo.sortBy.name
             preferences[PreferencesKeys.SORT_ORDER] = sortInfo.order.name
+        }
+    }
+    suspend fun saveSeparator(separator: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SEPARATOR] = separator
+        }
+    }
+    fun getSeparator(): Flow<String> {
+        return context.dataStore.data.map { preferences ->
+            preferences[PreferencesKeys.SEPARATOR] ?: "/"
         }
     }
 

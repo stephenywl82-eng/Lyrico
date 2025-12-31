@@ -3,6 +3,7 @@ package com.lonx.lyrics.utils
 import android.util.Base64
 import android.util.Log
 import com.lonx.lyrics.model.*
+import com.lonx.lyrics.source.kg.KrcLanguageItem
 import kotlinx.serialization.json.Json
 import java.util.regex.Pattern
 
@@ -86,38 +87,33 @@ object KrcParser {
                 // 解码 Base64 -> JSON
                 val jsonStr = String(Base64.decode(languageTag, Base64.DEFAULT), Charsets.UTF_8)
                 val langRoot = jsonParser.decodeFromString<KrcLanguageRoot>(jsonStr)
-
+                Log.d(TAG, "KRC language: $langRoot")
                 for (item in langRoot.content) {
-                    // Type 0: 罗马音/日文假名 (逐字对应)
+                    // Type 0: 罗马音/日文假名 (逐行对应)
                     if (item.type == 0) {
                         romaList = ArrayList()
                         var offset = 0 // 用于跳过原文中的空行
 
                         for ((i, origLine) in origList.withIndex()) {
-                            // 检查原文行是否有效
                             val isLineHasText = origLine.words.any { it.text.trim().isNotEmpty() }
                             if (!isLineHasText) {
                                 offset += 1
                                 continue
                             }
 
-                            // 计算在 lyricContent 中的实际索引
                             val contentIndex = i - offset
-
                             if (contentIndex >= 0 && contentIndex < item.lyricContent.size) {
-                                val romaWordsText = item.lyricContent[contentIndex]
-                                val newWords = ArrayList<LyricsWord>()
+                                val romaSyllables = item.lyricContent[contentIndex]
+                                // 清理并用单个空格拼接所有罗马音音节
+                                val fullRomaLine = romaSyllables.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" ")
 
-                                // 关键修复：安全循环
-                                // 取原文单词数和罗马音单词数的最小值，防止越界
-                                val count = minOf(origLine.words.size, romaWordsText.size)
-
-                                for (j in 0 until count) {
-                                    val origWord = origLine.words[j]
-                                    val romaText = romaWordsText[j]
-                                    newWords.add(LyricsWord(origWord.start, origWord.end, romaText))
+                                if (fullRomaLine.isNotEmpty()) {
+                                    val romaWord = LyricsWord(origLine.start, origLine.end, fullRomaLine)
+                                    romaList.add(LyricsLine(origLine.start, origLine.end, listOf(romaWord)))
+                                } else {
+                                    // 占位，保持行数对齐
+                                    romaList.add(LyricsLine(origLine.start, origLine.end, emptyList()))
                                 }
-                                romaList.add(LyricsLine(origLine.start, origLine.end, newWords))
                             }
                         }
                     }
@@ -147,6 +143,7 @@ object KrcParser {
             }
         }
         Log.d(TAG, "Parsed KRC lyrics: $tsList")
+        Log.d(TAG, "Parsed KRC lyrics: $romaList")
         return LyricsResult(
             tags = tags,
             original = origList,

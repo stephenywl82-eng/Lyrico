@@ -95,7 +95,7 @@ class KgSource {
 
 
 
-    suspend fun search(keyword: String, page: Int = 1): List<SongSearchResult> = withContext(Dispatchers.IO) {
+    suspend fun search(keyword: String, page: Int = 1,separator: String = "/"): List<SongSearchResult> = withContext(Dispatchers.IO) {
         val params = mapOf(
             "keyword" to keyword,
             "page" to page.toString(),
@@ -106,6 +106,7 @@ class KgSource {
             // 注意：Search 不需要 Body，所以 body 传空字符串参与签名
             val signedParams = buildSignedParams(params, body = "", module = "Search")
             val response = api.searchSong(signedParams)
+            Log.d("KgSource", "Search response: ${response.data}")
 
             if (response.errorCode != 0) {
                 Log.e("KgSource", "Search failed: ${response.errorCode}")
@@ -116,7 +117,7 @@ class KgSource {
                 SongSearchResult(
                     id = item.id ?: "",
                     title = item.songName,
-                    artist = item.singers.joinToString("/") { it.name },
+                    artist = item.singers.joinToString(separator) { it.name },
                     album = item.albumName ?: "",
                     duration = (item.duration * 1000).toLong(),
                     source = Source.KG,

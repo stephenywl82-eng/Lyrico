@@ -5,6 +5,14 @@ import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
+
+@Parcelize
+data class LyricsData(
+    val original: String?,      // 原始内容 (LRC/KRC 解密后)
+    val translated: String? = null,
+    val type: String = "lrc",    // lrc, krc
+    val romanization: String? = null
+) : Parcelable
 /**
  * 最小单位：字
  */
@@ -38,12 +46,14 @@ data class LyricsResult(
 
 
 @Serializable
+@Parcelize
 data class KrcLanguageRoot(
     val content: List<KrcLanguageItem>
-)
+): Parcelable
 
 @Serializable
+@Parcelize
 data class KrcLanguageItem(
     val type: Int, // 0: 罗马音(逐字), 1: 翻译(逐行)
     val lyricContent: List<List<String>> // 二维数组
-)
+): Parcelable

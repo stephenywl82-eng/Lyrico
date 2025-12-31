@@ -1,6 +1,7 @@
 package com.lonx.lyrics.source.kg
 
 import android.os.Parcelable
+import com.lonx.lyrics.model.Singer
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -39,14 +40,12 @@ data class KgSongItem(
     @SerialName("ID") val id: String? = null,
     @SerialName("FileHash") val fileHash: String,
     @SerialName("SongName") val songName: String,
-    @SerialName("Singers") val singers: List<KgSinger>,
+    @SerialName("Singers") val singers: List<Singer>,
     @SerialName("AlbumName") val albumName: String? = null,
     @SerialName("Duration") val duration: Int
 ) : Parcelable
 
-@Serializable
-@Parcelize
-data class KgSinger(val name: String) : Parcelable
+
 
 @Serializable
 @Parcelize
@@ -63,6 +62,13 @@ data class KgLyricContent(
     val fmt: String,
     val contenttype: Int
 ) : Parcelable
+
+@Parcelize
+@Serializable
+data class KrcLanguageItem(
+    val type: Int, // 0: 罗马音(逐字), 1: 翻译(逐行)
+    val lyricContent: List<List<String>> // 二维数组
+): Parcelable
 
 interface KgApi {
     @POST("https://userservice.kugou.com/risk/v1/r_register_dev")

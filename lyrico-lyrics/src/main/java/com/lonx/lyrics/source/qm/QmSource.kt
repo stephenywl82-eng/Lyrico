@@ -48,7 +48,7 @@ class QmSource {
         "nettype" to "NETWORK_WIFI"
     )
 
-    suspend fun search(keyword: String, page: Int = 1): List<SongSearchResult> = withContext(Dispatchers.IO) {
+    suspend fun search(keyword: String, page: Int = 1,separator: String = "/"): List<SongSearchResult> = withContext(Dispatchers.IO) {
         val param = buildJsonObject {
             put("search_id", Random.nextLong(10000000000000000L, 90000000000000000L).toString())
             put("remoteplace", "search.android.keyboard")
@@ -79,14 +79,14 @@ class QmSource {
             val songs = body?.get("item_song")?.jsonArray
 
             return@withContext songs?.mapNotNull { it.jsonObject }?.map { item ->
-                val singers = item["singer"]?.jsonArray?.joinToString("/") { it.jsonObject["name"]?.jsonPrimitive?.content ?: "" } ?: ""
+                val singerList = item["singer"]?.jsonArray?.map { it.jsonObject["name"]?.jsonPrimitive?.content ?: "" } ?: emptyList()
                 val album = item["album"]?.jsonObject?.get("name")?.jsonPrimitive?.content ?: ""
 
                 SongSearchResult(
                     id = item["id"]?.jsonPrimitive?.content ?: "0", // songID
                     mid = item["mid"]?.jsonPrimitive?.content ?: "", // songMID (关键)
                     title = item["title"]?.jsonPrimitive?.content ?: "",
-                    artist = singers,
+                    artist = singerList.joinToString(separator),
                     album = album,
                     duration = (item["interval"]?.jsonPrimitive?.int ?: 0) * 1000L,
                     source = Source.QM

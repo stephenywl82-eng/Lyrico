@@ -1,7 +1,9 @@
 package com.lonx.lyrico.viewmodel
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lonx.lyrico.utils.SettingsManager
 import com.lonx.lyrics.model.LyricsResult
 import com.lonx.lyrics.model.LyricsLine
 import com.lonx.lyrics.model.SongSearchResult
@@ -26,12 +28,14 @@ data class SearchUiState(
     val previewingSong: SongSearchResult? = null,
     val lyricsPreviewContent: String? = null,
     val isPreviewLoading: Boolean = false,
-    val lyricsPreviewError: String? = null
+    val lyricsPreviewError: String? = null,
+    val separator: String = "/",
 )
 
 class SearchViewModel(
     private val kgSource: KgSource,
-    private val qmSource: QmSource
+    private val qmSource: QmSource,
+    private val settingsManager: SettingsManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -39,7 +43,16 @@ class SearchViewModel(
     
     // 缓存搜索结果，以关键字和搜索源为键
     private val searchResultCache = mutableMapOf<String, MutableMap<Source, List<SongSearchResult>>>()
-
+    init {
+        viewModelScope.launch {
+            settingsManager.getSeparator().collect { separator ->
+            _uiState.update {
+                it.copy(
+                    separator = separator
+                )
+            }
+        } }
+    }
     fun onKeywordChanged(keyword: String) {
         _uiState.update { it.copy(searchKeyword = keyword) }
     }
@@ -82,8 +95,8 @@ class SearchViewModel(
             _uiState.update { it.copy(isSearching = true, searchError = null) }
             try {
                 val results = when (currentSource) {
-                    Source.KG -> kgSource.search(keyword)
-                    Source.QM -> qmSource.search(keyword)
+                    Source.KG -> kgSource.search(keyword, separator = _uiState.value.separator)
+                    Source.QM -> qmSource.search(keyword, separator = _uiState.value.separator)
                     else -> emptyList()
                 }
                 cacheSearchResults(keyword, currentSource, results)
@@ -128,7 +141,7 @@ class SearchViewModel(
                     else -> null
                 }
                 
-                val lyricsText = lyricsResult?.let { formatKrcResult(it) }
+                val lyricsText = lyricsResult?.let { formatLrcResult(it) }
 
                 _uiState.update {
                     it.copy(
@@ -156,7 +169,7 @@ class SearchViewModel(
                     else -> null
                 }
                 
-                val lyricsText = lyricsResult?.let { formatKrcResult(it) }
+                val lyricsText = lyricsResult?.let { formatLrcResult(it) }
                 onResult(lyricsText)
             } catch (e: Exception) {
                 onResult(null)
@@ -176,6 +189,7 @@ class SearchViewModel(
     }
 }
 
+@SuppressLint("DefaultLocale")
 private fun formatTimestamp(millis: Long): String {
     val totalSeconds = millis / 1000
     val minutes = totalSeconds / 60
@@ -184,12 +198,14 @@ private fun formatTimestamp(millis: Long): String {
     return String.format("%02d:%02d.%03d", minutes, seconds, ms)
 }
 
-private fun formatKrcResult(result: LyricsResult): String {
+private fun formatLrcResult(result: LyricsResult): String {
     val builder = StringBuilder()
     val originalLines = result.original
     val translatedLines = result.translated
+    val romanizationLines = result.romanization
 
     val translatedMap = translatedLines?.associateBy { it.start } ?: emptyMap()
+    val romanizationMap = romanizationLines?.associateBy { it.start } ?: emptyMap()
 
     originalLines.forEach { originalLine ->
         val formattedOriginalLine = originalLine.words.joinToString("") { word ->
@@ -200,10 +216,16 @@ private fun formatKrcResult(result: LyricsResult): String {
 
         // Find a matching translated line. A tolerance of 500ms is used to match lines.
         val matchedTranslation = findMatchingTranslatedLine(originalLine, translatedMap)
+        val matchedRomanization = findMatchingTranslatedLine(originalLine, romanizationMap)
 
         if (matchedTranslation != null) {
             val formattedTranslatedLine = "[${formatTimestamp(matchedTranslation.start)}]${matchedTranslation.words.joinToString(" ") { it.text }}"
             builder.append(formattedTranslatedLine)
+            builder.append("\n")
+        }
+        if (matchedRomanization != null) {
+            val formattedRomanizationLine = "[${formatTimestamp(matchedRomanization.start)}]${matchedRomanization.words.joinToString(" ") { it.text }}"
+            builder.append(formattedRomanizationLine)
             builder.append("\n")
         }
     }
@@ -212,7 +234,7 @@ private fun formatKrcResult(result: LyricsResult): String {
 
 private fun findMatchingTranslatedLine(originalLine: LyricsLine, translatedMap: Map<Long, LyricsLine>): LyricsLine? {
     // Exact match
-    var matched = translatedMap[originalLine.start]
+    val matched = translatedMap[originalLine.start]
     if (matched != null) return matched
 
     // Fuzzy match within a tolerance
