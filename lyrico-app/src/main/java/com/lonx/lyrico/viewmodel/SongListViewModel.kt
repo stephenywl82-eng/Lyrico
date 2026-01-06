@@ -162,9 +162,6 @@ class SongListViewModel(
                 Log.d(TAG, "开始后台扫描文件 (forceFullScan=$forceFullScan)")
                 _uiState.update { it.copy(isLoading = true, loadingMessage = "正在准备扫描...") }
 
-                if (forceFullScan) {
-                    musicScanner.clearCache()
-                }
 
                 val songFiles = mutableListOf<com.lonx.lyrico.data.model.SongFile>()
                 musicScanner.scanMusicFiles(emptyList())
