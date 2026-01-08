@@ -9,5 +9,6 @@ data class LyricsSearchResult(
     val artist: String?,
     val album: String?,
     val lyrics: String?,
-    val date: String?
+    val date: String?,
+    val trackerNumber: String?
 ) : Parcelable

@@ -79,7 +79,8 @@ class EditMetadataViewModel(
                     artist = result.artist?.takeIf { it.isNotBlank() } ?: currentData.artist,
                     album = result.album?.takeIf { it.isNotBlank() } ?: currentData.album,
                     lyrics = result.lyrics?.takeIf { it.isNotBlank() } ?: currentData.lyrics,
-                    date = result.date?.takeIf { it.isNotBlank() } ?: currentData.date
+                    date = result.date?.takeIf { it.isNotBlank() } ?: currentData.date,
+                    trackerNumber = result.trackerNumber?.takeIf { it.isNotBlank() } ?: currentData.trackerNumber
                 )
             )
         }

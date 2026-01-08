@@ -201,6 +201,7 @@ fun SearchResultsScreen(
                                                         album = result.album,
                                                         lyrics = lyrics,
                                                         date = result.date,
+                                                        trackerNumber = result.trackerNumber
 
                                                         )
                                                 )
@@ -286,7 +287,8 @@ fun SearchResultsScreen(
                                     artist = song.artist,
                                     album = song.album,
                                     lyrics = lyrics,
-                                    date = song.date
+                                    date = song.date,
+                                    trackerNumber = song.trackerNumber
                                 )
                             )
                         }
@@ -355,6 +357,16 @@ fun SearchResultItem(
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = song.date,
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                        color = SaltTheme.colors.subText, // 使用 SaltTheme
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                if (song.trackerNumber.isNotBlank()){
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Track ${song.trackerNumber}",
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                         color = SaltTheme.colors.subText, // 使用 SaltTheme
                         maxLines = 1,

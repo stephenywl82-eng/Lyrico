@@ -16,5 +16,6 @@ data class SongSearchResult(
     val hash: String? = null, // KG 特有
     val mid: String? = null,
     val date: String = "",
+    val trackerNumber: String = "",
 ) : Parcelable
 

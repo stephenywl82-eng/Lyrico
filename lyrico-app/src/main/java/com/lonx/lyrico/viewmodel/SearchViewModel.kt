@@ -9,6 +9,7 @@ import com.lonx.lyrics.model.LyricsLine
 import com.lonx.lyrics.model.SongSearchResult
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.source.kg.KgSource
+import com.lonx.lyrics.source.ne.NeSource
 import com.lonx.lyrics.source.qm.QmSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,7 @@ data class SearchUiState(
     val searchKeyword: String = "",
     val searchResults: List<SongSearchResult> = emptyList(),
     val selectedSearchSource: Source = Source.KG,
-    val availableSources: List<Source> = listOf(Source.KG, Source.QM),
+    val availableSources: List<Source> = listOf(Source.KG, Source.QM, Source.NE),
     val isSearching: Boolean = false,
     val searchError: String? = null,
     // 歌词预览相关
@@ -36,6 +37,7 @@ data class SearchUiState(
 class SearchViewModel(
     private val kgSource: KgSource,
     private val qmSource: QmSource,
+    private val neSource: NeSource,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
@@ -121,6 +123,7 @@ class SearchViewModel(
                 val results = when (currentSource) {
                     Source.KG -> kgSource.search(keyword, separator = separator)
                     Source.QM -> qmSource.search(keyword, separator = separator)
+                    Source.NE -> neSource.search(keyword, separator = separator)
                     else -> emptyList()
                 }
 
@@ -176,6 +179,7 @@ class SearchViewModel(
                 val lyricsResult: LyricsResult? = when (song.source) {
                     Source.KG -> kgSource.getLyrics(song)
                     Source.QM -> qmSource.getLyrics(song)
+                    Source.NE -> neSource.getLyrics(song)
                     else -> null
                 }
 
@@ -206,6 +210,7 @@ class SearchViewModel(
                 val lyricsResult: LyricsResult? = when (song.source) {
                     Source.KG -> kgSource.getLyrics(song)
                     Source.QM -> qmSource.getLyrics(song)
+                    Source.NE -> neSource.getLyrics(song)
                     else -> null
                 }
 
