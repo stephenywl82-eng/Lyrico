@@ -28,8 +28,13 @@ import com.lonx.lyrico.viewmodel.EditMetadataViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import android.app.Activity
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import coil3.compose.AsyncImage
 import coil3.toUri
 import com.lonx.lyrico.data.model.LyricsSearchResult
@@ -64,27 +69,12 @@ fun EditMetadataScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val hazeState = rememberHazeState()
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.onPermissionResult(true)
-        } else {
-            viewModel.onPermissionResult(false)
-        }
-    }
+
 
     onLyricsResult.onResult { result ->
         viewModel.updateMetadataFromSearchResult(result)
     }
-    LaunchedEffect(uiState.permissionRequest) {
-        uiState.permissionRequest?.let { intentSender ->
-            requestPermissionLauncher.launch(
-                IntentSenderRequest.Builder(intentSender).build()
-            )
-            viewModel.clearPermissionRequest()
-        }
-    }
+
     LaunchedEffect(songFilePath) {
         viewModel.readMetadata(songFilePath)
     }
@@ -176,38 +166,38 @@ fun EditMetadataScreen(
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(SaltTheme.colors.background))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SaltTheme.colors.background)
+        )
         {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = paddingValues.calculateTopPadding(), bottom = paddingValues.calculateBottomPadding())
+                    .padding(
+                        top = paddingValues.calculateTopPadding(),
+                        bottom = paddingValues.calculateBottomPadding()
+                    )
                     .hazeSource(hazeState)
                     .imePadding()
                     .verticalScroll(scrollState)
             ) {
-                AsyncImage(
-                    model = uiState.coverUri ?: uiState.filePath?.let { filePath ->
-                        val file = java.io.File(filePath)
-                        val lastModified = if (file.exists()) file.lastModified() else 0L
-                        CoverRequest(filePath.toUri(), lastModified)
-                    },
-                    contentDescription = uiState.songInfo?.tagData?.title ?: "歌曲封面",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f),
-                    contentScale = ContentScale.Crop,
-                    placeholder = rememberVectorPainter(Icons.Default.MusicNote),
-                    error = rememberVectorPainter(Icons.Default.MusicNote)
-                )
-
-
                 Column(
                     modifier = Modifier.padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
+
+                    CoverEditor(
+                        coverUri = uiState.coverUri,
+                        isModified = uiState.coverUri != uiState.originalCover,
+                        onCoverClick = { /* 弹出选择图片 */ },
+                        onRevertClick = { viewModel.revertCover() }, // 撤销
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    )
+
                     MetadataInputGroup(
                         label = "标题",
                         value = editingTagData?.title ?: "",
@@ -360,6 +350,84 @@ fun EditMetadataScreen(
     }
 }
 
+@Composable
+fun CoverEditor(
+    modifier: Modifier = Modifier,
+    coverUri: Any?,                   // 当前编辑封面
+    isModified: Boolean = false,              // 原始封面，用于撤销
+    onCoverClick: () -> Unit,         // 点击更换封面
+    onRevertClick: () -> Unit              // 点击撤销
+) {
+    // 判断是否修改
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .border(
+                width = 1.5.dp,
+                color = if (isModified) Amber300 else Gray200,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .background(
+                color = if (isModified) Amber50.copy(alpha = 0.3f) else Color.White,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onCoverClick() }
+    ) {
+        AsyncImage(
+            model = coverUri,
+            contentDescription = "封面",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            placeholder = rememberVectorPainter(Icons.Default.MusicNote),
+            error = rememberVectorPainter(Icons.Default.MusicNote)
+        )
+
+        if (isModified) {
+            // 已修改角标
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(8.dp)
+                    .background(
+                        color = Amber100.copy(alpha = 0.8f),
+                        shape = RoundedCornerShape(4.dp)
+                    )
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .shadow(1.dp, RoundedCornerShape(4.dp))
+            ) {
+                Text(
+                    text = "已修改",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Amber600
+                )
+            }
+
+            // 撤销按钮
+            IconButton(
+                onClick = onRevertClick,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp) // 和角标错开一些
+                    .background(
+                        color = Gray50.copy(alpha = 0.7f),
+                        shape = CircleShape
+                    )
+                    .size(28.dp)
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.Undo,
+                    contentDescription = "撤销封面修改",
+                    tint = Gray700
+                )
+            }
+        }
+
+    }
+
+}
 
 @Composable
 private fun MetadataInputGroup(
