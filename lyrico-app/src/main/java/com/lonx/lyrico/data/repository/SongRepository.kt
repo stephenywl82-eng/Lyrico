@@ -11,8 +11,11 @@ import com.lonx.audiotag.rw.AudioTagWriter
 import com.lonx.lyrico.data.LyricoDatabase
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.data.model.SongFile
+import com.lonx.lyrico.data.utils.SortKeyUtils
 import com.lonx.lyrico.utils.MusicScanner
 import com.lonx.lyrico.utils.SettingsManager
+import com.lonx.lyrico.viewmodel.SortBy
+import com.lonx.lyrico.viewmodel.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -121,11 +124,11 @@ class SongRepository(
                 sampleRate = audioData.sampleRate,
                 channels = audioData.channels,
                 rawProperties = audioData.rawProperties.toString(),
-                fileLastModified = songFile.lastModified,
-                dbUpdateTime = System.currentTimeMillis()
-            )
+                fileLastModified = songFile.lastModified
+            ).withSortKeysUpdated()
 
-            songDao.insert(songEntity)
+            songDao.insert(songEntity) // 或 songDao.upsert(songEntity)
+
             Log.d(TAG, "歌曲元数据已保存: ${songFile.fileName}")
             return@withContext songEntity
 
@@ -160,11 +163,11 @@ class SongRepository(
                     date = audioTagData.date ?: existingSong.date,
                     lyrics = audioTagData.lyrics ?: existingSong.lyrics,
                     rawProperties = audioTagData.rawProperties.toString(),
-                    fileLastModified = lastModified,
-                    dbUpdateTime = System.currentTimeMillis()
-                )
+                    fileLastModified = lastModified
+                ).withSortKeysUpdated()
 
                 songDao.update(updatedSong)
+
                 Log.d(TAG, "歌曲元数据已更新: $filePath")
                 return@withContext true
             } catch (e: Exception) {
@@ -248,6 +251,40 @@ class SongRepository(
             uri.scheme != null && (uri.scheme == "content" || uri.scheme == "file")
         } catch (e: Exception) {
             false
+        }
+    }
+    private fun SongEntity.withSortKeysUpdated(): SongEntity {
+        val titleText = (title?.takeIf { it.isNotBlank() } ?: fileName)
+        val artistText = (artist?.takeIf { it.isNotBlank() } ?: "未知艺术家")
+
+        val titleKeys = SortKeyUtils.getSortKeys(titleText)
+        val artistKeys = SortKeyUtils.getSortKeys(artistText)
+
+        return copy(
+            titleGroupKey = titleKeys.groupKey,
+            titleSortKey = titleKeys.sortKey,
+            artistGroupKey = artistKeys.groupKey,
+            artistSortKey = artistKeys.sortKey,
+            dbUpdateTime = System.currentTimeMillis()
+        )
+    }
+
+    fun getAllSongsSorted(sortBy: SortBy, order: SortOrder): Flow<List<SongEntity>> {
+        return when (sortBy) {
+            SortBy.TITLE -> {
+                if (order == SortOrder.ASC) songDao.getAllSongsOrderByTitleAsc()
+                else songDao.getAllSongsOrderByTitleDesc()
+            }
+
+            SortBy.ARTIST -> {
+                if (order == SortOrder.ASC) songDao.getAllSongsOrderByArtistAsc()
+                else songDao.getAllSongsOrderByArtistDesc()
+            }
+
+            SortBy.DATE_MODIFIED -> {
+                if (order == SortOrder.ASC) songDao.getAllSongsOrderByDateModifiedAsc()
+                else songDao.getAllSongsOrderByDateModifiedDesc()
+            }
         }
     }
     private suspend fun downloadImageBytes(url: String): ByteArray =

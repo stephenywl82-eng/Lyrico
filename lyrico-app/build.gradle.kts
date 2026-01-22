@@ -48,29 +48,47 @@ android {
 }
 
 dependencies {
-    implementation(libs.compose.destinations.core)
-    ksp(libs.compose.destinations.ksp)
-    implementation(libs.salt.ui.android)
-    implementation(libs.haze)
-    implementation(libs.haze.materials)
-    implementation(libs.koin.android)
-    implementation(libs.koin.androidx.compose)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+    // Project Modules
+    implementation(project(":lyrico-audiotag"))
+    implementation(project(":lyrico-lyrics"))
+
+    // Compose & UI
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.compose.destinations.core)
+    implementation(libs.salt.ui.android)
+    implementation(libs.haze)
+    implementation(libs.haze.materials)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
+    // AndroidX
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+
+    // Dependency Injection
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // Utilities
     implementation(libs.xxpermissions)
+    implementation(libs.tinypinyin)
+
+    // KSP
+    ksp(libs.compose.destinations.ksp)
     ksp(libs.androidx.room.compiler)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -78,9 +96,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-    implementation(project(":lyrico-audiotag"))
-    implementation(project(":lyrico-lyrics"))
-    // https://mvnrepository.com/artifact/io.coil-kt.coil3/coil
-    implementation(libs.coil.compose)
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.3.0")
 }

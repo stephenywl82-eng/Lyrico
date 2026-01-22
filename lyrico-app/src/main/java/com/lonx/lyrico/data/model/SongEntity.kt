@@ -1,28 +1,41 @@
 package com.lonx.lyrico.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
  * 数据库中存储的歌曲实体
- * @param filePath 文件URI路径（唯一标识）
+ *
+ * @param filePath 文件 URI 路径，作为主键（唯一标识）
  * @param fileName 文件名称
  * @param title 歌曲标题
- * @param artist 艺术家
- * @param album 专辑
+ * @param artist 艺术家名称
+ * @param album 专辑名称
  * @param genre 流派
- * @param trackerNumber 音轨号
- * @param date 日期
- * @param lyrics 歌词
- * @param durationMilliseconds 时长（毫秒）
- * @param bitrate 比特率
- * @param sampleRate 采样率
- * @param channels 声道数
- * @param rawProperties 原始属性JSON字符串
- * @param fileLastModified 文件最后修改时间戳
- * @param dbUpdateTime 数据库更新时间
+ * @param trackerNumber 音轨号（通常用于专辑排序）
+ * @param date 歌曲发行或录制日期
+ * @param lyrics 歌词文本
+ * @param durationMilliseconds 歌曲时长（毫秒）
+ * @param bitrate 比特率（kbps）
+ * @param sampleRate 采样率（Hz）
+ * @param channels 声道数（1=单声道，2=立体声）
+ * @param rawProperties 原始音频属性 JSON 字符串（用于调试或扩展）
+ * @param fileLastModified 文件最后修改时间戳（毫秒），用于增量更新
+ * @param dbUpdateTime 数据库更新时间戳（毫秒），用于排序或同步记录
+ * @param titleGroupKey 标题分组索引（A-Z 或 #），用于列表分组
+ * @param titleSortKey 标题排序索引（拼音首字母或英文首字母），用于组内排序
+ * @param artistGroupKey 艺术家分组索引（A-Z 或 #）
+ * @param artistSortKey 艺术家排序索引（拼音首字母或英文首字母）
  */
-@Entity(tableName = "songs")
+@Entity(
+    tableName = "songs",
+    indices = [
+        Index(value = ["titleGroupKey", "titleSortKey"]),  // 提升按标题排序查询性能
+        Index(value = ["artistGroupKey", "artistSortKey"]), // 提升按艺术家排序查询性能
+        Index(value = ["fileLastModified"])                // 提升按修改时间排序性能
+    ]
+)
 data class SongEntity(
     @PrimaryKey
     val filePath: String,
@@ -40,7 +53,11 @@ data class SongEntity(
     val channels: Int = 0,
     val rawProperties: String? = null,
     val fileLastModified: Long = 0,
-    val dbUpdateTime: Long = System.currentTimeMillis()
+    val dbUpdateTime: Long = System.currentTimeMillis(),
+    val titleGroupKey: String = "#",
+    val titleSortKey: String = "#",
+    val artistGroupKey: String = "#",
+    val artistSortKey: String = "#",
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -63,6 +80,11 @@ data class SongEntity(
         if (channels != other.channels) return false
         if (rawProperties != other.rawProperties) return false
         if (fileLastModified != other.fileLastModified) return false
+        if (dbUpdateTime != other.dbUpdateTime) return false
+        if (titleGroupKey != other.titleGroupKey) return false
+        if (titleSortKey != other.titleSortKey) return false
+        if (artistGroupKey != other.artistGroupKey) return false
+        if (artistSortKey != other.artistSortKey) return false
 
         return true
     }
@@ -83,6 +105,11 @@ data class SongEntity(
         result = 31 * result + channels
         result = 31 * result + (rawProperties?.hashCode() ?: 0)
         result = 31 * result + fileLastModified.hashCode()
+        result = 31 * result + dbUpdateTime.hashCode()
+        result = 31 * result + titleGroupKey.hashCode()
+        result = 31 * result + titleSortKey.hashCode()
+        result = 31 * result + artistGroupKey.hashCode()
+        result = 31 * result + artistSortKey.hashCode()
         return result
     }
 }

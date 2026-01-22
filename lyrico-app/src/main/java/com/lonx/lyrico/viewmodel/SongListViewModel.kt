@@ -13,7 +13,7 @@ import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.data.repository.SongRepository
 import com.lonx.lyrico.utils.MusicContentObserver
 import com.lonx.lyrico.utils.SettingsManager
-import java.text.Collator
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -60,38 +61,16 @@ class SongListViewModel(
     private var musicContentObserver: MusicContentObserver? = null
     private val scanRequest = MutableSharedFlow<Unit>(replay = 0)
 
-    val songs: StateFlow<List<SongEntity>> = combine(
-        _allSongs,
-        _sortInfo
-    ) { songs, sort ->
-        val collator = Collator.getInstance()
-        val sortedList = when (sort.sortBy) {
-            SortBy.TITLE -> {
-                val comparator = Comparator<SongEntity> { a, b ->
-                    collator.compare(a.title ?: a.fileName, b.title ?: b.fileName)
-                }
-                songs.sortedWith(if (sort.order == SortOrder.ASC) comparator else comparator.reversed())
-            }
-            SortBy.ARTIST -> {
-                val comparator = Comparator<SongEntity> { a, b ->
-                    collator.compare(a.artist ?: "未知艺术家", b.artist ?: "未知艺术家")
-                }
-                songs.sortedWith(if (sort.order == SortOrder.ASC) comparator else comparator.reversed())
-            }
-            SortBy.DATE_MODIFIED -> {
-                if (sort.order == SortOrder.ASC) {
-                    songs.sortedBy { it.fileLastModified }
-                } else {
-                    songs.sortedByDescending { it.fileLastModified }
-                }
-            }
-        }
-        sortedList
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val songs: StateFlow<List<SongEntity>> =
+        sortInfo.flatMapLatest { sort ->
+            songRepository.getAllSongsSorted(sort.sortBy, sort.order)
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
 
     init {
         Log.d(TAG, "SongListViewModel 初始化")
