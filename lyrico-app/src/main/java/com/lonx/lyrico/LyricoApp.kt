@@ -47,7 +47,7 @@ fun LyricoApp() {
                         slideInHorizontally(
                             initialOffsetX = { it },
                             animationSpec = tween(
-                                durationMillis = 500,
+                                durationMillis = 300,
                                 easing = FastOutSlowInEasing
                             )
                         )
@@ -56,9 +56,9 @@ fun LyricoApp() {
                 override val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition =
                     {
                         slideOutHorizontally(
-                            targetOffsetX = { -it / 5 },
+                            targetOffsetX = { -it },
                             animationSpec = tween(
-                                durationMillis = 500,
+                                durationMillis = 300,
                                 easing = FastOutSlowInEasing
                             )
                         )
@@ -67,9 +67,9 @@ fun LyricoApp() {
                 override val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition =
                     {
                         slideInHorizontally(
-                            initialOffsetX = { -it / 5 },
+                            initialOffsetX = { -it },
                             animationSpec = tween(
-                                durationMillis = 500,
+                                durationMillis = 300,
                                 easing = FastOutSlowInEasing
                             )
                         )
@@ -80,7 +80,7 @@ fun LyricoApp() {
                         slideOutHorizontally(
                             targetOffsetX = { it },
                             animationSpec = tween(
-                                durationMillis = 500,
+                                durationMillis = 300,
                                 easing = FastOutSlowInEasing
                             )
                         )

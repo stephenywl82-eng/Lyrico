@@ -9,8 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +19,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +31,7 @@ import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import coil3.size.Size
+import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.LyricsSearchResult
 import com.lonx.lyrico.ui.components.bar.SearchBar
 import com.lonx.lyrico.ui.theme.Gray200
@@ -40,6 +40,8 @@ import com.lonx.lyrics.model.SongSearchResult
 import com.moriafly.salt.ui.ItemDivider
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
+import com.moriafly.salt.ui.icons.Check
+import com.moriafly.salt.ui.icons.SaltIcons
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
@@ -137,7 +139,7 @@ fun SearchResultsScreen(
                             leadingIcon = {
                                 if (isSelected) {
                                     Icon(
-                                        Icons.Default.Check,
+                                        imageVector = SaltIcons.Check,
                                         contentDescription = null,
                                         modifier = Modifier.size(16.dp),
                                         tint = SaltTheme.colors.highlight
@@ -184,7 +186,7 @@ fun SearchResultsScreen(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Icon(
-                                Icons.Default.SearchOff,
+                                painter = painterResource(id = R.drawable.ic_searchoff_24dp),
                                 contentDescription = "No results",
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
@@ -385,8 +387,8 @@ fun SearchResultItem(
                         contentDescription = song.title,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
-                        placeholder = rememberVectorPainter(Icons.Default.MusicNote),
-                        error = rememberVectorPainter(Icons.Default.MusicNote)
+                        placeholder = painterResource(R.drawable.ic_album_24dp),
+                        error = painterResource(R.drawable.ic_album_24dp)
                     )
                 }
 

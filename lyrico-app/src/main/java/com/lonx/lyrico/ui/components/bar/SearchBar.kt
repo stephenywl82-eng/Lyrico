@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,10 +22,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lonx.lyrico.R
 import com.moriafly.salt.ui.SaltTheme
 
 
@@ -69,7 +68,7 @@ fun SearchBar(
             ) {
                 // 1. 左侧搜索图标
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    painter = painterResource(R.drawable.ic_search_24dp),
                     contentDescription = "Search",
                     tint = SaltTheme.colors.subText,
                     modifier = Modifier.size(20.dp)
@@ -101,7 +100,7 @@ fun SearchBar(
                 // 3. 右侧清除按钮：有文字时显示
                 if (value.isNotEmpty()) {
                     Icon(
-                        imageVector = Icons.Default.Cancel,
+                        painter = painterResource(R.drawable.ic_clear_24dp),
                         contentDescription = "Clear",
                         tint = SaltTheme.colors.subText,
                         modifier = Modifier

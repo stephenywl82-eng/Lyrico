@@ -1,24 +1,16 @@
 package com.lonx.lyrico.screens
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,20 +19,29 @@ import com.lonx.lyrico.ui.theme.*
 import com.lonx.lyrico.viewmodel.EditMetadataViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import android.app.Activity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.IntOffset
 import coil3.compose.AsyncImage
-import coil3.toUri
+import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.LyricsSearchResult
 import com.lonx.lyrico.ui.components.bar.TopBar
-import com.lonx.lyrico.utils.coil.CoverRequest
+import com.moriafly.salt.ui.Item
+import com.moriafly.salt.ui.ItemDropdown
 import com.moriafly.salt.ui.SaltTheme
+import com.moriafly.salt.ui.UnstableSaltUiApi
+import com.moriafly.salt.ui.icons.ArrowBack
+import com.moriafly.salt.ui.icons.SaltIcons
+import com.moriafly.salt.ui.popup.PopupMenu
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.SearchResultsDestination
@@ -53,7 +54,9 @@ import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class,
+    UnstableSaltUiApi::class
+)
 @Composable
 @Destination<RootGraph>(route = "edit_metadata")
 fun EditMetadataScreen(
@@ -130,7 +133,7 @@ fun EditMetadataScreen(
                         IconButton(onClick = {
                             navigator.popBackStack()
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                            Icon(SaltIcons.ArrowBack, contentDescription = "返回")
                         }
                     },
                     actions = {
@@ -146,7 +149,7 @@ fun EditMetadataScreen(
                             }
                             navigator.navigate(SearchResultsDestination(keyword))
                         }) {
-                            Icon(Icons.Default.Search, contentDescription = "搜索")
+                            Icon(painter = painterResource(R.drawable.ic_search_24dp), contentDescription = "搜索")
                         }
                         IconButton(
                             onClick = { viewModel.saveMetadata() },
@@ -155,10 +158,11 @@ fun EditMetadataScreen(
                             if (uiState.isSaving) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp
+                                    strokeWidth = 2.dp,
+                                    color = SaltTheme.colors.highlight
                                 )
                             } else {
-                                Icon(Icons.Default.Save, contentDescription = "保存")
+                                Icon(painter = painterResource(R.drawable.ic_save_24dp), contentDescription = "保存")
                             }
                         }
                     }
@@ -215,8 +219,7 @@ fun EditMetadataScreen(
                                     title = originalTagData?.title ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.Default.Title
+                        }
                     )
 
                     MetadataInputGroup(
@@ -236,8 +239,7 @@ fun EditMetadataScreen(
                                     artist = originalTagData?.artist ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.Default.Person
+                        }
                     )
 
                     MetadataInputGroup(
@@ -257,8 +259,7 @@ fun EditMetadataScreen(
                                     album = originalTagData?.album ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.Default.Album
+                        }
                     )
 
                     MetadataInputGroup(
@@ -278,8 +279,7 @@ fun EditMetadataScreen(
                                     date = originalTagData?.date ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.Default.CalendarToday
+                        }
                     )
 
                     MetadataInputGroup(
@@ -299,8 +299,7 @@ fun EditMetadataScreen(
                                     genre = originalTagData?.genre ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.Default.Category
+                        }
                     )
 
                     MetadataInputGroup(
@@ -318,8 +317,7 @@ fun EditMetadataScreen(
                                     trackerNumber = originalTagData?.trackerNumber ?: ""
                                 )
                             )
-                        },
-                        icon = Icons.AutoMirrored.Filled.QueueMusic
+                        }
                     )
 
                     MetadataInputGroup(
@@ -340,8 +338,7 @@ fun EditMetadataScreen(
                                 )
                             )
                         },
-                        isMultiline = true,
-                        icon = Icons.AutoMirrored.Filled.List
+                        isMultiline = true
                     )
                     Spacer(modifier = Modifier.height(200.dp))
                 }
@@ -380,8 +377,8 @@ fun CoverEditor(
             contentDescription = "封面",
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
-            placeholder = rememberVectorPainter(Icons.Default.MusicNote),
-            error = rememberVectorPainter(Icons.Default.MusicNote)
+            placeholder = painterResource(id = R.drawable.ic_album_24dp),
+            error = painterResource(id = R.drawable.ic_album_24dp)
         )
 
         if (isModified) {
@@ -418,9 +415,8 @@ fun CoverEditor(
                     .size(28.dp)
             ) {
                 Icon(
-                    Icons.AutoMirrored.Filled.Undo,
-                    contentDescription = "撤销封面修改",
-                    tint = Gray700
+                    painter = painterResource(R.drawable.ic_undo_24dp),
+                    contentDescription = "撤销"
                 )
             }
         }
@@ -476,7 +472,7 @@ private fun MetadataInputGroup(
                 }
                 IconButton(onClick = onRevert, modifier = Modifier.size(24.dp)) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Undo,
+                        painter = painterResource(R.drawable.ic_undo_24dp),
                         contentDescription = "撤销修改",
                         tint = Gray400
                     )

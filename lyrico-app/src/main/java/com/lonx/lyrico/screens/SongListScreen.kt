@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -20,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import coil3.toUri
+import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.SongEntity
 import com.lonx.lyrico.ui.components.bar.TopBar
 import com.lonx.lyrico.ui.theme.Gray200
@@ -92,7 +90,7 @@ fun SongListScreen(
                     text = "歌曲(${songs.size}首)",
                     navigationIcon = {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            painter = painterResource(R.drawable.ic_settings_24dp),
                             contentDescription = "Settings",
                             tint = SaltTheme.colors.text,
                             modifier = Modifier
@@ -105,7 +103,7 @@ fun SongListScreen(
                     },
                     actions = {
                         Icon(
-                            imageVector = Icons.Default.Search,
+                            painter = painterResource(R.drawable.ic_search_24dp),
                             contentDescription = "Search",
                             tint = SaltTheme.colors.text,
                             modifier = Modifier
@@ -122,7 +120,7 @@ fun SongListScreen(
                                 .wrapContentSize()
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Sort,
+                                painter = painterResource(R.drawable.ic_sort_24dp),
                                 contentDescription = "Sort",
                                 tint = SaltTheme.colors.text,
                                 modifier = Modifier
@@ -149,11 +147,7 @@ fun SongListScreen(
                                 )
 
                                 sorts.forEach { info ->
-                                    val text = when (info.sortBy) {
-                                        SortBy.TITLE -> "歌曲名"
-                                        SortBy.DATE_MODIFIED -> "修改时间"
-                                        SortBy.ARTIST -> "歌手"
-                                    } + if (info.order == SortOrder.ASC) " (升序)" else " (降序)"
+                                    val text = "${info.sortBy.displayName}(${if (info.order == SortOrder.ASC) "升序" else "降序"})"
 
                                     PopupMenuItem(
                                         text = text,
@@ -258,8 +252,8 @@ fun SongListItem(
                     contentDescription = song.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
-                    placeholder = rememberVectorPainter(Icons.Default.MusicNote),
-                    error = rememberVectorPainter(Icons.Default.MusicNote)
+                    placeholder = painterResource(R.drawable.ic_album_24dp),
+                    error = painterResource(R.drawable.ic_album_24dp)
                 )
 
                 // 格式角标 (保持但字体缩小)
