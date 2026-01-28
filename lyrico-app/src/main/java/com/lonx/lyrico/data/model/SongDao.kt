@@ -148,4 +148,20 @@ interface SongDao {
         ORDER BY fileLastModified DESC
     """)
     fun getAllSongsOrderByDateModifiedDesc(): Flow<List<SongEntity>>
+    /**
+     * 按添加时间升序获取所有歌曲（最早添加的在前）
+     */
+    @Query("""
+        SELECT * FROM songs
+        ORDER BY fileAdded ASC
+    """)
+    fun getAllSongsOrderByDateAddedAsc(): Flow<List<SongEntity>>
+    /**
+     * 按添加时间降序获取所有歌曲（最新添加的在前）
+     */
+    @Query("""
+        SELECT * FROM songs
+        ORDER BY fileAdded DESC
+    """)
+    fun getAllSongsOrderByDateAddedDesc(): Flow<List<SongEntity>>
 }

@@ -22,6 +22,7 @@ import androidx.room.PrimaryKey
  * @param channels 声道数（1=单声道，2=立体声）
  * @param rawProperties 原始音频属性 JSON 字符串（用于调试或扩展）
  * @param fileLastModified 文件最后修改时间戳（毫秒），用于增量更新
+ * @param fileAdded 文件添加时间戳（毫秒），用于排序
  * @param dbUpdateTime 数据库更新时间戳（毫秒），用于排序或同步记录
  * @param titleGroupKey 标题分组索引（A-Z 或 #），用于列表分组
  * @param titleSortKey 标题排序索引（拼音首字母或英文首字母），用于组内排序
@@ -33,7 +34,8 @@ import androidx.room.PrimaryKey
     indices = [
         Index(value = ["titleGroupKey", "titleSortKey"]),  // 提升按标题排序查询性能
         Index(value = ["artistGroupKey", "artistSortKey"]), // 提升按艺术家排序查询性能
-        Index(value = ["fileLastModified"])                // 提升按修改时间排序性能
+        Index(value = ["fileLastModified"]),              // 提升按修改时间排序性能
+        Index(value = ["fileAdded"])                      // 提升按添加时间排序性能
     ]
 )
 data class SongEntity(
@@ -53,6 +55,7 @@ data class SongEntity(
     val channels: Int = 0,
     val rawProperties: String? = null,
     val fileLastModified: Long = 0,
+    val fileAdded: Long = 0,
     val dbUpdateTime: Long = System.currentTimeMillis(),
     val titleGroupKey: String = "#",
     val titleSortKey: String = "#",
@@ -80,6 +83,7 @@ data class SongEntity(
         if (channels != other.channels) return false
         if (rawProperties != other.rawProperties) return false
         if (fileLastModified != other.fileLastModified) return false
+        if (fileAdded != other.fileAdded) return false
         if (dbUpdateTime != other.dbUpdateTime) return false
         if (titleGroupKey != other.titleGroupKey) return false
         if (titleSortKey != other.titleSortKey) return false
@@ -105,6 +109,7 @@ data class SongEntity(
         result = 31 * result + channels
         result = 31 * result + (rawProperties?.hashCode() ?: 0)
         result = 31 * result + fileLastModified.hashCode()
+        result = 31 * result + fileAdded.hashCode()
         result = 31 * result + dbUpdateTime.hashCode()
         result = 31 * result + titleGroupKey.hashCode()
         result = 31 * result + titleSortKey.hashCode()

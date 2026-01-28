@@ -40,7 +40,6 @@ object AudioTagReader {
 
                 // 处理属性 Map
                 val props = metadata.propertyMap
-                Log.d(TAG, "Metadata: $props")
                 // 辅助函数：安全获取 Map 中的第一个值
                 fun getValue(key: String): String? {
                     if (props.containsKey(key)) {

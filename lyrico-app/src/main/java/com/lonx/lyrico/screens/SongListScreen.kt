@@ -71,7 +71,6 @@ fun SongListScreen(
     val sortInfo by viewModel.sortInfo.collectAsState()
     val songs by viewModel.songs.collectAsState()
     var sortOrderDropdownExpanded by remember { mutableStateOf(false) }
-
     val pullToRefreshState = rememberPullToRefreshState()
     // 创建 Haze 状态
     val hazeState = rememberHazeState()
@@ -137,25 +136,38 @@ fun SongListScreen(
                                     sortOrderDropdownExpanded = false
                                 }
                             ) {
-                                val sorts = listOf(
-                                    SortInfo(SortBy.TITLE, SortOrder.ASC),
-                                    SortInfo(SortBy.TITLE, SortOrder.DESC),
-                                    SortInfo(SortBy.DATE_MODIFIED, SortOrder.ASC),
-                                    SortInfo(SortBy.DATE_MODIFIED, SortOrder.DESC),
-                                    SortInfo(SortBy.ARTIST, SortOrder.ASC),
-                                    SortInfo(SortBy.ARTIST, SortOrder.DESC)
+                                val sortTypes = listOf(
+                                    SortBy.TITLE,
+                                    SortBy.ARTIST,
+                                    SortBy.DATE_MODIFIED,
+                                    SortBy.DATE_ADDED
                                 )
 
-                                sorts.forEach { info ->
-                                    val text = "${info.sortBy.displayName}(${if (info.order == SortOrder.ASC) "升序" else "降序"})"
+                                sortTypes.forEach { type ->
+                                    val isSelected = sortInfo.sortBy == type
 
                                     PopupMenuItem(
-                                        text = text,
-                                        onClick = {
-                                            viewModel.onSortChange(info)
-                                            sortOrderDropdownExpanded = false
+                                        text = type.displayName,
+                                        selected = isSelected,
+                                        iconPainter = if (isSelected) {
+                                            if (sortInfo.order == SortOrder.ASC) {
+                                                painterResource(R.drawable.ic_arrow_down_24dp) // 升序图标
+                                            } else {
+                                                painterResource(R.drawable.ic_arrow_up_24dp)   // 降序图标
+                                            }
+                                        } else {
+                                            null // 未选中时不显示图标
                                         },
-                                        selected = info == sortInfo
+                                        iconPaddingValues = PaddingValues(2.dp),
+                                        onClick = {
+                                            val newOrder = if (isSelected) {
+                                                if (sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC
+                                            } else {
+                                                SortOrder.ASC
+                                            }
+
+                                            viewModel.onSortChange(SortInfo(type, newOrder))
+                                        }
                                     )
                                 }
                             }

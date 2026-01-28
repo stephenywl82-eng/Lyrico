@@ -19,7 +19,6 @@ import com.lonx.lyrico.viewmodel.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.HttpURLConnection
@@ -42,44 +41,28 @@ class SongRepository(
         const val TAG = "SongRepository"
     }
 
-    /**
-     * Performs a full synchronization between the device's MediaStore and the local database.
-     * This is the primary method for all scanning operations, including incremental updates and full scans.
-     * It efficiently handles additions, deletions, and modifications.
-     */
-    suspend fun synchronizeWithDevice() = withContext(Dispatchers.Default) {
+    suspend fun synchronizeWithDevice() = withContext(Dispatchers.IO) {
         Log.d(TAG, "开始同步数据库与设备文件...")
 
-        // Step 1: Get the current list of music files from the device (the "source of truth").
-        val deviceSongFiles = musicScanner.scanMusicFiles().toList()
-        val deviceSongFileMap = deviceSongFiles.associateBy { it.filePath }
-
-        // Step 2: Get the current list of songs from our local database.
         val dbSongs = songDao.getAllSongs().first()
         val dbSongMap = dbSongs.associateBy { it.filePath }
+        val dbPaths = dbSongMap.keys
 
-        // Step 3: Identify and delete songs that are in the database but no longer on the device.
-        val deletedPaths = dbSongMap.keys - deviceSongFileMap.keys
+        val devicePaths = mutableSetOf<String>()
+
+        musicScanner.scanMusicFiles().collect { deviceSong ->
+            devicePaths.add(deviceSong.filePath)
+
+            val dbSong = dbSongMap[deviceSong.filePath]
+            if (dbSong == null || dbSong.fileLastModified != deviceSong.lastModified) {
+                readAndSaveSongMetadata(deviceSong, forceUpdate = true)
+            }
+        }
+
+        val deletedPaths = dbPaths - devicePaths
         if (deletedPaths.isNotEmpty()) {
             Log.d(TAG, "发现 ${deletedPaths.size} 首已删除歌曲，正在从数据库移除...")
             songDao.deleteByFilePaths(deletedPaths.toList())
-        }
-
-        // Step 4: Identify new songs to add or existing songs to update.
-        val songsToProcess = mutableListOf<SongFile>()
-        deviceSongFiles.forEach { deviceSongFile ->
-            val dbSong = dbSongMap[deviceSongFile.filePath]
-            // Process if the song is new or if its modification date has changed.
-            if (dbSong == null || dbSong.fileLastModified != deviceSongFile.lastModified) {
-                songsToProcess.add(deviceSongFile)
-            }
-        }
-
-        if (songsToProcess.isNotEmpty()) {
-            Log.d(TAG, "发现 ${songsToProcess.size} 首新增或更新的歌曲，正在处理...")
-            songsToProcess.forEach { songFile ->
-                readAndSaveSongMetadata(songFile, forceUpdate = true)
-            }
         }
 
         settingsManager.saveLastScanTime(System.currentTimeMillis())
@@ -101,7 +84,7 @@ class SongRepository(
                 }
             }
 
-            Log.d(TAG, "读取歌曲元数据: ${songFile.fileName}")
+//            Log.d(TAG, "读取歌曲元数据: ${songFile.fileName}")
 
             val audioData = context.contentResolver.openFileDescriptor(
                 songFile.filePath.toUri(), "r"
@@ -129,7 +112,7 @@ class SongRepository(
 
             songDao.insert(songEntity) // 或 songDao.upsert(songEntity)
 
-            Log.d(TAG, "歌曲元数据已保存: ${songFile.fileName}")
+//            Log.d(TAG, "歌曲元数据已保存: ${songFile.fileName}")
             return@withContext songEntity
 
         } catch (e: Exception) {
@@ -284,6 +267,11 @@ class SongRepository(
             SortBy.DATE_MODIFIED -> {
                 if (order == SortOrder.ASC) songDao.getAllSongsOrderByDateModifiedAsc()
                 else songDao.getAllSongsOrderByDateModifiedDesc()
+            }
+
+            SortBy.DATE_ADDED -> {
+                if (order == SortOrder.ASC) songDao.getAllSongsOrderByDateAddedAsc()
+                else songDao.getAllSongsOrderByDateAddedDesc()
             }
         }
     }

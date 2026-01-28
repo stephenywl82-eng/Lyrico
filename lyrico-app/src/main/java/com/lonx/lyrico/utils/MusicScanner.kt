@@ -32,7 +32,8 @@ class MusicScanner(private val context: Context) {
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DISPLAY_NAME,
-            MediaStore.Audio.Media.DATE_MODIFIED
+            MediaStore.Audio.Media.DATE_MODIFIED,
+            MediaStore.Audio.Media.DATE_ADDED
         )
 
         // Get only music files
@@ -49,22 +50,22 @@ class MusicScanner(private val context: Context) {
                 "${MediaStore.Audio.Media.DATE_ADDED} DESC"
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-                val nameColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-                val dateModifiedColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
+                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+                val dateModifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_MODIFIED)
+                val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
                     // MediaStore.Audio.Media.DATE_MODIFIED is in seconds, convert to milliseconds
                     val lastModified = cursor.getLong(dateModifiedColumn) * 1000L
-//                    Log.d(TAG, "最后修改时间: $lastModified")
+                    val dateAdded = cursor.getLong(dateAddedColumn) * 1000L
+
                     val contentUri = ContentUris.withAppendedId(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         id
                     )
-                    emit(SongFile(contentUri.toString(), name, lastModified))
+                    emit(SongFile(contentUri.toString(), name, lastModified, dateAdded))
                 }
                 Log.d(TAG, "MediaStore scan finished.")
             }
@@ -73,5 +74,4 @@ class MusicScanner(private val context: Context) {
             // Error is logged, flow will just complete.
         }
     }.flowOn(Dispatchers.IO)
-
 }
