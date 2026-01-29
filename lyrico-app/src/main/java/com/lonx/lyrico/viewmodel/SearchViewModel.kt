@@ -262,14 +262,6 @@ private fun formatLrcResult(result: LyricsResult, romaEnabled: Boolean = false):
         builder.append("\n")
 
         val matchedTranslation = findMatchingTranslatedLine(originalLine, translatedMap)
-
-        if (matchedTranslation != null) {
-            val formattedTranslatedLine = "[${formatTimestamp(matchedTranslation.start)}]${
-                matchedTranslation.words.joinToString(" ") { it.text }
-            }"
-            builder.append(formattedTranslatedLine)
-            builder.append("\n")
-        }
         if (romaEnabled) {
             val romanizationLines = result.romanization
             val romanizationMap = romanizationLines?.associateBy { it.start } ?: emptyMap()
@@ -282,6 +274,14 @@ private fun formatLrcResult(result: LyricsResult, romaEnabled: Boolean = false):
                 builder.append("\n")
             }
         }
+        if (matchedTranslation != null) {
+            val formattedTranslatedLine = "[${formatTimestamp(matchedTranslation.start)}]${
+                matchedTranslation.words.joinToString(" ") { it.text }
+            }"
+            builder.append(formattedTranslatedLine)
+            builder.append("\n")
+        }
+
     }
     return builder.toString().trim()
 }

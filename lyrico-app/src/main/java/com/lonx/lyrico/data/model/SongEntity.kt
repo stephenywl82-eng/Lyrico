@@ -1,5 +1,6 @@
 package com.lonx.lyrico.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
@@ -55,6 +56,7 @@ data class SongEntity(
     val channels: Int = 0,
     val rawProperties: String? = null,
     val fileLastModified: Long = 0,
+    @ColumnInfo(defaultValue = "0")
     val fileAdded: Long = 0,
     val dbUpdateTime: Long = System.currentTimeMillis(),
     val titleGroupKey: String = "#",

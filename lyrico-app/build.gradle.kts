@@ -73,7 +73,9 @@ android {
         compose = true
     }
 }
-
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
 dependencies {
     // Project Modules
     implementation(project(":lyrico-audiotag"))
@@ -89,8 +91,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.compose.destinations.core)
     implementation(libs.salt.ui.android)
-    implementation(libs.haze)
-    implementation(libs.haze.materials)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
