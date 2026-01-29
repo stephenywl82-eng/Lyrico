@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.LyricDisplayMode
-import com.lonx.lyrico.data.model.toChar
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.ItemCheck
@@ -131,7 +130,7 @@ fun SettingsScreen(
             RoundedColumn {
                 ItemDropdown(
                     text = "艺术家分隔符",
-                    value = artistSeparator.toChar(),
+                    value = artistSeparator.toText(),
                     sub = "存在多个艺术家时使用该分隔符分隔",
                     content = {
                         val separators = listOf(
@@ -142,7 +141,7 @@ fun SettingsScreen(
                         )
                         separators.forEach { separator ->
                             ItemCheck(
-                                text = separator.toChar(),
+                                text = separator.toText(),
                                 state = artistSeparator == separator,
                                 onChange = {
                                     viewModel.setSeparator(separator)

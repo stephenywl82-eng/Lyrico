@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.utils.SettingsManager
 import com.lonx.lyrico.data.model.LyricDisplayMode
-import com.lonx.lyrico.data.model.toChar
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,7 +63,7 @@ class SettingsViewModel(
     }
     fun setSeparator(separator: ArtistSeparator) {
         viewModelScope.launch {
-            settingsManager.saveSeparator(separator.toChar())
+            settingsManager.saveSeparator(separator.toText())
             _uiState.update {
                 it.copy(separator = separator)
             }

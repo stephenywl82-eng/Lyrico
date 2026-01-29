@@ -1,26 +1,21 @@
 package com.lonx.lyrico.data.model
 
-enum class ArtistSeparator {
-    COMMA,
-    SLASH,
-    SEMICOLON,
-    ENUMERATION_COMMA
+enum class ArtistSeparator(
+    private val text: String
+) {
+    COMMA(","),
+    SLASH("/"),
+    SEMICOLON(";"),
+    ENUMERATION_COMMA("、");
+
+    fun toText(): String = text
+
+    companion object {
+        fun fromText(text: String): ArtistSeparator =
+            entries.firstOrNull { it.text == text } ?: COMMA
+    }
 }
 
-fun ArtistSeparator.toChar(): String {
-    return when (this) {
-        ArtistSeparator.COMMA -> ","
-        ArtistSeparator.SLASH -> "/"
-        ArtistSeparator.SEMICOLON -> ";"
-        ArtistSeparator.ENUMERATION_COMMA -> "、"
-    }
-}
-fun String.toArtistSeparator(): ArtistSeparator {
-    return when (this) {
-        "," -> ArtistSeparator.COMMA
-        "/" -> ArtistSeparator.SLASH
-        ";" -> ArtistSeparator.SEMICOLON
-        "、" -> ArtistSeparator.ENUMERATION_COMMA
-        else -> ArtistSeparator.COMMA
-    }
-}
+
+fun String.toArtistSeparator(): ArtistSeparator =
+    ArtistSeparator.fromText(this)
