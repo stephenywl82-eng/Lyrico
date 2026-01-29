@@ -38,6 +38,7 @@ data class SongInfo(
 data class SongListUiState(
     val isLoading: Boolean = false,
     val lastScanTime: Long = 0,
+    val selectedSongs: SongEntity? = null,
     val loadingMessage: String? = null
 )
 
@@ -97,7 +98,12 @@ class SongListViewModel(
                 }
         }
     }
-
+    fun selectedSong(song: SongEntity) {
+        _uiState.update { it.copy(selectedSongs = song) }
+    }
+    fun clearSelectedSong(){
+        _uiState.update { it.copy(selectedSongs = null) }
+    }
     private fun registerMusicObserver() {
         musicContentObserver = MusicContentObserver(viewModelScope, Handler(Looper.getMainLooper())) {
             Log.d(TAG, "MediaStore 变更, 请求自动同步")

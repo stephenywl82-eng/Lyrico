@@ -107,7 +107,8 @@ class SongRepository(
                 sampleRate = audioData.sampleRate,
                 channels = audioData.channels,
                 rawProperties = audioData.rawProperties.toString(),
-                fileLastModified = songFile.lastModified
+                fileLastModified = songFile.lastModified,
+                fileAdded = songFile.dateAdded
             ).withSortKeysUpdated()
 
             songDao.insert(songEntity) // 或 songDao.upsert(songEntity)

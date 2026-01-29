@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -36,7 +38,11 @@ import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortInfo
 import com.lonx.lyrico.viewmodel.SortOrder
 import com.moriafly.salt.ui.Icon
+import com.moriafly.salt.ui.Item
+import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemDivider
+import com.moriafly.salt.ui.ItemTip
+import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -50,6 +56,9 @@ import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestin
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(
     ExperimentalMaterial3Api::class, UnstableSaltUiApi::class
@@ -65,7 +74,7 @@ fun SongListScreen(
     val songs by viewModel.songs.collectAsState()
     var sortOrderDropdownExpanded by remember { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
-
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
         modifier = Modifier
@@ -195,10 +204,33 @@ fun SongListScreen(
                     SongListItem(
                         song = song,
                         navigator = navigator,
-                        modifier = Modifier.animateItem()
+                        modifier = Modifier.animateItem(),
+                        trailingContent = {
+                            IconButton(
+                                modifier = Modifier.size(24.dp),
+                                onClick = {
+                                    viewModel.selectedSong(song)
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_info_24dp),
+                                    contentDescription = "Info"
+                                )
+                            }
+                        }
                     )
                     ItemDivider()
                 }
+            }
+        }
+        uiState.selectedSongs?.let { selectedSongs ->
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.clearSelectedSong() },
+                sheetState = sheetState,
+                containerColor = SaltTheme.colors.background,
+                tonalElevation = 0.dp
+            ) {
+                SongDetailBottomSheetContent(selectedSongs)
             }
         }
     }
@@ -209,7 +241,8 @@ fun SongListScreen(
 fun SongListItem(
     song: SongEntity,
     navigator: DestinationsNavigator,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    trailingContent: (@Composable () -> Unit)? = null
 ) {
     Column(
         modifier = modifier
@@ -221,10 +254,13 @@ fun SongListItem(
                     )
                 )
             })
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(vertical = 8.dp)
     ) {
 
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -335,7 +371,120 @@ fun SongListItem(
                     )
                 }
             }
+            trailingContent?.let {
+                Box(
+                    contentAlignment = Alignment.Center
+                ) {
+                    trailingContent()
+                }
+            }
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
+@Composable
+fun SongDetailBottomSheetContent(song: SongEntity) {
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 32.dp) // 底部留白
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Card(
+                shape = RoundedCornerShape(0.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.size(100.dp)
+            ) {
+                AsyncImage(
+                    model = CoverRequest(song.filePath.toUri(), song.fileLastModified),
+                    contentDescription = "Cover",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.ic_album_24dp),
+                    error = painterResource(R.drawable.ic_album_24dp)
+                )
+            }
+
+            // 标题和艺术家
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = song.title.takeIf { !it.isNullOrBlank() } ?: song.fileName,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = SaltTheme.colors.text
+                )
+                Text(
+                    text = song.artist.takeIf { !it.isNullOrBlank() } ?: "未知艺术家",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = SaltTheme.colors.highlight
+                )
+            }
+        }
+
+
+        SongDetailItem(label = "专辑", value = song.album)
+        SongDetailItem(label = "年份/日期", value = song.date)
+        SongDetailItem(label = "流派", value = song.genre)
+        SongDetailItem(label = "音轨号", value = song.trackerNumber)
+
+
+        SongDetailItem(
+            label = "时长",
+            value = if (song.durationMilliseconds > 0) {
+                val min = song.durationMilliseconds / 60000
+                val sec = (song.durationMilliseconds % 60000) / 1000
+                String.format("%d:%02d", min, sec)
+            } else null
+        )
+        SongDetailItem(
+            label = "比特率",
+            value = if (song.bitrate > 0) "${song.bitrate} kbps" else null
+        )
+        SongDetailItem(
+            label = "采样率",
+            value = if (song.sampleRate > 0) "${song.sampleRate} Hz" else null
+        )
+        SongDetailItem(
+            label = "声道",
+            value = if (song.channels > 0) "${song.channels}" else null
+        )
+
+        SongDetailItem(
+            label = "添加时间",
+            value = if (song.fileAdded > 0) dateFormat.format(Date(song.fileAdded)) else null
+        )
+        SongDetailItem(
+            label = "最后修改",
+            value = if (song.fileLastModified > 0) dateFormat.format(Date(song.fileLastModified)) else null
+        )
+
+
+    }
+}
+
+@Composable
+fun SongDetailItem(label: String, value: String?) {
+    if (value.isNullOrBlank()) return
+
+    Column(modifier = Modifier.padding(horizontal = 16.dp,vertical = 8.dp)) {
+        Text(
+            text = label,
+            style = SaltTheme.textStyles.sub
+        )
+        Text(
+            text = value,
+            style = SaltTheme.textStyles.main,
+            modifier = Modifier.padding(top = 2.dp)
+        )
+    }
+}
