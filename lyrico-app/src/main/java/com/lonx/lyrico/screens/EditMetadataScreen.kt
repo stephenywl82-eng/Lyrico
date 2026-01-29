@@ -175,9 +175,13 @@ fun EditMetadataScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(SaltTheme.colors.background)
                 .padding(paddingValues)
+                .padding(horizontal = 12.dp)
                 .imePadding()
-                .verticalScroll(scrollState)
+                .verticalScroll(scrollState),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CoverEditor(
                 coverUri = uiState.coverUri,
