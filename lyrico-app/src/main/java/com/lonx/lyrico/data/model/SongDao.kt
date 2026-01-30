@@ -100,7 +100,7 @@ interface SongDao {
      */
     @Query("""
         SELECT * FROM songs
-        ORDER BY titleGroupKey ASC, titleSortKey ASC
+        ORDER BY titleSortKey ASC
     """)
     fun getAllSongsOrderByTitleAsc(): Flow<List<SongEntity>>
 
@@ -109,7 +109,7 @@ interface SongDao {
      */
     @Query("""
         SELECT * FROM songs
-        ORDER BY titleGroupKey DESC, titleSortKey DESC
+        ORDER BY titleSortKey DESC
     """)
     fun getAllSongsOrderByTitleDesc(): Flow<List<SongEntity>>
 
@@ -118,7 +118,7 @@ interface SongDao {
      */
     @Query("""
         SELECT * FROM songs
-        ORDER BY artistGroupKey ASC, artistSortKey ASC
+        ORDER BY artistSortKey ASC
     """)
     fun getAllSongsOrderByArtistAsc(): Flow<List<SongEntity>>
 
@@ -127,7 +127,7 @@ interface SongDao {
      */
     @Query("""
         SELECT * FROM songs
-        ORDER BY artistGroupKey DESC, artistSortKey DESC
+        ORDER BY artistSortKey DESC
     """)
     fun getAllSongsOrderByArtistDesc(): Flow<List<SongEntity>>
 

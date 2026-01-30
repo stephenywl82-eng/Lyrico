@@ -1,11 +1,15 @@
 package com.lonx.lyrico.screens
 
 import android.annotation.SuppressLint
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -19,7 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -38,11 +45,7 @@ import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortInfo
 import com.lonx.lyrico.viewmodel.SortOrder
 import com.moriafly.salt.ui.Icon
-import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.ItemContainer
 import com.moriafly.salt.ui.ItemDivider
-import com.moriafly.salt.ui.ItemTip
-import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -55,10 +58,17 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val SECTIONS_ASC = listOf(
+    "0"
+) + ('A'..'Z').map { it.toString() } + listOf("#")
+
+private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
 
 @OptIn(
     ExperimentalMaterial3Api::class, UnstableSaltUiApi::class
@@ -75,6 +85,29 @@ fun SongListScreen(
     var sortOrderDropdownExpanded by remember { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    val sectionIndexMap = remember(songs, sortInfo) {
+        val map = mutableMapOf<String, Int>()
+        if (sortInfo.sortBy == SortBy.TITLE || sortInfo.sortBy == SortBy.ARTIST) {
+            songs.forEachIndexed { index, song ->
+                val key = if (sortInfo.sortBy == SortBy.ARTIST) song.artistGroupKey else song.titleGroupKey
+                if (!map.containsKey(key)) {
+                    map[key] = index
+                }
+            }
+        }
+        map
+    }
+    val sections = remember(sortInfo.order) {
+        if (sortInfo.order == SortOrder.ASC) {
+            SECTIONS_ASC
+        } else {
+            SECTIONS_DESC
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier
@@ -194,32 +227,52 @@ fun SongListScreen(
                 viewModel.refreshSongs()
             }
         ) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(
-                    items = songs,
-                    key = { song -> song.filePath }
-                ) { song ->
-                    SongListItem(
-                        song = song,
-                        navigator = navigator,
-                        modifier = Modifier.animateItem(),
-                        trailingContent = {
-                            IconButton(
-                                modifier = Modifier.size(24.dp),
-                                onClick = {
-                                    viewModel.selectedSong(song)
+            Box(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState
+                ) {
+                    items(
+                        items = songs,
+                        key = { song -> song.filePath }
+                    ) { song ->
+                        SongListItem(
+                            song = song,
+                            navigator = navigator,
+                            modifier = Modifier.animateItem(),
+                            trailingContent = {
+                                IconButton(
+                                    modifier = Modifier.size(24.dp),
+                                    onClick = {
+                                        viewModel.selectedSong(song)
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_info_24dp),
+                                        contentDescription = "Info"
+                                    )
                                 }
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.ic_info_24dp),
-                                    contentDescription = "Info"
-                                )
                             }
-                        }
+                        )
+                        ItemDivider()
+                    }
+                }
+                if (sections.isNotEmpty()) {
+                    AlphabetSideBar(
+                        sections = sections,
+                        onSectionSelected = { section ->
+                            val index = findScrollIndex(
+                                section = section,
+                                sectionIndexMap = sectionIndexMap,
+                                order = sortInfo.order
+                            )
+                            scope.launch {
+                                listState.scrollToItem(index)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
                     )
-                    ItemDivider()
                 }
             }
         }
@@ -235,7 +288,145 @@ fun SongListScreen(
         }
     }
 }
+fun findScrollIndex(
+    section: String,
+    sectionIndexMap: Map<String, Int>,
+    order: SortOrder
+): Int {
+    if (sectionIndexMap.isEmpty()) return 0
 
+    // 已存在，直接用
+    sectionIndexMap[section]?.let { return it }
+
+    val keys = sectionIndexMap.keys.sorted()
+
+    return if (order == SortOrder.ASC) {
+        // 找第一个 >= section
+        keys.firstOrNull { it >= section }
+            ?.let { sectionIndexMap[it] }
+            ?: sectionIndexMap[keys.last()]!!
+    } else {
+        // DESC：找第一个 <= section
+        keys.lastOrNull { it <= section }
+            ?.let { sectionIndexMap[it] }
+            ?: sectionIndexMap[keys.first()]!!
+    }
+}
+@Composable
+fun AlphabetSideBar(
+    sections: List<String>,
+    onSectionSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val view = LocalView.current
+    var componentHeight by remember { mutableIntStateOf(0) }
+    // 新增：记录当前触摸的 Section，用于显示气泡
+    var currentSection by remember { mutableStateOf<String?>(null) }
+    // 记录上一次选中的索引，防止滑动时重复触发回调
+    var lastSelectedIndex by remember { mutableIntStateOf(-1) }
+
+    // 计算索引的辅助函数
+    fun getSectionIndex(offsetY: Float): Int {
+        if (componentHeight == 0 || sections.isEmpty()) return -1
+        val step = componentHeight.toFloat() / sections.size
+        return (offsetY / step).toInt().coerceIn(0, sections.lastIndex)
+    }
+
+    // 更新选中状态和回调的辅助函数
+    fun updateSelection(index: Int) {
+        if (index != -1) {
+            val section = sections[index]
+            currentSection = section // 更新气泡显示内容
+            if (index != lastSelectedIndex) {
+                lastSelectedIndex = index
+                onSectionSelected(section)
+                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            }
+        }
+    }
+
+    // 使用 Row 将气泡和索引栏水平排列
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
+    ) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = currentSection != null,
+            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.scaleIn(),
+            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.scaleOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .size(50.dp)
+                    .background(
+                        color = SaltTheme.colors.highlight,
+                        shape = androidx.compose.foundation.shape.CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = currentSection ?: "",
+                    style = SaltTheme.textStyles.largeTitle,
+                    color = SaltTheme.colors.background,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .width(24.dp)
+                .onGloballyPositioned { componentHeight = it.size.height }
+                // 拖拽手势
+                .pointerInput(sections) {
+                    detectVerticalDragGestures(
+                        onDragStart = { offset ->
+                            val index = getSectionIndex(offset.y)
+                            updateSelection(index)
+                        },
+                        onDragEnd = {
+                            currentSection = null
+                            lastSelectedIndex = -1
+                        },
+                        onDragCancel = {
+                            currentSection = null
+                            lastSelectedIndex = -1
+                        }
+                    ) { change, _ ->
+                        change.consume()
+                        val index = getSectionIndex(change.position.y)
+                        updateSelection(index)
+                    }
+                }
+                .pointerInput(sections) {
+                    detectTapGestures(
+                        onPress = { offset ->
+                            val index = getSectionIndex(offset.y)
+                            updateSelection(index)
+                            tryAwaitRelease()
+                            currentSection = null
+                            lastSelectedIndex = -1
+                        },
+                        onTap = {
+                        }
+                    )
+                },
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            sections.forEach { section ->
+                Text(
+                    text = section,
+                    style = SaltTheme.textStyles.sub.copy(fontSize = 12.sp),
+                    color = if (currentSection == section) SaltTheme.colors.highlight else SaltTheme.colors.subText,
+                    modifier = Modifier.padding(vertical = 1.dp)
+                )
+            }
+        }
+    }
+}
 @SuppressLint("DefaultLocale")
 @Composable
 fun SongListItem(
@@ -464,7 +655,7 @@ fun SongDetailBottomSheetContent(song: SongEntity) {
             value = if (song.fileAdded > 0) dateFormat.format(Date(song.fileAdded)) else null
         )
         SongDetailItem(
-            label = "最后修改",
+            label = "修改时间",
             value = if (song.fileLastModified > 0) dateFormat.format(Date(song.fileLastModified)) else null
         )
 
