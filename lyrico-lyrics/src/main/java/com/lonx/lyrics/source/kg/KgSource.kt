@@ -4,6 +4,7 @@ import android.util.Base64
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lonx.lyrics.model.LyricsResult
+import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.model.SongSearchResult
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.utils.KgCryptoUtils
@@ -20,8 +21,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
 
 
-class KgSource {
-
+class KgSource: SearchSource {
+    override val sourceType = Source.KG
     // 配置更宽容的 JSON 解析器
     private val json = Json {
         ignoreUnknownKeys = true
@@ -95,7 +96,7 @@ class KgSource {
 
 
 
-    suspend fun search(keyword: String, page: Int = 1,separator: String = "/"): List<SongSearchResult> = withContext(Dispatchers.IO) {
+    override suspend fun search(keyword: String, page: Int, separator: String): List<SongSearchResult> = withContext(Dispatchers.IO) {
         val params = mapOf(
             "keyword" to keyword,
             "page" to page.toString(),
@@ -175,7 +176,7 @@ class KgSource {
         return baseParams
     }
 
-    suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
+    override suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
         if (song.hash.isNullOrEmpty()) return@withContext null
 
         try {

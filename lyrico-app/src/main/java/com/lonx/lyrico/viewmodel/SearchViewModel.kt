@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.utils.SettingsManager
 import com.lonx.lyrics.model.LyricsResult
 import com.lonx.lyrics.model.LyricsLine
+import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.model.SongSearchResult
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.source.kg.KgSource
@@ -35,9 +36,7 @@ data class SearchUiState(
 )
 
 class SearchViewModel(
-    private val kgSource: KgSource,
-    private val qmSource: QmSource,
-    private val neSource: NeSource,
+    private val sources: List<SearchSource>,
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
@@ -92,40 +91,29 @@ class SearchViewModel(
     fun search(keywordToSearch: String? = null) {
         val keyword = keywordToSearch ?: _uiState.value.searchKeyword
 
-        // 如果传入了新关键词，先更新 UI
-        if (keywordToSearch != null) {
-            _uiState.update { it.copy(searchKeyword = keyword) }
-        }
-
         if (keyword.isBlank()) {
             _uiState.update { it.copy(searchResults = emptyList(), isSearching = false) }
             return
         }
 
-        // 1. 取消上一次正在进行的搜索（防止快速点击导致结果错乱）
+        // 取消上一次搜索
         searchJob?.cancel()
 
-        // 2. 开启新协程
         searchJob = viewModelScope.launch {
             _uiState.update { it.copy(isSearching = true, searchError = null) }
 
             try {
-                // 再次检查缓存（防止在等待协程启动时状态变化，虽然在 switchSource 处理了，但双重保障无害）
-                val currentSource = _uiState.value.selectedSearchSource
-                val cached = getCachedResults(keyword, currentSource)
-                if (cached != null) {
-                    _uiState.update { it.copy(searchResults = cached, isSearching = false) }
-                    return@launch
+                if (keywordToSearch != null) {
+                    _uiState.update { it.copy(searchKeyword = keyword) }
                 }
 
-                // 执行网络请求
+                val currentSource = _uiState.value.selectedSearchSource
+
+
+                val sourceImpl = sources.firstOrNull { it.sourceType == currentSource }
+
                 val separator = settingsManager.getSeparator().first()
-                val results = when (currentSource) {
-                    Source.KG -> kgSource.search(keyword, separator = separator)
-                    Source.QM -> qmSource.search(keyword, separator = separator)
-                    Source.NE -> neSource.search(keyword, separator = separator)
-                    else -> emptyList()
-                }
+                val results = sourceImpl?.search(keyword, separator = separator) ?: emptyList()
 
                 // 写入缓存
                 cacheSearchResults(keyword, currentSource, results)
@@ -147,6 +135,7 @@ class SearchViewModel(
         }
     }
 
+
     // --- 缓存逻辑 ---
     private fun cacheSearchResults(
         keyword: String,
@@ -162,6 +151,9 @@ class SearchViewModel(
     }
 
     // --- 歌词预览逻辑 ---
+    /**
+     * 歌词预览
+     */
     fun fetchLyricsForPreview(song: SongSearchResult) {
         // 取消上一次的歌词加载（防止用户快速点击不同歌曲）
         lyricsJob?.cancel()
@@ -175,13 +167,11 @@ class SearchViewModel(
                     lyricsPreviewError = null
                 )
             }
+
             try {
-                val lyricsResult: LyricsResult? = when (song.source) {
-                    Source.KG -> kgSource.getLyrics(song)
-                    Source.QM -> qmSource.getLyrics(song)
-                    Source.NE -> neSource.getLyrics(song)
-                    else -> null
-                }
+                // --- 通过接口获取对应搜索源 ---
+                val sourceImpl = sources.firstOrNull { it.sourceType == song.source }
+                val lyricsResult: LyricsResult? = sourceImpl?.getLyrics(song)
 
                 val romaEnabled = settingsManager.getRomaEnabled().first()
                 val lyricsText = lyricsResult?.let { formatLrcResult(result = it, romaEnabled = romaEnabled) }
@@ -204,15 +194,14 @@ class SearchViewModel(
         }
     }
 
+    /**
+     * 直接获取歌词（回调）
+     */
     fun fetchLyricsDirectly(song: SongSearchResult, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             try {
-                val lyricsResult: LyricsResult? = when (song.source) {
-                    Source.KG -> kgSource.getLyrics(song)
-                    Source.QM -> qmSource.getLyrics(song)
-                    Source.NE -> neSource.getLyrics(song)
-                    else -> null
-                }
+                val sourceImpl = sources.firstOrNull { it.sourceType == song.source }
+                val lyricsResult: LyricsResult? = sourceImpl?.getLyrics(song)
 
                 val romaEnabled = settingsManager.getRomaEnabled().first()
                 val lyricsText = lyricsResult?.let { formatLrcResult(result = it, romaEnabled = romaEnabled) }
@@ -236,8 +225,6 @@ class SearchViewModel(
         }
     }
 }
-
-// --- 辅助函数保持不变 ---
 
 @SuppressLint("DefaultLocale")
 private fun formatTimestamp(millis: Long): String {

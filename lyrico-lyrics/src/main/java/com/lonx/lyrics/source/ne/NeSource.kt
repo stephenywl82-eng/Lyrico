@@ -4,6 +4,7 @@ import android.util.Base64
 import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lonx.lyrics.model.LyricsResult
+import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.model.SongSearchResult
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.utils.NeCryptoUtils
@@ -28,7 +29,8 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.random.Random
 
-class NeSource {
+class NeSource: SearchSource {
+    override val sourceType = Source.NE
     private val json = Json {
         ignoreUnknownKeys = true
         coerceInputValues = true
@@ -192,7 +194,7 @@ class NeSource {
         }
     }
 
-    suspend fun search(keyword: String, page: Int = 1, separator: String = "/"): List<SongSearchResult> = withContext(
+    override suspend fun search(keyword: String, page: Int, separator: String): List<SongSearchResult> = withContext(
         Dispatchers.IO) {
         ensureInit()
 
@@ -237,7 +239,7 @@ class NeSource {
         }
     }
 
-    suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
+    override suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
         ensureInit()
         val path = "/eapi/song/lyric/v1"
         val params = buildJsonObject {

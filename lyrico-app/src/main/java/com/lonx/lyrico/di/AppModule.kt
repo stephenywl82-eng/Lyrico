@@ -11,6 +11,7 @@ import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.lonx.lyrico.viewmodel.SongListViewModel
 import com.lonx.lyrico.data.LyricoDatabase
 import com.lonx.lyrico.data.repository.SongRepository
+import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.source.kg.KgSource
 import com.lonx.lyrics.source.ne.NeSource
 import com.lonx.lyrics.source.qm.QmSource
@@ -20,10 +21,10 @@ import org.koin.dsl.module
 
 val appModule = module {
     // 歌词源
-    single { KgSource() }
-    single { QmSource() }
-    single { NeSource() }
-    
+    single<SearchSource> { KgSource() }
+    single<SearchSource> { QmSource() }
+    single<SearchSource> { NeSource() }
+    single { getAll<SearchSource>() }
     // 工具类
     single { SettingsManager(get()) }
     single { MusicScanner(androidContext()) }
@@ -42,7 +43,7 @@ val appModule = module {
     // ViewModels
     viewModel { SongListViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get()) }
-    viewModel { SearchViewModel(get(), get(),get(), get()) }
+    viewModel { SearchViewModel(get(), get()) }
     viewModel { EditMetadataViewModel(get(), androidContext()) }
     viewModel { LocalSearchViewModel(get()) }
 }

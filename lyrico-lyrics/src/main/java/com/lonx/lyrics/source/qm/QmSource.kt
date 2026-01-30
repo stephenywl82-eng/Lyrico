@@ -6,6 +6,7 @@ import android.util.Log
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lonx.lyrics.model.LyricsResult
 import com.lonx.lyrics.model.LyricsData
+import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.model.SongSearchResult
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.utils.QmCryptoUtils
@@ -20,7 +21,8 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import kotlin.random.Random
 
-class QmSource {
+class QmSource: SearchSource {
+    override val sourceType: Source = Source.QM
     private val json = Json { ignoreUnknownKeys = true; isLenient = true; encodeDefaults = true }
     private val client = OkHttpClient.Builder()
         .addInterceptor { chain ->
@@ -50,7 +52,7 @@ class QmSource {
         "nettype" to "NETWORK_WIFI"
     )
 
-    suspend fun search(keyword: String, page: Int = 1,separator: String = "/"): List<SongSearchResult> = withContext(Dispatchers.IO) {
+    override suspend fun search(keyword: String, page: Int,separator: String): List<SongSearchResult> = withContext(Dispatchers.IO) {
         val param = buildJsonObject {
             put("search_id", Random.nextLong(10000000000000000L, 90000000000000000L).toString())
             put("remoteplace", "search.android.keyboard")
@@ -104,7 +106,7 @@ class QmSource {
         }
     }
 
-    suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
+    override suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(Dispatchers.IO) {
         Log.d("QmSource", "Get Lyric: $song")
         if (song.id == "0") return@withContext null
 
