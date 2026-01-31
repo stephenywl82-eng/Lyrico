@@ -303,7 +303,7 @@ fun SongListScreen(
                         ItemDivider()
                     }
                 }
-                if (sections.isNotEmpty()) {
+                if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
                     AlphabetSideBar(
                         sections = sections,
                         onSectionSelected = { section ->

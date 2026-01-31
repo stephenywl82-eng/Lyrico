@@ -1,10 +1,10 @@
 package com.lonx.lyrico.viewmodel
 
-enum class SortBy(val displayName: String) {
-    TITLE("歌曲名"),
-    ARTIST("歌手"),
-    DATE_MODIFIED("修改时间"),
-    DATE_ADDED("添加时间")
+enum class SortBy(val displayName: String, val supportsIndex: Boolean) {
+    TITLE("歌曲名", true),
+    ARTIST("歌手", true),
+    DATE_MODIFIED("修改时间", false),
+    DATE_ADDED("添加时间", false)
 }
 
 enum class SortOrder {
