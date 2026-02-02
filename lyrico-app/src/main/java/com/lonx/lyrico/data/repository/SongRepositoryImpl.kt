@@ -34,62 +34,91 @@ class SongRepositoryImpl(
 ) : SongRepository {
 
     private val songDao = database.songDao()
+    private val folderDao = database.folderDao()
     private companion object {
         const val TAG = "SongRepository"
     }
 
-    override suspend fun synchronizeWithDevice() {
+    override suspend fun synchronizeWithDevice(fullRescan: Boolean) {
         withContext(Dispatchers.IO) {
-            Log.d(TAG, "开始同步数据库与设备文件...")
+            Log.d(TAG, "开始同步数据库与设备文件... (全量扫描: $fullRescan)")
 
             val dbSongs = songDao.getAllSongs().first()
-            val dbSongMap = dbSongs.associateBy { it.filePath }
+            val dbSongMap = dbSongs.associate { it.filePath to it.fileLastModified }
             val dbPaths = dbSongMap.keys
 
             val devicePaths = mutableSetOf<String>()
+            val impactedFolderIds = mutableSetOf<Long>()
+            val folderIdCache = mutableMapOf<String, Long>()
 
             musicScanner.scanMusicFiles().collect { deviceSong ->
                 devicePaths.add(deviceSong.filePath)
 
-                val dbSong = dbSongMap[deviceSong.filePath]
-                if (dbSong == null || dbSong.fileLastModified != deviceSong.lastModified) {
-                    readAndSaveSongMetadata(deviceSong, forceUpdate = true)
+                val folderPath = deviceSong.filePath.substringBeforeLast("/").trimEnd('/')
+                val folderId = folderIdCache.getOrPut(folderPath) {
+                    folderDao.upsertAndGetId(folderPath)
+                }
+                impactedFolderIds.add(folderId)
+
+                val lastModifiedInDb = dbSongMap[deviceSong.filePath]
+
+                // 判断是否需要更新
+                if (fullRescan || lastModifiedInDb == null || lastModifiedInDb != deviceSong.lastModified) {
+                    try {
+                        readAndSaveSongMetadata(deviceSong, folderId = folderId)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "处理歌曲失败: ${deviceSong.filePath}", e)
+                    }
                 }
             }
 
+            // 处理删除逻辑
             val deletedPaths = dbPaths - devicePaths
             if (deletedPaths.isNotEmpty()) {
-                Log.d(TAG, "发现 ${deletedPaths.size} 首已删除歌曲，正在从数据库移除...")
-                songDao.deleteByFilePaths(deletedPaths.toList())
+                val folderIdsOfDeletedSongs = dbSongs
+                    .filter { it.filePath in deletedPaths }
+                    .map { it.folderId }
+                impactedFolderIds.addAll(folderIdsOfDeletedSongs)
+
+                deletedPaths.chunked(500).forEach { chunk ->
+                    songDao.deleteByFilePaths(chunk)
+                }
             }
 
+            // 刷新计数
+            impactedFolderIds.forEach { folderId ->
+                folderDao.refreshSongCount(folderId)
+            }
+
+            folderDao.deleteEmptyFolders()
             settingsRepository.saveLastScanTime(System.currentTimeMillis())
-            Log.d(TAG, "数据库同步完成。")
+            Log.d(TAG, "同步完成。")
         }
     }
 
     /**
-     * Reads metadata from a SongFile and saves it to the database.
+     *  读取并保存歌曲元数据
      */
     private suspend fun readAndSaveSongMetadata(
         songFile: SongFile,
+        folderId: Long,
         forceUpdate: Boolean = false
     ): SongEntity? = withContext(Dispatchers.IO) {
         try {
-            if (!forceUpdate) {
-                val existingSong = songDao.getSongByPath(songFile.filePath)
-                if (existingSong != null && existingSong.fileLastModified == songFile.lastModified) {
-                    return@withContext existingSong
-                }
+            val existingSong = songDao.getSongByPath(songFile.filePath)
+            if (!forceUpdate && existingSong != null && existingSong.fileLastModified == songFile.lastModified) {
+                return@withContext existingSong
             }
 
             val audioData = context.contentResolver.openFileDescriptor(
-                songFile.filePath.toUri(), "r"
+                songFile.uri, "r"
             )?.use { pfd ->
                 AudioTagReader.read(pfd, readPictures = false)
             } ?: return@withContext null
 
             val songEntity = SongEntity(
+                id = existingSong?.id ?: 0,
+                mediaId = songFile.mediaId,
                 filePath = songFile.filePath,
                 fileName = songFile.fileName,
                 title = audioData.title,
@@ -105,15 +134,19 @@ class SongRepositoryImpl(
                 channels = audioData.channels,
                 rawProperties = audioData.rawProperties.toString(),
                 fileLastModified = songFile.lastModified,
-                fileAdded = songFile.dateAdded
+                fileAdded = songFile.dateAdded,
+                folderId = folderId
             ).withSortKeysUpdated()
 
-            songDao.insert(songEntity) 
+            if (songEntity.id == 0L) {
+                songDao.insert(songEntity)
+            } else {
+                songDao.update(songEntity)
+            }
 
             return@withContext songEntity
-
         } catch (e: Exception) {
-            Log.e(TAG, "读取歌曲元数据失败: ${songFile.fileName}", e)
+            Log.e(TAG, "读取元数据失败: ${songFile.fileName}", e)
             return@withContext null
         }
     }

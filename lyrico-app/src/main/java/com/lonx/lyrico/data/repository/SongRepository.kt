@@ -17,8 +17,10 @@ interface SongRepository {
      *
      * 扫描设备上的音频文件，将新发现的歌曲添加到数据库，更新已修改的歌曲，并移除数据库中不再存在的文件记录。
      * 此外，还会更新最后一次扫描的时间戳。
+     *
+     * @param fullRescan 是否进行彻底的重新扫描（强制读取所有文件的元数据，忽略修改时间检查）
      */
-    suspend fun synchronizeWithDevice()
+    suspend fun synchronizeWithDevice(fullRescan: Boolean)
 
     /**
      * 获取所有歌曲
