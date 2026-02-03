@@ -98,7 +98,8 @@ fun SongListScreen(
         val map = mutableMapOf<String, Int>()
         if (sortInfo.sortBy == SortBy.TITLE || sortInfo.sortBy == SortBy.ARTIST) {
             songs.forEachIndexed { index, song ->
-                val key = if (sortInfo.sortBy == SortBy.ARTIST) song.artistGroupKey else song.titleGroupKey
+                val key =
+                    if (sortInfo.sortBy == SortBy.ARTIST) song.artistGroupKey else song.titleGroupKey
                 if (!map.containsKey(key)) {
                     map[key] = index
                 }
@@ -135,11 +136,14 @@ fun SongListScreen(
                         }
                         TextButton(
                             enabled = selectedPaths.isNotEmpty(),
-                            onClick= {
+                            onClick = {
                                 viewModel.batchMatchLyrics()
                             }
                         ) {
-                            Text(text = "匹配标签", color = if (selectedPaths.isNotEmpty()) SaltTheme.colors.highlight else SaltTheme.colors.subText)
+                            Text(
+                                text = "匹配标签",
+                                color = if (selectedPaths.isNotEmpty()) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                            )
                         }
                         TextButton(
                             onClick = {
@@ -327,13 +331,15 @@ fun SongListScreen(
                 onDismissRequest = { viewModel.clearSelectedSong() },
                 sheetState = sheetState,
                 containerColor = SaltTheme.colors.background,
-                tonalElevation = 0.dp
+                tonalElevation = 0.dp,
+                contentWindowInsets = { WindowInsets(0, 0, 0, 0) }
             ) {
                 SongDetailBottomSheetContent(selectedSongs)
             }
         }
     }
 }
+
 fun findScrollIndex(
     section: String,
     sectionIndexMap: Map<String, Int>,
@@ -357,6 +363,7 @@ fun findScrollIndex(
             ?: sectionIndexMap[keys.first()]!!
     }
 }
+
 @Composable
 fun AlphabetSideBar(
     sections: List<String>,
@@ -470,6 +477,7 @@ fun AlphabetSideBar(
         }
     }
 }
+
 @SuppressLint("DefaultLocale")
 @Composable
 fun SongListItem(
@@ -477,12 +485,13 @@ fun SongListItem(
     navigator: DestinationsNavigator,
     modifier: Modifier = Modifier,
     trailingContent: (@Composable () -> Unit)? = null,
-    isSelectionMode: Boolean ? = null,
+    isSelectionMode: Boolean? = null,
     isSelected: Boolean? = null,
-    onToggleSelection: (() -> Unit )? = null,
+    onToggleSelection: (() -> Unit)? = null,
 ) {
     val view = LocalView.current
-    val backgroundColor = if (isSelected == true) SaltTheme.colors.highlight.copy(alpha = 0.1f) else SaltTheme.colors.background
+    val backgroundColor =
+        if (isSelected == true) SaltTheme.colors.highlight.copy(alpha = 0.1f) else SaltTheme.colors.background
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -648,97 +657,111 @@ fun SongListItem(
 fun SongDetailBottomSheetContent(song: SongEntity) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
 
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
             .padding(bottom = 32.dp) // 底部留白
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Card(
-                shape = RoundedCornerShape(0.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.size(100.dp)
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AsyncImage(
-                    model = CoverRequest(song.getUri, song.fileLastModified),
-                    contentDescription = "Cover",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    placeholder = rememberTintedPainter(
-                        painter = painterResource(R.drawable.ic_album_24dp),
-                        tint = LyricoColors.coverPlaceholderIcon
-                    ),
-                    error = rememberTintedPainter(
-                        painter = painterResource(R.drawable.ic_album_24dp),
-                        tint = LyricoColors.coverPlaceholderIcon
+                Card(
+                    shape = RoundedCornerShape(0.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.size(100.dp)
+                ) {
+                    AsyncImage(
+                        model = CoverRequest(song.getUri, song.fileLastModified),
+                        contentDescription = "Cover",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = rememberTintedPainter(
+                            painter = painterResource(R.drawable.ic_album_24dp),
+                            tint = LyricoColors.coverPlaceholderIcon
+                        ),
+                        error = rememberTintedPainter(
+                            painter = painterResource(R.drawable.ic_album_24dp),
+                            tint = LyricoColors.coverPlaceholderIcon
+                        )
                     )
-                )
-            }
+                }
 
-            // 标题和艺术家
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = song.title.takeIf { !it.isNullOrBlank() } ?: song.fileName,
-                    style = SaltTheme.textStyles.main,
-                    fontWeight = FontWeight.Bold,
-                    color = SaltTheme.colors.text
-                )
-                Text(
-                    text = song.artist.takeIf { !it.isNullOrBlank() } ?: "未知艺术家",
-                    style = SaltTheme.textStyles.sub,
-                    color = SaltTheme.colors.highlight
-                )
+                // 标题和艺术家
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = song.title.takeIf { !it.isNullOrBlank() } ?: song.fileName,
+                        style = SaltTheme.textStyles.main,
+                        fontWeight = FontWeight.Bold,
+                        color = SaltTheme.colors.text
+                    )
+                    Text(
+                        text = song.artist.takeIf { !it.isNullOrBlank() } ?: "未知艺术家",
+                        style = SaltTheme.textStyles.sub,
+                        color = SaltTheme.colors.highlight
+                    )
+                }
             }
         }
 
 
-        SongDetailItem(label = "专辑", value = song.album)
-        SongDetailItem(label = "年份/日期", value = song.date)
-        SongDetailItem(label = "流派", value = song.genre)
-        SongDetailItem(label = "音轨号", value = song.trackerNumber)
+        item { SongDetailItem(label = "专辑", value = song.album) }
+        item { SongDetailItem(label = "年份/日期", value = song.date) }
+        item { SongDetailItem(label = "流派", value = song.genre) }
+        item { SongDetailItem(label = "音轨号", value = song.trackerNumber) }
 
 
-        SongDetailItem(
-            label = "时长",
-            value = if (song.durationMilliseconds > 0) {
-                val min = song.durationMilliseconds / 60000
-                val sec = (song.durationMilliseconds % 60000) / 1000
-                String.format("%d:%02d", min, sec)
-            } else null
-        )
-        SongDetailItem(
-            label = "比特率",
-            value = if (song.bitrate > 0) "${song.bitrate} kbps" else null
-        )
-        SongDetailItem(
-            label = "采样率",
-            value = if (song.sampleRate > 0) "${song.sampleRate} Hz" else null
-        )
-        SongDetailItem(
-            label = "声道",
-            value = if (song.channels > 0) "${song.channels}" else null
-        )
+        item {
+            SongDetailItem(
+                label = "时长",
+                value = if (song.durationMilliseconds > 0) {
+                    val min = song.durationMilliseconds / 60000
+                    val sec = (song.durationMilliseconds % 60000) / 1000
+                    String.format("%d:%02d", min, sec)
+                } else null
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "比特率",
+                value = if (song.bitrate > 0) "${song.bitrate} kbps" else null
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "采样率",
+                value = if (song.sampleRate > 0) "${song.sampleRate} Hz" else null
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "声道",
+                value = if (song.channels > 0) "${song.channels}" else null
+            )
+        }
 
-        SongDetailItem(
-            label = "添加时间",
-            value = if (song.fileAdded > 0) dateFormat.format(Date(song.fileAdded)) else null
-        )
-        SongDetailItem(
-            label = "修改时间",
-            value = if (song.fileLastModified > 0) dateFormat.format(Date(song.fileLastModified)) else null
-        )
-        SongDetailItem(
-            label = "文件路径",
-            value = song.filePath
-        )
-
+        item {
+            SongDetailItem(
+                label = "添加时间",
+                value = if (song.fileAdded > 0) dateFormat.format(Date(song.fileAdded)) else null
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "修改时间",
+                value = if (song.fileLastModified > 0) dateFormat.format(Date(song.fileLastModified)) else null
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "文件路径",
+                value = song.filePath
+            )
+        }
 
     }
 }
@@ -747,7 +770,7 @@ fun SongDetailBottomSheetContent(song: SongEntity) {
 fun SongDetailItem(label: String, value: String?) {
     if (value.isNullOrBlank()) return
 
-    Column(modifier = Modifier.padding(horizontal = 16.dp,vertical = 8.dp)) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
         Text(
             text = label,
             style = SaltTheme.textStyles.sub
@@ -759,6 +782,7 @@ fun SongDetailItem(label: String, value: String?) {
         )
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectionModeTopAppBar(
