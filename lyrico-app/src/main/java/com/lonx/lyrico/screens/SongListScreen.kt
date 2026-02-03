@@ -536,14 +536,14 @@ fun SongListItem(
                 )
 
                 val formatGradientColor = if (SaltTheme.configs.isDarkTheme) {
-                    Color.Black.copy(alpha = 0.7f)
+                    Color.White.copy(alpha = 0.7f)  // 深色模式改为白底
                 } else {
-                    Color.White.copy(alpha = 0.7f)
+                    Color.Black.copy(alpha = 0.7f)  // 浅色模式改为黑底
                 }
                 val formatTextColor = if (SaltTheme.configs.isDarkTheme) {
-                    Color.White
+                    Color.Black  // 深色模式改为黑字
                 } else {
-                    Color.Black
+                    Color.White  // 浅色模式改为白字
                 }
                 Box(
                     modifier = Modifier
