@@ -1,10 +1,15 @@
 package com.lonx.lyrico
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
@@ -18,14 +23,15 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 open class MainActivity : ComponentActivity() {
-
+    private var externalUri by mutableStateOf<Uri?>(null)
     @JvmField
     protected var hasPermission = false
     private val songListViewModel: SongListViewModel by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        // 解析启动时的 Intent
+        handleIntent(intent)
         hasPermission = PermissionUtil.hasNecessaryPermission(this)
         if (!hasPermission) {
 
@@ -42,7 +48,7 @@ open class MainActivity : ComponentActivity() {
                             Toast.makeText(this@MainActivity, "已拒绝权限", Toast.LENGTH_SHORT).show()
                             return
                         }
-                        
+
                         hasPermission = true
                         // Trigger a scan after permission is granted, with a small delay
                         lifecycleScope.launch {
@@ -57,8 +63,19 @@ open class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LyricoTheme {
-                LyricoApp()
+                LyricoApp(externalUri = if (hasPermission) externalUri else null)
             }
+        }
+    }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            externalUri = intent.data
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.lonx.lyrico
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -18,15 +19,24 @@ import com.moriafly.salt.ui.Surface
 import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationStyle
 import com.ramcosta.composedestinations.generated.NavGraphs
+import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
+import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun LyricoApp() {
-    val navController = rememberNavController()
+fun LyricoApp(externalUri: Uri?) {
+
     val songListViewModel: SongListViewModel = koinViewModel()
 
-    // When the app's main UI is composed, trigger an initial scan if the database is empty.
-    // This runs only once when LyricoApp is first displayed after permissions are granted.
+    val navController = rememberNavController()
+    val navigator = navController.rememberDestinationsNavigator()
+    LaunchedEffect(externalUri) {
+        externalUri?.let { uri ->
+            navigator.navigate(EditMetadataDestination(songFilePath = uri.toString())) {
+                launchSingleTop = true
+            }
+        }
+    }
     LaunchedEffect(Unit) {
         songListViewModel.initialScanIfEmpty()
     }
