@@ -23,8 +23,9 @@ class MusicScanner(
     private val TAG = "MusicScanner"
 
      fun scanMusicFiles(): Flow<SongFile> = flow {
-         val ignoredFolders = folderDao.getIgnoredFolderPaths()
-
+         val ignoredPaths = folderDao.getIgnoredFolderPaths().map {
+             if (it.endsWith("/")) it else "$it/"
+         }
          val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
              MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
          } else {
@@ -59,9 +60,7 @@ class MusicScanner(
                  val filePath = cursor.getString(dataCol)
 
                  // TODO: 目前是在扫描时过滤忽略的文件夹，之后可能会考虑在显示时过滤忽略的文件夹，把忽略文件夹下的内容也保存到数据库
-                 val isIgnored = ignoredFolders.any { ignoredPath ->
-                     filePath.startsWith("$ignoredPath/") || filePath == ignoredPath
-                 }
+                 val isIgnored = ignoredPaths.any { filePath.startsWith(it) }
                  if (isIgnored) {
                      Log.d(TAG, "忽略的文件路径: $filePath")
                      continue

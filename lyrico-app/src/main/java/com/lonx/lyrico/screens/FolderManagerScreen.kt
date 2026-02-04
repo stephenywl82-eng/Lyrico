@@ -1,5 +1,8 @@
 package com.lonx.lyrico.screens
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,8 +18,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.lonx.lyrico.R
+import com.lonx.lyrico.ui.components.rememberTintedPainter
+import com.lonx.lyrico.utils.UriUtils
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.ItemOuterTitle
@@ -45,7 +53,25 @@ fun FolderManagerScreen(
     val uiState by viewModel.uiState.collectAsState()
     val folders = uiState.folders
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri?.let {
+            val path = UriUtils.getFileAbsolutePath(context, it)
 
+            if (path != null) {
+                viewModel.addAndIgnoreFolder(path)
+            } else {
+                viewModel.addAndIgnoreFolder(it.toString())
+            }
+
+            val contentResolver = context.contentResolver
+            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            contentResolver.takePersistableUriPermission(it, takeFlags)
+        }
+    }
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -64,6 +90,16 @@ fun FolderManagerScreen(
                 navigationIcon = {
                     IconButton(onClick = { navigator.popBackStack() }) {
                         Icon(imageVector = SaltIcons.ArrowBack, contentDescription = null)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        folderPickerLauncher.launch(null)
+                    }) {
+                        Icon(
+                            painter = rememberTintedPainter(
+                                painterResource(id = R.drawable.ic_addfolder_24dp), tint = SaltTheme.colors.text),
+                            contentDescription = null)
                     }
                 }
             )
