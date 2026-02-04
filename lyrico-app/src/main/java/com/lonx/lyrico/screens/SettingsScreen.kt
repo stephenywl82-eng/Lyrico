@@ -46,6 +46,7 @@ import com.moriafly.salt.ui.rememberScrollState
 import com.moriafly.salt.ui.verticalScroll
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.AboutDestination
 import com.ramcosta.composedestinations.generated.destinations.FolderManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.SearchSourcePriorityDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -211,7 +212,16 @@ fun SettingsScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(paddingValues.calculateBottomPadding()))
+            ItemOuterTitle("其他")
+            RoundedColumn {
+                Item(
+                    text = "关于",
+                    onClick = {
+                        navigator.navigate(AboutDestination())
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(SaltTheme.dimens.padding))
         }
     }
 }
