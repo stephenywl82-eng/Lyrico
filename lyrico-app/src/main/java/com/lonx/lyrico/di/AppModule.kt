@@ -30,7 +30,7 @@ val appModule = module {
     single { getAll<SearchSource>() }
     // 工具类
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
-    single { MusicScanner(androidContext(), get()) }
+    single { MusicScanner(androidContext()) }
     
     // 数据库和存储库
     single {

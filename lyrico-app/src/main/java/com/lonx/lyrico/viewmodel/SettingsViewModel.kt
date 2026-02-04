@@ -107,12 +107,19 @@ class SettingsViewModel(
     /**
      * 如果用户想手动添加一个还没被扫描到的文件夹并忽略它
      */
-    fun addAndIgnoreFolder(path: String) {
+    fun addFolderByPath(path: String) {
         viewModelScope.launch {
             // 确保文件夹在数据库中存在（upsert）
             val id = folderDao.upsertAndGetId(path = path, addedBySaf = true)
             // 设置为忽略
             folderDao.setIgnored(id, true)
+        }
+    }
+    fun deleteFolder(folder: FolderEntity) {
+        viewModelScope.launch {
+            folderDao.deleteFolderPermanently(folder.id)
+            // 注意：删除文件夹记录后，SongDao 会因为外键约束或逻辑关联
+            // 导致这些歌曲在库中不可见（因为 JOIN 找不到 folderId）
         }
     }
 

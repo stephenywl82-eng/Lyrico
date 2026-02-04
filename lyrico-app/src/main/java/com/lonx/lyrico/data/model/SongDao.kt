@@ -48,44 +48,44 @@ interface SongDao {
     suspend fun deleteByFilePaths(paths: List<String>)
 
     /**
-     * 全字段搜索歌曲（标题 / 艺术家 / 专辑）
-     * 返回结果按照匹配优先级排序：
-     * 1. title 匹配最高
-     * 2. artist 匹配次之
-     * 3. album 匹配最低
-     *
-     * @param query 查询关键字
-     * @return Flow 可观察的歌曲列表
+     * 全字段搜索：关联 folders 表过滤掉已忽略的文件夹
      */
     @Query("""
-        SELECT * FROM songs
-        WHERE title LIKE '%' || :query || '%' 
-           OR artist LIKE '%' || :query || '%'
-           OR album LIKE '%' || :query || '%'
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0 AND (
+            s.title LIKE '%' || :query || '%' 
+            OR s.artist LIKE '%' || :query || '%'
+            OR s.album LIKE '%' || :query || '%'
+        )
         ORDER BY 
             CASE 
-                WHEN title LIKE '%' || :query || '%' THEN 1
-                WHEN artist LIKE '%' || :query || '%' THEN 2
-                WHEN album LIKE '%' || :query || '%' THEN 3
+                WHEN s.title LIKE '%' || :query || '%' THEN 1
+                WHEN s.artist LIKE '%' || :query || '%' THEN 2
+                WHEN s.album LIKE '%' || :query || '%' THEN 3
                 ELSE 4 
             END
     """)
     fun searchSongsByAll(query: String): Flow<List<SongEntity>>
 
     /**
-     * 获取所有歌曲（无排序）
-     *
-     * @return Flow 可观察的所有歌曲列表
+     * 获取所有未忽略的歌曲
      */
-    @Query("SELECT * FROM songs")
+    @Query("""
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+    """)
     fun getAllSongs(): Flow<List<SongEntity>>
 
     /**
-     * 获取歌曲总数
-     *
-     * @return 歌曲数量
+     * 获取未忽略歌曲的总数
      */
-    @Query("SELECT COUNT(*) FROM songs")
+    @Query("""
+        SELECT COUNT(*) FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+    """)
     suspend fun getSongsCount(): Int
 
     /**
@@ -94,16 +94,15 @@ interface SongDao {
     @Query("DELETE FROM songs")
     suspend fun clear()
 
-    // =====================
-    // 排序查询方法（按缓存字段排序）
-    // =====================
 
     /**
      * 按标题升序（A-Z）获取所有歌曲
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY titleSortKey ASC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.titleSortKey ASC
     """)
     fun getAllSongsOrderByTitleAsc(): Flow<List<SongEntity>>
 
@@ -111,8 +110,10 @@ interface SongDao {
      * 按标题降序（Z-A）获取所有歌曲
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY titleSortKey DESC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.titleSortKey DESC
     """)
     fun getAllSongsOrderByTitleDesc(): Flow<List<SongEntity>>
 
@@ -120,8 +121,10 @@ interface SongDao {
      * 按艺术家升序（A-Z）获取所有歌曲
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY artistSortKey ASC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.artistSortKey ASC
     """)
     fun getAllSongsOrderByArtistAsc(): Flow<List<SongEntity>>
 
@@ -129,8 +132,10 @@ interface SongDao {
      * 按艺术家降序（Z-A）获取所有歌曲
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY artistSortKey DESC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.artistSortKey DESC
     """)
     fun getAllSongsOrderByArtistDesc(): Flow<List<SongEntity>>
 
@@ -138,8 +143,10 @@ interface SongDao {
      * 按修改时间升序获取所有歌曲（最早修改的在前）
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY fileLastModified ASC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.fileLastModified ASC
     """)
     fun getAllSongsOrderByDateModifiedAsc(): Flow<List<SongEntity>>
 
@@ -147,24 +154,26 @@ interface SongDao {
      * 按修改时间降序获取所有歌曲（最新修改的在前）
      */
     @Query("""
-        SELECT * FROM songs
-        ORDER BY fileLastModified DESC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.fileLastModified DESC
     """)
     fun getAllSongsOrderByDateModifiedDesc(): Flow<List<SongEntity>>
-    /**
-     * 按添加时间升序获取所有歌曲（最早添加的在前）
-     */
+
     @Query("""
-        SELECT * FROM songs
-        ORDER BY fileAdded ASC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.fileAdded ASC
     """)
     fun getAllSongsOrderByDateAddedAsc(): Flow<List<SongEntity>>
-    /**
-     * 按添加时间降序获取所有歌曲（最新添加的在前）
-     */
+
     @Query("""
-        SELECT * FROM songs
-        ORDER BY fileAdded DESC
+        SELECT s.* FROM songs AS s
+        INNER JOIN folders AS f ON s.folderId = f.id
+        WHERE f.isIgnored = 0
+        ORDER BY s.fileAdded DESC
     """)
     fun getAllSongsOrderByDateAddedDesc(): Flow<List<SongEntity>>
 }

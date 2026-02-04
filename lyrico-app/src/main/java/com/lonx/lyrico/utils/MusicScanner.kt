@@ -4,9 +4,6 @@ import android.content.ContentUris
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
-import com.lonx.lyrico.data.LyricoDatabase
-import com.lonx.lyrico.data.model.FolderDao
 import com.lonx.lyrico.data.model.SongFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -15,17 +12,13 @@ import kotlinx.coroutines.flow.flowOn
 
 class MusicScanner(
     private val context: Context,
-    private val database: LyricoDatabase,
 )
  {
 
-    private val folderDao: FolderDao = database.folderDao()
     private val TAG = "MusicScanner"
 
      fun scanMusicFiles(): Flow<SongFile> = flow {
-         val ignoredPaths = folderDao.getIgnoredFolderPaths().map {
-             if (it.endsWith("/")) it else "$it/"
-         }
+
          val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
              MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
          } else {
@@ -59,12 +52,6 @@ class MusicScanner(
              while (cursor.moveToNext()) {
                  val filePath = cursor.getString(dataCol)
 
-                 // TODO: 目前是在扫描时过滤忽略的文件夹，之后可能会考虑在显示时过滤忽略的文件夹，把忽略文件夹下的内容也保存到数据库
-                 val isIgnored = ignoredPaths.any { filePath.startsWith(it) }
-                 if (isIgnored) {
-                     Log.d(TAG, "忽略的文件路径: $filePath")
-                     continue
-                 }
 
                  val id = cursor.getLong(idCol)
 

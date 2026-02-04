@@ -90,7 +90,7 @@ class SongRepositoryImpl(
                 folderDao.refreshSongCount(folderId)
             }
 
-            folderDao.deleteEmptyFolders()
+            folderDao.performPostScanCleanup()
             settingsRepository.saveLastScanTime(System.currentTimeMillis())
             Log.d(TAG, "同步完成。")
         }
