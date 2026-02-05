@@ -65,7 +65,7 @@ fun FolderManagerScreen(
     val viewModel: SettingsViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val folders = uiState.folders
-    val scrollState = rememberScrollState()
+
     val context = LocalContext.current
 
     // 底部弹窗

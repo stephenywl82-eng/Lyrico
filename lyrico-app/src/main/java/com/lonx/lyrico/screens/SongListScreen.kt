@@ -51,6 +51,7 @@ import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
 import com.moriafly.salt.ui.dialog.BasicDialog
+import com.moriafly.salt.ui.gestures.cupertino.rememberCupertinoOverscrollEffect
 import com.moriafly.salt.ui.icons.Check
 import com.moriafly.salt.ui.icons.SaltIcons
 import com.moriafly.salt.ui.icons.Uncheck
@@ -276,7 +277,8 @@ fun SongListScreen(
             Box(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    state = listState
+                    state = listState,
+                    overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
                 ) {
                     items(
                         items = songs,
