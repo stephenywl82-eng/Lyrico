@@ -34,8 +34,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import java.io.File
-import kotlin.math.abs
+import java.util.Collections
 
 @Parcelize
 data class SongInfo(
@@ -73,7 +79,11 @@ class SongListViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, SortInfo())
 
     private val searchSourceOrder: StateFlow<List<Source>> = settingsRepository.searchSourceOrder
-        .stateIn(viewModelScope, SharingStarted.Eagerly, listOf(Source.KG, Source.QM, Source.NE))
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    private val separator = settingsRepository.separator
+        .stateIn(viewModelScope, SharingStarted.Eagerly, "/")
+
 
     // 当排序信息改变时，歌曲列表自动重新加载
     val songs: StateFlow<List<SongEntity>> = sortInfo
@@ -104,96 +114,122 @@ class SongListViewModel(
     }
 
     /**
-     * 批量匹配歌曲，初步实现，待完善匹配逻辑和数据库同步逻辑
-     *
+     * 批量匹配歌曲（支持并发控制）
+     * @param parallelism 并发数
      */
-    fun batchMatchLyrics() {
+    fun batchMatch(parallelism: Int = 3) {
         val selectedIds = _selectedSongIds.value
+        val separator = separator.value
         if (selectedIds.isEmpty()) return
 
         batchMatchJob = viewModelScope.launch {
             val songsToMatch = songs.value.filter { it.mediaId in selectedIds }
             val currentOrder = searchSourceOrder.value
+            val total = songsToMatch.size
 
             _uiState.update { it.copy(
                 isBatchMatching = true,
                 successCount = 0,
                 failureCount = 0,
-                loadingMessage = "准备匹配...",
-                batchProgress = 0 to songsToMatch.size
+                batchProgress = 0 to total
             ) }
 
-            val successFiles = mutableListOf<String>()
+            val semaphore = Semaphore(parallelism)
+            val processedCount = java.util.concurrent.atomic.AtomicInteger(0)
+            val matchResults = Collections.synchronizedList(mutableListOf<Pair<SongEntity, AudioTagData>>())
 
-            songsToMatch.forEachIndexed { index, song ->
-                _uiState.update { it.copy(
-                    batchProgress = (index + 1) to songsToMatch.size,
-                    currentFile = song.fileName
-                ) }
+            songsToMatch.map { song ->
+                launch {
+                    semaphore.withPermit {
+                        _uiState.update { it.copy(currentFile = song.fileName) }
 
-                val isSuccess = matchSingleSong(song, currentOrder)
-                if (isSuccess) {
-                    successFiles.add(song.filePath)
-                    _uiState.update { it.copy(successCount = it.successCount + 1) }
-                } else {
-                    _uiState.update { it.copy(failureCount = it.failureCount + 1) }
+                        val result = matchAndGetTag(song,separator, currentOrder)
+
+                        val currentProcessed = processedCount.incrementAndGet()
+                        if (result != null) {
+                            matchResults.add(song to result)
+                            _uiState.update { it.copy(successCount = it.successCount + 1) }
+                        } else {
+                            _uiState.update { it.copy(failureCount = it.failureCount + 1) }
+                        }
+
+                        _uiState.update { it.copy(batchProgress = currentProcessed to total) }
+                    }
                 }
-                delay(600) // 频率限制
-            }
+            }.joinAll()
 
-            if (successFiles.isNotEmpty()) {
-                _uiState.update { it.copy(loadingMessage = "正在更新数据库...") }
-                songRepository.synchronizeWithDevice(false)
-
+            if (matchResults.isNotEmpty()) {
+                _uiState.update { it.copy(loadingMessage = "正在批量持久化...") }
+                songRepository.applyBatchMetadata(matchResults)
             }
 
             _uiState.update { it.copy(isBatchMatching = false, loadingMessage = "匹配完成") }
         }
     }
-    private suspend fun matchSingleSong(song: SongEntity, order: List<Source>): Boolean {
+    private suspend fun matchAndGetTag(song: SongEntity,separator: String, order: List<Source>): AudioTagData? = coroutineScope {
         val queries = MusicMatchUtils.buildSearchQueries(song)
         val (parsedTitle, parsedArtist) = MusicMatchUtils.parseFileName(song.fileName)
         val queryTitle = song.title?.takeIf { it.isNotBlank() && !it.contains("未知", true) } ?: parsedTitle
         val queryArtist = song.artist?.takeIf { it.isNotBlank() && !it.contains("未知", true) } ?: parsedArtist
 
-        val scoredResults = mutableListOf<ScoredSearchResult>()
         val orderedSources = sources.sortedBy { s ->
             order.indexOf(s.sourceType).let { if (it == -1) Int.MAX_VALUE else it }
         }
 
+        var bestMatch: ScoredSearchResult? = null
+
+        // 策略：对每一个 Query，并行请求所有搜索源
         for (query in queries) {
-            for (source in orderedSources) {
-                try {
-                    val results = source.search(query, pageSize = 2)
-                    results.forEach { res ->
-                        val score = MusicMatchUtils.calculateMatchScore(res, song, queryTitle, queryArtist)
-                        scoredResults.add(ScoredSearchResult(res, score, source))
-                    }
-                } catch (e: Exception) { /* Log error */ }
+            // 在一首歌内部，对多个源发起并行请求
+            val searchTasks = orderedSources.map { source ->
+                async {
+                    try {
+                        val results = source.search(query, separator = separator, pageSize = 2)
+                        results.map { res ->
+                            val score = MusicMatchUtils.calculateMatchScore(res, song, queryTitle, queryArtist)
+                            ScoredSearchResult(res, score, source)
+                        }
+                    } catch (e: Exception) { emptyList() }
+                }
             }
-            if (scoredResults.any { it.score > 0.75 }) break
+
+            // 等待所有源返回结果
+            val allResults = searchTasks.awaitAll().flatten()
+            val currentBest = allResults.maxByOrNull { it.score }
+
+            if (currentBest != null) {
+                if (bestMatch == null || currentBest.score > bestMatch.score) {
+                    bestMatch = currentBest
+                }
+                // 强剪枝：如果当前 Query 已经找到了非常完美的匹配 ( > 0.9)
+                // 直接跳过后续的 Query 搜索（不再搜索“文件名”等模糊词）
+                if (currentBest.score > 0.9) break
+            }
         }
 
-        val bestMatch = scoredResults.maxByOrNull { it.score } ?: return false
-        if (bestMatch.score < 0.35) return false
+        val finalMatch = bestMatch ?: return@coroutineScope null
+        if (finalMatch.score < 0.35) return@coroutineScope null
 
-        return try {
-            val lyrics = bestMatch.source.getLyrics(bestMatch.result)
+        try {
+            // 并行处理：获取歌词的同时下载图片
+            val lyricsDeferred = async { finalMatch.source.getLyrics(finalMatch.result) }
             val lyricDisplayMode = settingsRepository.lyricDisplayMode.first()
+
             val tagData = AudioTagData(
-                title = song.title?.takeIf { !it.contains("未知", true) } ?: bestMatch.result.title,
-                artist = song.artist?.takeIf { !it.contains("未知", true) } ?: bestMatch.result.artist,
-                lyrics = lyrics?.let { LyricsUtils.formatLrcResult(it, lineByLine = lyricDisplayMode == LyricDisplayMode.LINE_BY_LINE) },
-                picUrl = bestMatch.result.picUrl,
-                date = bestMatch.result.date,
-                trackerNumber = bestMatch.result.trackerNumber
+                title = song.title?.takeIf { !it.contains("未知", true) } ?: finalMatch.result.title,
+                artist = song.artist?.takeIf { !it.contains("未知", true) } ?: finalMatch.result.artist,
+                lyrics = lyricsDeferred.await()?.let {
+                    LyricsUtils.formatLrcResult(it, lineByLine = lyricDisplayMode == LyricDisplayMode.LINE_BY_LINE)
+                },
+                picUrl = finalMatch.result.picUrl,
+                date = finalMatch.result.date,
+                trackerNumber = finalMatch.result.trackerNumber
             )
-            val oldTime = song.fileLastModified
+
             if (songRepository.writeAudioTagData(song.filePath, tagData)) {
-                File(song.filePath).setLastModified(oldTime) // 恢复时间戳避免触发系统全量扫描
-                true
-            } else false
-        } catch (e: Exception) { false }
+                tagData
+            } else null
+        } catch (e: Exception) { null }
     }
 
 
@@ -226,7 +262,7 @@ class SongListViewModel(
             val message = if (isAuto) "检测到文件变化，正在更新..." else "正在扫描歌曲..."
             _uiState.update { it.copy(isLoading = true, loadingMessage = message) }
             try {
-                songRepository.synchronizeWithDevice(false)
+                songRepository.synchronize(false)
             } catch (e: Exception) {
                 Log.e(TAG, "同步失败", e)
             } finally {

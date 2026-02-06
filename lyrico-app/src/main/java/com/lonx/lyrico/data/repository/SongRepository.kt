@@ -20,14 +20,14 @@ interface SongRepository {
      *
      * @param fullRescan 是否进行彻底的重新扫描（强制读取所有文件的元数据，忽略修改时间检查）
      */
-    suspend fun synchronizeWithDevice(fullRescan: Boolean)
+    suspend fun synchronize(fullRescan: Boolean)
 
     /**
-     * 获取所有歌曲
+     * 更新歌曲元数据（仅更新数据库）
      *
-     * @return 返回包含所有 [SongEntity] 的 Flow 流。
+     * @param updates 要更新的歌曲列表，包含歌曲实体和音频标签数据
      */
-    fun getAllSongs(): Flow<List<SongEntity>>
+    suspend fun applyBatchMetadata(updates: List<Pair<SongEntity, AudioTagData>>)
 
     /**
      * 根据查询条件搜索歌曲
@@ -93,5 +93,5 @@ interface SongRepository {
      * @param filePath 文件路径或 URI
      * @return 文件名称
      */
-    fun getFileName(filePath: String): String
+    fun resolveDisplayName(filePath: String): String
 }

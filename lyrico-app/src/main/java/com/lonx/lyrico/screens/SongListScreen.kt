@@ -139,7 +139,7 @@ fun SongListScreen(
                         TextButton(
                             enabled = selectedPaths.isNotEmpty(),
                             onClick = {
-                                viewModel.batchMatchLyrics()
+                                viewModel.batchMatch()
                             }
                         ) {
                             Text(

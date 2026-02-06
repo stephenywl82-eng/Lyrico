@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.room.withTransaction
 import com.lonx.audiotag.model.AudioPicture
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.rw.AudioTagReader
@@ -17,7 +18,6 @@ import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.HttpURLConnection
@@ -39,12 +39,12 @@ class SongRepositoryImpl(
         const val TAG = "SongRepository"
     }
 
-    override suspend fun synchronizeWithDevice(fullRescan: Boolean) {
+    override suspend fun synchronize(fullRescan: Boolean) {
         withContext(Dispatchers.IO) {
             Log.d(TAG, "开始同步数据库与设备文件... (全量扫描: $fullRescan)")
 
-            val dbSongs = songDao.getAllSongs().first()
-            val dbSongMap = dbSongs.associate { it.filePath to it.fileLastModified }
+            val dbSyncInfos = songDao.getAllSyncInfo()
+            val dbSongMap = dbSyncInfos.associateBy({ it.filePath }, { it.fileLastModified })
             val dbPaths = dbSongMap.keys
 
             val devicePaths = mutableSetOf<String>()
@@ -65,6 +65,7 @@ class SongRepositoryImpl(
                 // 判断是否需要更新
                 if (fullRescan || lastModifiedInDb == null || lastModifiedInDb != deviceSong.lastModified) {
                     try {
+                        // 仅在确定需要更新时，才去读写单条完整的元数据记录
                         readAndSaveSongMetadata(deviceSong, folderId = folderId)
                     } catch (e: Exception) {
                         Log.e(TAG, "处理歌曲失败: ${deviceSong.filePath}", e)
@@ -75,7 +76,8 @@ class SongRepositoryImpl(
             // 处理删除逻辑
             val deletedPaths = dbPaths - devicePaths
             if (deletedPaths.isNotEmpty()) {
-                val folderIdsOfDeletedSongs = dbSongs
+                // 筛选受影响的 folderId
+                val folderIdsOfDeletedSongs = dbSyncInfos
                     .filter { it.filePath in deletedPaths }
                     .map { it.folderId }
                 impactedFolderIds.addAll(folderIdsOfDeletedSongs)
@@ -95,7 +97,35 @@ class SongRepositoryImpl(
             Log.d(TAG, "同步完成。")
         }
     }
+    /**
+     * 专门用于批量匹配后的局部更新，避开全量同步的开销
+     */
+    override suspend fun applyBatchMetadata(updates: List<Pair<SongEntity, AudioTagData>>) {
+        withContext(Dispatchers.IO) {
+            if (updates.isEmpty()) return@withContext
 
+            val updatedEntities = updates.map { (song, tag) ->
+                song.copy(
+                    title = tag.title,
+                    artist = tag.artist,
+                    lyrics = tag.lyrics,
+                    date = tag.date,
+                    trackerNumber = tag.trackerNumber,
+                    fileLastModified = File(song.filePath).lastModified() // 获取最新真实时间
+                ).withSortKeysUpdated()
+            }
+
+            database.withTransaction {
+                updatedEntities.chunked(100).forEach { chunk ->
+                    songDao.upsertAll(chunk)
+                }
+            }
+
+            updatedEntities.map { it.folderId }.distinct().forEach { folderId ->
+                folderDao.refreshSongCount(folderId)
+            }
+        }
+    }
     /**
      *  读取并保存歌曲元数据
      */
@@ -151,9 +181,6 @@ class SongRepositoryImpl(
         }
     }
 
-    override fun getAllSongs(): Flow<List<SongEntity>> {
-        return songDao.getAllSongs()
-    }
 
     override fun searchSongs(query: String): Flow<List<SongEntity>> {
         return songDao.searchSongsByAll(query)
@@ -227,7 +254,7 @@ class SongRepositoryImpl(
 
     override suspend fun readAudioTagData(filePath: String): AudioTagData {
         return withContext(Dispatchers.IO) {
-            val fileName = getFileName(filePath)
+            val fileName = resolveDisplayName(filePath)
             try {
                 (if (isUriPath(filePath)) {
                     context.contentResolver.openFileDescriptor(filePath.toUri(), "r")
@@ -313,7 +340,7 @@ class SongRepositoryImpl(
             connection.inputStream.use { it.readBytes() }
         }
 
-    override fun getFileName(filePath: String): String {
+    override fun resolveDisplayName(filePath: String): String {
         // Content URI (例如 content://media/external/...)
         if (filePath.startsWith("content://")) {
             try {
