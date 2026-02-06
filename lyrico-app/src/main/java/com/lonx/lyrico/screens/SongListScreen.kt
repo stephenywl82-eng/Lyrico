@@ -274,60 +274,59 @@ fun SongListScreen(
                 viewModel.refreshSongs()
             }
         ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
-                ) {
-                    items(
-                        items = songs,
-                        key = { song -> song.mediaId }
-                    ) { song ->
-                        SongListItem(
-                            song = song,
-                            navigator = navigator,
-                            modifier = Modifier.animateItem(),
-                            isSelectionMode = isSelectionMode,
-                            isSelected = selectedPaths.contains(song.mediaId),
-                            onToggleSelection = { viewModel.toggleSelection(song.mediaId) },
-                            trailingContent = {
-                                if (!isSelectionMode) {
-                                    IconButton(onClick = { viewModel.selectedSong(song) }) {
-                                        Icon(painterResource(R.drawable.ic_info_24dp), "Info")
-                                    }
-                                } else {
-                                    IconButton(onClick = { viewModel.toggleSelection(song.mediaId) }) {
-                                        Icon(
-                                            imageVector = if (selectedPaths.contains(song.mediaId)) SaltIcons.Check else SaltIcons.Uncheck,
-                                            contentDescription = null,
-                                            tint = if (selectedPaths.contains(song.mediaId)) SaltTheme.colors.highlight else SaltTheme.colors.text
-                                        )
-                                    }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
+            ) {
+                items(
+                    items = songs,
+                    key = { song -> song.mediaId }
+                ) { song ->
+                    SongListItem(
+                        song = song,
+                        navigator = navigator,
+                        modifier = Modifier.animateItem(),
+                        isSelectionMode = isSelectionMode,
+                        isSelected = selectedPaths.contains(song.mediaId),
+                        onToggleSelection = { viewModel.toggleSelection(song.mediaId) },
+                        trailingContent = {
+                            if (!isSelectionMode) {
+                                IconButton(onClick = { viewModel.selectedSong(song) }) {
+                                    Icon(painterResource(R.drawable.ic_info_24dp), "Info")
+                                }
+                            } else {
+                                IconButton(onClick = { viewModel.toggleSelection(song.mediaId) }) {
+                                    Icon(
+                                        imageVector = if (selectedPaths.contains(song.mediaId)) SaltIcons.Check else SaltIcons.Uncheck,
+                                        contentDescription = null,
+                                        tint = if (selectedPaths.contains(song.mediaId)) SaltTheme.colors.highlight else SaltTheme.colors.text
+                                    )
                                 }
                             }
-                        )
-                        ItemDivider()
-                    }
-                }
-                if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
-                    AlphabetSideBar(
-                        sections = sections,
-                        onSectionSelected = { section ->
-                            val index = findScrollIndex(
-                                section = section,
-                                sectionIndexMap = sectionIndexMap,
-                                order = sortInfo.order
-                            )
-                            scope.launch {
-                                listState.scrollToItem(index)
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
+                        }
                     )
+                    ItemDivider()
                 }
             }
+            if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
+                AlphabetSideBar(
+                    sections = sections,
+                    onSectionSelected = { section ->
+                        val index = findScrollIndex(
+                            section = section,
+                            sectionIndexMap = sectionIndexMap,
+                            order = sortInfo.order
+                        )
+                        scope.launch {
+                            listState.scrollToItem(index)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                )
+            }
+
         }
         uiState.selectedSongs?.let { selectedSongs ->
             ModalBottomSheet(
@@ -340,7 +339,7 @@ fun SongListScreen(
                 SongDetailBottomSheetContent(selectedSongs)
             }
         }
-        
+
         // 批量匹配对话框
         if (uiState.isBatchMatching || uiState.batchProgress != null) {
             BatchMatchingDialog(
