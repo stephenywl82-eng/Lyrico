@@ -343,7 +343,7 @@ class SongRepositoryImpl(
                 if (!response.isSuccessful) {
                     throw IOException("图片下载失败: $url, 响应码: ${response.code}")
                 }
-                response.body?.bytes() ?: throw IOException("图片响应为空: $url")
+                response.body.bytes()
             }
         }
 

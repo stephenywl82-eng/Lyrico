@@ -76,7 +76,6 @@ interface NeApi {
     suspend fun request(
         @Url url: String,
         @HeaderMap headers: Map<String, String>,
-        @Body body: okhttp3.RequestBody,
-        @Query("cache_key") cacheKey: String? = null // 部分接口需要
-    ): ResponseBody
+        @Body body: okhttp3.RequestBody
+    ): retrofit2.Response<ResponseBody>
 }

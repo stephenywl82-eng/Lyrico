@@ -55,25 +55,6 @@ val appModule = module {
             .readTimeout(8, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .cache(cache)
-//            .addInterceptor { chain ->
-//                val request = chain.request()
-//                val response = chain.proceed(request)
-//
-//                // 缓存 Debug 输出
-//                val cacheResponse = response.cacheResponse
-//                val networkResponse = response.networkResponse
-//
-//                when {
-//                    cacheResponse != null && networkResponse != null ->
-//                        Log.d("OkHttpCache", "条件请求: ${request.url} (服务器验证: ${if (networkResponse.code == 304) "304 未修改" else networkResponse.code})")
-//                    cacheResponse != null ->
-//                        Log.d("OkHttpCache", "缓存命中: ${request.url}")
-//                    networkResponse != null ->
-//                        Log.d("OkHttpCache", "网络请求: ${request.url} (${response.code})")
-//                }
-//
-//                response
-//            }
             .build()
     }
     single<NeApi> {
@@ -137,7 +118,8 @@ val appModule = module {
     ) }
     single<SearchSource>(named("Ne")) { NeSource(
         api = get(),
-        json = get()
+        json = get(),
+        context = androidContext()
     ) }
 
     single { getAll<SearchSource>() }
