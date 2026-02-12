@@ -33,7 +33,7 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.entity.FolderEntity
 import com.lonx.lyrico.ui.components.ItemExt
 import com.lonx.lyrico.utils.UriUtils
-import com.lonx.lyrico.viewmodel.SettingsViewModel
+import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.Item
 import com.moriafly.salt.ui.ItemArrowType
@@ -51,9 +51,9 @@ import com.moriafly.salt.ui.ext.safeMainCompat
 import com.moriafly.salt.ui.lazy.LazyColumn
 import com.moriafly.salt.ui.lazy.items
 import com.moriafly.salt.ui.outerPadding
-import com.moriafly.salt.ui.rememberScrollState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.FolderSongsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 
@@ -63,7 +63,7 @@ import org.koin.androidx.compose.koinViewModel
 fun FolderManagerScreen(
     navigator: DestinationsNavigator
 ) {
-    val viewModel: SettingsViewModel = koinViewModel()
+    val viewModel: FolderManagerViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val folders = uiState.folders
 
@@ -200,8 +200,7 @@ fun FolderManagerScreen(
                     ) {
                         ItemExt(
                             onClick = {
-                                selectedFolderId = folder.id
-                                showSheet = true
+                                navigator.navigate(FolderSongsDestination(folder.id, folder.path))
                             },
                             iconPainter = if (folder.isIgnored)
                                 painterResource(id = R.drawable.ic_invisible_24dp)

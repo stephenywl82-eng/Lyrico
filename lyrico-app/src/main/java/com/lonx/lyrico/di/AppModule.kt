@@ -1,6 +1,5 @@
 package com.lonx.lyrico.di
 
-import android.util.Log
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lonx.lyrico.data.LyricoDatabase
@@ -13,6 +12,8 @@ import com.lonx.lyrico.data.repository.SongRepositoryImpl
 import com.lonx.lyrico.utils.MusicScanner
 import com.lonx.lyrico.viewmodel.BatchMatchHistoryViewModel
 import com.lonx.lyrico.viewmodel.EditMetadataViewModel
+import com.lonx.lyrico.viewmodel.FolderManagerViewModel
+import com.lonx.lyrico.viewmodel.FolderSongsViewModel
 import com.lonx.lyrico.viewmodel.LocalSearchViewModel
 import com.lonx.lyrico.viewmodel.SearchViewModel
 import com.lonx.lyrico.viewmodel.SettingsViewModel
@@ -151,5 +152,7 @@ val appModule = module {
     viewModel { EditMetadataViewModel(get(), androidContext()) }
     viewModel { LocalSearchViewModel(get()) }
     viewModel { BatchMatchHistoryViewModel(get()) }
+    viewModel { FolderManagerViewModel(get()) }
+    viewModel { FolderSongsViewModel(get(), get()) }
 }
 

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.LyricDisplayMode
 import com.lonx.lyrico.data.model.ThemeMode
+import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.Item
 import com.moriafly.salt.ui.ItemCheck
@@ -42,19 +43,22 @@ import kotlin.math.roundToInt
 fun SettingsScreen(
     navigator: DestinationsNavigator
 ) {
-    val viewModel: SettingsViewModel = koinViewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val settingsViewModel: SettingsViewModel = koinViewModel()
+    val settingsUiState by settingsViewModel.uiState.collectAsState()
+    val folderViewModel: FolderManagerViewModel = koinViewModel()
+    val folderUiState by folderViewModel.uiState.collectAsState()
 
-    val lyricDisplayMode = uiState.lyricDisplayMode
-    val artistSeparator = uiState.separator
-    val romaEnabled = uiState.romaEnabled
-    val ignoreShortAudio = uiState.ignoreShortAudio
+
+    val lyricDisplayMode = settingsUiState.lyricDisplayMode
+    val artistSeparator = settingsUiState.separator
+    val romaEnabled = settingsUiState.romaEnabled
+    val ignoreShortAudio = settingsUiState.ignoreShortAudio
     val scrollState = rememberScrollState()
-    val folders = uiState.folders
+    val folders = folderUiState.folders
     val totalFolders = folders.size
     val ignoredFolders = folders.count { it.isIgnored }
-    val searchSourceOrder = uiState.searchSourceOrder
-    val searchPageSize = uiState.searchPageSize
+    val searchSourceOrder = settingsUiState.searchSourceOrder
+    val searchPageSize = settingsUiState.searchPageSize
 
     BasicScreenBox(
         title = "设置",
@@ -69,14 +73,14 @@ fun SettingsScreen(
             RoundedColumn {
                 ItemDropdown(
                     text = "主题模式",
-                    value = uiState.themeMode.displayName,
+                    value = settingsUiState.themeMode.displayName,
                     content = {
                         ThemeMode.entries.forEach { mode ->
                             ItemCheck(
                                 text = mode.displayName,
-                                state = uiState.themeMode == mode,
+                                state = settingsUiState.themeMode == mode,
                                 onChange = {
-                                    viewModel.setThemeMode(mode)
+                                    settingsViewModel.setThemeMode(mode)
                                     state.dismiss()
                                 }
                             )
@@ -98,7 +102,7 @@ fun SettingsScreen(
                     text = "不扫描 60 秒以下音频",
                     state = ignoreShortAudio,
                     onChange = {
-                        viewModel.setIgnoreShortAudio(!ignoreShortAudio)
+                        settingsViewModel.setIgnoreShortAudio(!ignoreShortAudio)
                     }
                 )
             }
@@ -121,7 +125,7 @@ fun SettingsScreen(
                         tempPageSize.intValue = it.roundToInt()
                     },
                     onValueChangeFinished = {
-                        viewModel.setSearchPageSize(tempPageSize.intValue)
+                        settingsViewModel.setSearchPageSize(tempPageSize.intValue)
                     },
                     sub = "${tempPageSize.intValue}",
                     text = "搜索限制数"
@@ -143,7 +147,7 @@ fun SettingsScreen(
                             text = "逐字歌词",
                             state = lyricDisplayMode == LyricDisplayMode.WORD_BY_WORD,
                             onChange = {
-                                viewModel.setLyricDisplayMode(LyricDisplayMode.WORD_BY_WORD)
+                                settingsViewModel.setLyricDisplayMode(LyricDisplayMode.WORD_BY_WORD)
                                 state.dismiss()
                             }
                         )
@@ -151,7 +155,7 @@ fun SettingsScreen(
                             text = "逐行歌词",
                             state = lyricDisplayMode == LyricDisplayMode.LINE_BY_LINE,
                             onChange = {
-                                viewModel.setLyricDisplayMode(LyricDisplayMode.LINE_BY_LINE)
+                                settingsViewModel.setLyricDisplayMode(LyricDisplayMode.LINE_BY_LINE)
                                 state.dismiss()
                             }
                         )
@@ -159,7 +163,7 @@ fun SettingsScreen(
                 )
                 ItemSwitcher(
                     state = romaEnabled,
-                    onChange = viewModel::setRomaEnabled,
+                    onChange = settingsViewModel::setRomaEnabled,
                     text = "罗马音",
                     sub = "搜索歌词中包含罗马音"
                 )
@@ -182,7 +186,7 @@ fun SettingsScreen(
                                 text = separator.toText(),
                                 state = artistSeparator == separator,
                                 onChange = {
-                                    viewModel.setSeparator(separator)
+                                    settingsViewModel.setSeparator(separator)
                                     state.dismiss()
                                 }
                             )

@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import com.lonx.lyrico.data.model.toArtistSeparator
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 data class SettingsUiState(
@@ -25,7 +26,6 @@ data class SettingsUiState(
     val separator: ArtistSeparator = ArtistSeparator.SLASH,
     val romaEnabled: Boolean = false,
     val ignoreShortAudio: Boolean = false,
-    val folders: List<FolderEntity> = emptyList(),
     val searchSourceOrder: List<Source> = emptyList(),
     val searchPageSize: Int = 20,
     val themeMode: ThemeMode = ThemeMode.AUTO
@@ -40,25 +40,25 @@ class SettingsViewModel(
     private val songDao: SongDao = database.songDao()
     private val _uiState = MutableStateFlow(SettingsUiState())
 
-    val uiState: StateFlow<SettingsUiState> = combine(
-        settingsRepository.settingsFlow,
-        folderDao.getAllFolders()
-    ) { settings, folders ->
-        SettingsUiState(
-            lyricDisplayMode = settings.lyricDisplayMode,
-            romaEnabled = settings.romaEnabled,
-            separator = settings.separator.toArtistSeparator(),
-            folders = folders,
-            searchSourceOrder = settings.searchSourceOrder,
-            searchPageSize = settings.searchPageSize,
-            themeMode = settings.themeMode,
-            ignoreShortAudio = settings.ignoreShortAudio
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SettingsUiState()
-    )
+    val uiState: StateFlow<SettingsUiState> =
+        settingsRepository.settingsFlow
+            .map { settings ->
+                SettingsUiState(
+                    lyricDisplayMode = settings.lyricDisplayMode,
+                    romaEnabled = settings.romaEnabled,
+                    separator = settings.separator.toArtistSeparator(),
+                    searchSourceOrder = settings.searchSourceOrder,
+                    searchPageSize = settings.searchPageSize,
+                    themeMode = settings.themeMode,
+                    ignoreShortAudio = settings.ignoreShortAudio
+                )
+            }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = SettingsUiState()
+            )
+
 
 
 
