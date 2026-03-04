@@ -114,29 +114,17 @@ fun EditMetadataScreen(
             .background(SaltTheme.colors.background),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            Surface(
-                modifier = Modifier
-                    .padding(12.dp)
-                    .size(48.dp),
-                shape = CircleShape,
-                color = SaltTheme.colors.highlight,
-                tonalElevation = 2.dp
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(
-                        onClick = {viewModel.play(context)},
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Icon(
-                            painter = rememberTintedPainter(painterResource(R.drawable.ic_play_24dp), tint = SaltTheme.colors.text),
-                            contentDescription = null,
-                            tint = SaltTheme.colors.text,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+            FloatingActionButton(
+                containerColor = SaltTheme.colors.highlight,
+                onClick = {
+                    viewModel.play(context)
                 }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_play_24dp),
+                    contentDescription = null,
+                    tint = null
+                )
             }
         },
         topBar = {
