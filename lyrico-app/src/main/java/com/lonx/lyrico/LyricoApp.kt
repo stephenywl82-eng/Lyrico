@@ -34,7 +34,7 @@ fun LyricoApp(externalUri: Uri?) {
     val navigator = navController.rememberDestinationsNavigator()
     LaunchedEffect(externalUri) {
         externalUri?.let { uri ->
-            navigator.navigate(EditMetadataDestination(songFilePath = uri.toString())) {
+            navigator.navigate(EditMetadataDestination(songFileUri = uri.toString())) {
                 launchSingleTop = true
             }
         }

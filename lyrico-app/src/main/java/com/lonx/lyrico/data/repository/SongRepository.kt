@@ -1,6 +1,5 @@
 package com.lonx.lyrico.data.repository
 
-import android.net.Uri
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.viewmodel.SortBy
@@ -21,7 +20,9 @@ interface SongRepository {
      */
     suspend fun deleteSong(song: SongEntity)
 
-    suspend fun getSongByFilePath(filePath: String): SongEntity?
+
+    suspend fun getSongByUri(uri: String): SongEntity?
+
     /**
      * 同步数据库与设备文件
      *
@@ -51,28 +52,28 @@ interface SongRepository {
      * 更新歌曲元数据（仅更新数据库）
      *
      * @param audioTagData 新的音频标签数据
-     * @param filePath 歌曲文件路径
+     * @param contentUri 歌曲文件uri
      * @param lastModified 文件最后修改时间戳
      * @return 如果更新成功返回 true，否则返回 false。
      */
-    suspend fun updateSongMetadata(audioTagData: AudioTagData, filePath: String, lastModified: Long): Boolean
+    suspend fun updateSongMetadata(audioTagData: AudioTagData, contentUri: String, lastModified: Long): Boolean
 
     /**
      * 将元数据写入物理音频文件
      *
-     * @param filePath 目标文件路径
+     * @param contentUri 目标文件uri
      * @param audioTagData 要写入的音频标签数据
      * @return 如果写入操作成功返回 true，否则返回 false。
      */
-    suspend fun writeAudioTagData(filePath: String, audioTagData: AudioTagData): Boolean
+    suspend fun writeAudioTagData(contentUri: String, audioTagData: AudioTagData): Boolean
 
     /**
      * 读取物理音频文件的元数据
      *
-     * @param filePath 文件路径
+     * @param contentUri 文件uri
      * @return 返回读取到的 [AudioTagData]，如果读取失败会尝试返回包含文件名的基础数据。
      */
-    suspend fun readAudioTagData(filePath: String): AudioTagData
+    suspend fun readAudioTagData(contentUri: String): AudioTagData
 
     /**
      * 获取数据库中歌曲总数
@@ -100,8 +101,8 @@ interface SongRepository {
      *
      * 尝试通过 ContentResolver 获取文件名，如果失败则从路径中提取。
      *
-     * @param filePath 文件路径或 URI
+     * @param contentUri 文件路径或 URI
      * @return 文件名称
      */
-    fun resolveDisplayName(filePath: String): String
+    fun resolveDisplayName(contentUri: String): String
 }

@@ -54,20 +54,20 @@ class EditMetadataViewModel(
     private var currentSongPath: String? = null
 
 
-    fun readMetadata(filePath: String) {
-        currentSongPath = filePath
+    fun readMetadata(contentUri: String) {
+        currentSongPath = contentUri
 
         viewModelScope.launch {
             try {
-                val song = songRepository.getSongByFilePath(filePath)
+                val song = songRepository.getSongByUri(contentUri)
                 currentSong = song
-                val audioTagData = songRepository.readAudioTagData(filePath)
+                val audioTagData = songRepository.readAudioTagData(contentUri)
                 val firstPicture = audioTagData.pictures.firstOrNull()?.data
 
                 _uiState.update { state ->
                     state.copy(
                         songInfo = SongInfo(
-                            filePath = filePath,
+                            filePath = contentUri,
                             tagData = audioTagData
                         ),
                         originalTagData = audioTagData,

@@ -28,23 +28,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.data.model.LyricsSearchResult
-import com.moriafly.salt.ui.ItemContainer
-import com.moriafly.salt.ui.ItemEdit
-import com.moriafly.salt.ui.ItemOuterEdit
-import com.moriafly.salt.ui.ItemTip
-import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
-import com.moriafly.salt.ui.dialog.InputDialog
 import com.moriafly.salt.ui.icons.ArrowBack
 import com.moriafly.salt.ui.icons.SaltIcons
-import com.moriafly.salt.ui.icons.Success
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.SearchResultsDestination
@@ -61,7 +53,7 @@ import com.ramcosta.composedestinations.result.onResult
 @Destination<RootGraph>(route = "edit_metadata")
 fun EditMetadataScreen(
     navigator: DestinationsNavigator,
-    songFilePath: String,
+    songFileUri: String,
     onLyricsResult: ResultRecipient<SearchResultsDestination, LyricsSearchResult>
 ) {
     val viewModel: EditMetadataViewModel = koinViewModel()
@@ -77,8 +69,8 @@ fun EditMetadataScreen(
         viewModel.updateMetadataFromSearchResult(result)
     }
 
-    LaunchedEffect(songFilePath) {
-        viewModel.readMetadata(songFilePath)
+    LaunchedEffect(songFileUri) {
+        viewModel.readMetadata(songFileUri)
     }
 
 

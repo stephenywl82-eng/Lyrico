@@ -9,14 +9,13 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.io.File
 
 /**
  * 数据库中存储的歌曲实体
  *
  * @param id 主键 ID，自动生成
  * @param folderId 关联的文件夹 ID，用于归类歌曲
- * @param filePath 文件 URI 路径，作为主键（唯一标识）
+ * @param filePath 文件 URI 路径
  * @param fileName 文件名称
  * @param title 歌曲标题
  * @param artist 艺术家名称
@@ -89,6 +88,8 @@ data class SongEntity(
     val titleSortKey: String = "#",
     val artistGroupKey: String = "#",
     val artistSortKey: String = "#",
+    @ColumnInfo(defaultValue = "0")
+    val uri: String = filePath.toUri().toString(),
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

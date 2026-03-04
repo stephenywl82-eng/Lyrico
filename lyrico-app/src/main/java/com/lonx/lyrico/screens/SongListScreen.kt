@@ -810,7 +810,7 @@ fun SongListItem(
                     if (isSelectionMode == true) {
                         onToggleSelection?.let { it() }
                     } else {
-                        navigator.navigate(EditMetadataDestination(songFilePath = song.filePath))
+                        navigator.navigate(EditMetadataDestination(songFileUri = song.uri))
                     }
                 },
                 onLongClick = {
@@ -1127,6 +1127,12 @@ fun SongDetailBottomSheetContent(song: SongEntity) {
             SongDetailItem(
                 label = stringResource(R.string.label_file_path),
                 value = song.filePath
+            )
+        }
+        item {
+            SongDetailItem(
+                label = "文件URI",
+                value = song.uri
             )
         }
 

@@ -411,7 +411,7 @@ class SongListViewModel(
 
             if (isEffectivelyEmpty) return@coroutineScope MatchResult(null, BatchMatchResult.SKIPPED)
 
-            if (songRepository.writeAudioTagData(song.filePath, tagDataToWrite)) {
+            if (songRepository.writeAudioTagData(song.uri, tagDataToWrite)) {
                 MatchResult(tagDataToWrite, BatchMatchResult.SUCCESS)
             } else {
                 MatchResult(null, BatchMatchResult.FAILURE) // Write failed

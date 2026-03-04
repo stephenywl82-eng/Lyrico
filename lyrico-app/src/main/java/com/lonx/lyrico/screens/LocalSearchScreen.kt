@@ -107,7 +107,7 @@ fun LocalSearchScreen(
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(items = uiState.songs, key = { it.filePath }) { song ->
+                    items(items = uiState.songs, key = { it.uri }) { song ->
                         SongListItem(song = song, navigator = navigator)
                         ItemDivider()
                     }
