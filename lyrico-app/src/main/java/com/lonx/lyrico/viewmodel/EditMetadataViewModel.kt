@@ -77,7 +77,7 @@ class EditMetadataViewModel(
 
                         picture = audioTagData.pictures.firstOrNull(),
 
-                        originalCover = firstPicture,
+                        originalCover = if (state.isEditing) state.originalCover else firstPicture,
 
                         // coverUri 初始化为原始封面（未编辑时）
                         coverUri = if (state.isEditing) state.coverUri else firstPicture
@@ -103,6 +103,16 @@ class EditMetadataViewModel(
     fun updateMetadataFromSearchResult(result: LyricsSearchResult) {
         _uiState.update { state ->
             val current = state.editingTagData ?: AudioTagData()
+
+            // 仅应用歌词
+            if (result.lyricsOnly) {
+                return@update state.copy(
+                    isEditing = true,
+                    editingTagData = current.copy(
+                        lyrics = result.lyrics?.takeIf { it.isNotBlank() } ?: current.lyrics
+                    )
+                )
+            }
 
             state.copy(
                 isEditing = true,

@@ -249,6 +249,31 @@ fun SearchResultsScreen(
                                                 ).show()
                                             }
                                         }
+                                    },
+                                    onApplyLyricsOnlyClick = {
+                                        scope.launch {
+                                            val lyrics = viewModel.fetchLyrics(result)
+                                            if (lyrics != null) {
+                                                resultNavigator.navigateBack(
+                                                    LyricsSearchResult(
+                                                        title = null,
+                                                        artist = null,
+                                                        album = null,
+                                                        lyrics = lyrics,
+                                                        date = null,
+                                                        trackerNumber = null,
+                                                        picUrl = null,
+                                                        lyricsOnly = true
+                                                    )
+                                                )
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.fetch_lyrics_failed),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -288,6 +313,21 @@ fun SearchResultsScreen(
                         )
                     )
                     viewModel.clearLyrics()
+                },
+                onApplyLyricsOnly = { lyrics ->
+                    resultNavigator.navigateBack(
+                        LyricsSearchResult(
+                            title = null,
+                            artist = null,
+                            album = null,
+                            lyrics = lyrics,
+                            date = null,
+                            trackerNumber = null,
+                            picUrl = null,
+                            lyricsOnly = true
+                        )
+                    )
+                    viewModel.clearLyrics()
                 }
             )
         }
@@ -298,7 +338,8 @@ fun SearchResultsScreen(
 @Composable
 private fun LyricsBottomSheetContent(
     lyricsState: LyricsUiState,
-    onApply: (String) -> Unit
+    onApply: (String) -> Unit,
+    onApplyLyricsOnly: (String) -> Unit
 ) {
     val song = lyricsState.song ?: return
 
@@ -351,16 +392,34 @@ private fun LyricsBottomSheetContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
-            onClick = { lyricsState.content?.let(onApply) },
-            enabled = lyricsState.content != null,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = SaltTheme.colors.highlight
-            )
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(stringResource(R.string.apply_action), color = SaltTheme.colors.onHighlight)
+            OutlinedButton(
+                onClick = { lyricsState.content?.let(onApplyLyricsOnly) },
+                enabled = lyricsState.content != null,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = SaltTheme.colors.highlight
+                ),
+                border = ButtonDefaults.outlinedButtonBorder(enabled = lyricsState.content != null)
+            ) {
+                Text(stringResource(R.string.apply_lyrics_only_action))
+            }
+
+            Button(
+                onClick = { lyricsState.content?.let(onApply) },
+                enabled = lyricsState.content != null,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SaltTheme.colors.highlight
+                )
+            ) {
+                Text(stringResource(R.string.apply_action), color = SaltTheme.colors.onHighlight)
+            }
         }
     }
 }
@@ -369,7 +428,8 @@ private fun LyricsBottomSheetContent(
 fun SearchResultItem(
     song: SongSearchResult,
     onPreviewClick: () -> Unit,
-    onApplyClick: () -> Unit
+    onApplyClick: () -> Unit,
+    onApplyLyricsOnlyClick: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -531,6 +591,19 @@ fun SearchResultItem(
                     elevation = ButtonDefaults.buttonElevation(0.dp)
                 ) {
                     Text(stringResource(R.string.apply_action), fontSize = 13.sp)
+                }
+
+                TextButton(
+                    onClick = onApplyLyricsOnlyClick,
+                    modifier = Modifier.height(34.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.apply_lyrics_only_action),
+                        fontSize = 13.sp,
+                        color = SaltTheme.colors.subText
+                    )
                 }
             }
         }
