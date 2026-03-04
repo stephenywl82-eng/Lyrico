@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.R
@@ -579,46 +581,67 @@ fun BatchMatchingDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // 标题或加载信息
-                Text(
-                    text = stringResource(R.string.batch_matching_title),
-                    style = SaltTheme.textStyles.main
-                )
+                Column(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    progress?.let { (current, total) ->
+                        val progress =
+                            if (total > 0) current.toFloat() / total.toFloat() else 0f
 
-                // 进度信息
-                progress?.let { (current, total) ->
-                    Text(
-                        text = stringResource(R.string.batch_matching_progress, current, total),
-                        style = SaltTheme.textStyles.main
-                    )
+                        // 进度文字
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+
+                            Text(
+                                text = if (isMatching)
+                                    currentFile
+                                else
+                                    stringResource(
+                                        R.string.batch_matching_total_time,
+                                        batchTimeMillis / 1000.0
+                                    ),
+                                style = SaltTheme.textStyles.main,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                text = "$current / $total",
+                                style = SaltTheme.textStyles.main,
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = SaltTheme.colors.highlight,
+                            trackColor = SaltTheme.colors.subBackground,
+                            strokeCap = ProgressIndicatorDefaults.LinearStrokeCap,
+                        )
+                    }
                 }
 
-                // 当前文件
-                if (currentFile.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.batch_matching_current, currentFile),
-                        style = SaltTheme.textStyles.main
-                    )
-                }
 
                 // 成功/失败计数
-                Text(
-                    text = stringResource(R.string.batch_matching_success, successCount),
-                    style = SaltTheme.textStyles.main
-                )
-                Text(
-                    text = stringResource(R.string.batch_matching_skipped, skippedCount),
-                    style = SaltTheme.textStyles.main
-                )
-                Text(
-                    text = stringResource(R.string.batch_matching_failure, failureCount),
-                    style = SaltTheme.textStyles.main
-                )
-
-                // 总用时显示（仅当任务完成时显示）
-                if (!isMatching && batchTimeMillis > 0) {
-                    val seconds = batchTimeMillis / 1000.0
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = stringResource(R.string.batch_matching_total_time, seconds),
+                        text = stringResource(R.string.batch_matching_success, successCount),
+                        style = SaltTheme.textStyles.main
+                    )
+                    Text(
+                        text = stringResource(R.string.batch_matching_skipped, skippedCount),
+                        style = SaltTheme.textStyles.main
+                    )
+                    Text(
+                        text = stringResource(R.string.batch_matching_failure, failureCount),
                         style = SaltTheme.textStyles.main
                     )
                 }
@@ -639,6 +662,7 @@ fun BatchMatchingDialog(
                         modifier = Modifier.fillMaxWidth(),
                         text = stringResource(R.string.action_view_results),
                         onClick = {
+                            onClose()
                             navigator.navigate(BatchMatchHistoryDetailDestination(historyId))
                         },
                         type = ButtonType.Highlight

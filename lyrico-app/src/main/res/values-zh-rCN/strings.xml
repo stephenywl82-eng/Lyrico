@@ -184,7 +184,7 @@
     <string name="batch_matching_success">成功: %d</string>
     <string name="batch_matching_skipped">跳过: %d</string>
     <string name="batch_matching_failure">失败: %d</string>
-    <string name="batch_matching_total_time">总用时: %.2f 秒</string>
+    <string name="batch_matching_total_time">用时 %.2f 秒</string>
     <string name="action_abort">中止</string>
     <string name="action_close">关闭</string>
     <string name="action_view_results">查看结果</string>
