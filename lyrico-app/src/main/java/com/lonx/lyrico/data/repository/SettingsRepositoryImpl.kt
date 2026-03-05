@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.lonx.lyrico.data.model.LyricFormat
 import com.lonx.lyrico.data.model.LyricRenderConfig
+import com.lonx.lyrico.data.model.SettingsBackup
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortInfo
@@ -18,11 +19,36 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
+object SettingsDefaults {
+    val LYRIC_FORMAT = LyricFormat.VERBATIM_LRC
+    val SORT_BY = SortBy.TITLE
+    val SORT_ORDER = SortOrder.ASC
+    const val SEPARATOR = "/"
+    const val ROMA_ENABLED = true
+    const val TRANSLATION_ENABLED = true
+    const val CHECK_UPDATE_ENABLED = true
+    const val IGNORE_SHORT_AUDIO = true
+    const val ONLY_TRANSLATION_IF_AVAILABLE = false
+    const val REMOVE_EMPTY_LINES = true
+
+    // 搜索源顺序默认值
+    val SEARCH_SOURCE_ORDER = listOf(Source.QM, Source.KG, Source.NE)
+    const val SEARCH_PAGE_SIZE = 10
+
+    val THEME_MODE = ThemeMode.AUTO
+}
+
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
+    private val jsonFormatter = Json {
+        ignoreUnknownKeys = true // 允许 JSON 中包含当前版本未知的字段
+        prettyPrint = true       // 导出的 JSON 格式化，易于阅读
+        encodeDefaults = true    // 即使是默认值也编码
+    }
 
     private object PreferencesKeys {
         val REMOVE_EMPTY_LINES = booleanPreferencesKey("remove_empty_lines")
@@ -42,57 +68,69 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val ONLY_TRANSLATION_IF_AVAILABLE = booleanPreferencesKey("only_translation_if_available")
     }
 
-    // 默认搜索源顺序
-    private val defaultSourceOrder = listOf(Source.QM, Source.KG, Source.NE)
-    private val defaultSearchPageSize = 10
-
     override val lyricFormat: Flow<LyricFormat>
         get() = context.settingsDataStore.data.map { preferences ->
-            LyricFormat.valueOf(
-                preferences[PreferencesKeys.LYRIC_FORMAT]
-                    ?: LyricFormat.VERBATIM_LRC.name
-            )
+            try {
+                LyricFormat.valueOf(
+                    preferences[PreferencesKeys.LYRIC_FORMAT] ?: SettingsDefaults.LYRIC_FORMAT.name
+                )
+            } catch (e: Exception) {
+                SettingsDefaults.LYRIC_FORMAT
+            }
         }
 
     override val sortInfo: Flow<SortInfo>
         get() = context.settingsDataStore.data.map { preferences ->
-            val sortBy = SortBy.valueOf(
-                preferences[PreferencesKeys.SORT_BY] ?: SortBy.TITLE.name
-            )
-            val sortOrder = SortOrder.valueOf(
-                preferences[PreferencesKeys.SORT_ORDER]
-                    ?: SortOrder.ASC.name
-            )
+            val sortBy = try {
+                SortBy.valueOf(
+                    preferences[PreferencesKeys.SORT_BY] ?: SettingsDefaults.SORT_BY.name
+                )
+            } catch (e: Exception) {
+                SettingsDefaults.SORT_BY
+            }
+
+            val sortOrder = try {
+                SortOrder.valueOf(
+                    preferences[PreferencesKeys.SORT_ORDER] ?: SettingsDefaults.SORT_ORDER.name
+                )
+            } catch (e: Exception) {
+                SettingsDefaults.SORT_ORDER
+            }
+
             SortInfo(sortBy, sortOrder)
         }
 
     override val separator: Flow<String>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.SEPARATOR] ?: "/"
+            preferences[PreferencesKeys.SEPARATOR] ?: SettingsDefaults.SEPARATOR
         }
 
     override val romaEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.ROMA_ENABLED] ?: true
+            preferences[PreferencesKeys.ROMA_ENABLED] ?: SettingsDefaults.ROMA_ENABLED
         }
+
     override val translationEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.TRANSLATION_ENABLED] ?: true
+            preferences[PreferencesKeys.TRANSLATION_ENABLED] ?: SettingsDefaults.TRANSLATION_ENABLED
         }
+
     override val checkUpdateEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED] ?: true
+            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED]
+                ?: SettingsDefaults.CHECK_UPDATE_ENABLED
         }
+
     override val ignoreShortAudio: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.IGNORE_SHORT_AUDIO] ?: true
+            preferences[PreferencesKeys.IGNORE_SHORT_AUDIO] ?: SettingsDefaults.IGNORE_SHORT_AUDIO
         }
 
     override val searchSourceOrder: Flow<List<Source>>
         get() = context.settingsDataStore.data.map { preferences ->
             val orderString = preferences[PreferencesKeys.SEARCH_SOURCE_ORDER]
             if (orderString.isNullOrBlank()) {
-                defaultSourceOrder
+                SettingsDefaults.SEARCH_SOURCE_ORDER
             } else {
                 try {
                     orderString.split(",").mapNotNull { name ->
@@ -101,108 +139,49 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                         } catch (e: IllegalArgumentException) {
                             null
                         }
-                    }.ifEmpty { defaultSourceOrder }
+                    }.ifEmpty { SettingsDefaults.SEARCH_SOURCE_ORDER }
                 } catch (e: Exception) {
-                    defaultSourceOrder
+                    SettingsDefaults.SEARCH_SOURCE_ORDER
                 }
             }
         }
+
     override val searchPageSize: Flow<Int>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.SEARCH_PAGE_SIZE] ?: defaultSearchPageSize
+            preferences[PreferencesKeys.SEARCH_PAGE_SIZE] ?: SettingsDefaults.SEARCH_PAGE_SIZE
         }
 
     override val themeMode: Flow<ThemeMode>
         get() = context.settingsDataStore.data.map { preferences ->
             val modeName = preferences[PreferencesKeys.THEME_MODE]
             if (modeName.isNullOrBlank()) {
-                ThemeMode.AUTO
+                SettingsDefaults.THEME_MODE
             } else {
                 try {
                     ThemeMode.valueOf(modeName)
                 } catch (e: IllegalArgumentException) {
-                    ThemeMode.AUTO
+                    SettingsDefaults.THEME_MODE
                 }
             }
         }
 
     override val onlyTranslationIfAvailable: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE] ?: false
+            preferences[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE]
+                ?: SettingsDefaults.ONLY_TRANSLATION_IF_AVAILABLE
         }
 
     override val removeEmptyLines: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.REMOVE_EMPTY_LINES] ?: true
+            preferences[PreferencesKeys.REMOVE_EMPTY_LINES] ?: SettingsDefaults.REMOVE_EMPTY_LINES
         }
+
     override suspend fun getLastScanTime(): Long {
         return context.settingsDataStore.data.map { preferences ->
             preferences[PreferencesKeys.LAST_SCAN_TIME] ?: 0L
         }.first()
     }
 
-    override suspend fun saveLyricDisplayMode(mode: LyricFormat) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.LYRIC_FORMAT] = mode.name
-        }
-    }
-
-    override suspend fun saveSortInfo(sortInfo: SortInfo) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.SORT_BY] = sortInfo.sortBy.name
-            preferences[PreferencesKeys.SORT_ORDER] = sortInfo.order.name
-        }
-    }
-
-    override suspend fun saveSeparator(separator: String) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.SEPARATOR] = separator
-        }
-    }
-
-    override suspend fun saveRomaEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.ROMA_ENABLED] = enabled
-        }
-    }
-    override suspend fun saveCheckUpdateEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED] = enabled
-        }
-    }
-    override suspend fun saveTranslationEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.TRANSLATION_ENABLED] = enabled
-        }
-    }
-    override suspend fun saveIgnoreShortAudio(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.IGNORE_SHORT_AUDIO] = enabled
-        }
-    }
-
-    override suspend fun saveLastScanTime(time: Long) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.LAST_SCAN_TIME] = time
-        }
-    }
-
-    override suspend fun saveSearchSourceOrder(sources: List<Source>) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.SEARCH_SOURCE_ORDER] = sources.joinToString(",") { it.name }
-        }
-    }
-    override suspend fun saveSearchPageSize(size: Int) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.SEARCH_PAGE_SIZE] = size
-        }
-    }
-
-    override suspend fun saveThemeMode(mode: ThemeMode) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.THEME_MODE] = mode.name
-        }
-    }
     private data class LyricPart(
         val lyricFormat: LyricFormat,
         val romaEnabled: Boolean,
@@ -227,6 +206,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 removeEmptyLines = removeEmptyLines
             )
         }
+
     private data class SearchPart(
         val separator: String,
         val searchSourceOrder: List<Source>,
@@ -237,6 +217,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         combine(separator, searchSourceOrder, searchPageSize) { sep, order, size ->
             SearchPart(sep, order, size)
         }
+
     private data class UiPart(
         val themeMode: ThemeMode,
         val ignoreShortAudio: Boolean
@@ -275,32 +256,177 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
+    override suspend fun saveLyricDisplayMode(mode: LyricFormat) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.LYRIC_FORMAT] = mode.name
+        }
+    }
+
+    override suspend fun saveSortInfo(sortInfo: SortInfo) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.SORT_BY] = sortInfo.sortBy.name
+            preferences[PreferencesKeys.SORT_ORDER] = sortInfo.order.name
+        }
+    }
+
+    override suspend fun saveSeparator(separator: String) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.SEPARATOR] = separator
+        }
+    }
+
+    override suspend fun saveRomaEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.ROMA_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun saveCheckUpdateEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun saveTranslationEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.TRANSLATION_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun saveIgnoreShortAudio(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.IGNORE_SHORT_AUDIO] = enabled
+        }
+    }
+
+    override suspend fun saveLastScanTime(time: Long) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.LAST_SCAN_TIME] = time
+        }
+    }
+
+    override suspend fun saveSearchSourceOrder(sources: List<Source>) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.SEARCH_SOURCE_ORDER] = sources.joinToString(",") { it.name }
+        }
+    }
+
+    override suspend fun saveSearchPageSize(size: Int) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.SEARCH_PAGE_SIZE] = size
+        }
+    }
+
+    override suspend fun saveThemeMode(mode: ThemeMode) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.THEME_MODE] = mode.name
+        }
+    }
+
     override suspend fun saveRemoveEmptyLines(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.REMOVE_EMPTY_LINES] = enabled
         }
     }
+
     override suspend fun getLyricRenderConfig(): LyricRenderConfig {
         val prefs = context.settingsDataStore.data.first()
 
         val format = LyricFormat.valueOf(
             prefs[PreferencesKeys.LYRIC_FORMAT]
-                ?: LyricFormat.VERBATIM_LRC.name
+                ?: SettingsDefaults.LYRIC_FORMAT.name
         )
 
-        val roma = prefs[PreferencesKeys.ROMA_ENABLED] ?: true
+        val roma = prefs[PreferencesKeys.ROMA_ENABLED] ?: SettingsDefaults.ROMA_ENABLED
 
-        val showTranslation = prefs[PreferencesKeys.TRANSLATION_ENABLED] ?: true
+        val showTranslation = prefs[PreferencesKeys.TRANSLATION_ENABLED] ?: SettingsDefaults.TRANSLATION_ENABLED
 
-        val onlyTranslationIfAvailable = prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE] ?: false
+        val removeEmptyLines = prefs[PreferencesKeys.REMOVE_EMPTY_LINES] ?: SettingsDefaults.REMOVE_EMPTY_LINES
+        val onlyTranslationIfAvailable = prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE] ?: SettingsDefaults.ONLY_TRANSLATION_IF_AVAILABLE
         return LyricRenderConfig(
             format = format,
             showRomanization = roma,
+            removeEmptyLines = removeEmptyLines,
             showTranslation = showTranslation,
             onlyTranslationIfAvailable = onlyTranslationIfAvailable
         )
     }
 
+    override suspend fun exportSettings(): String {
+        val prefs = context.settingsDataStore.data.first()
+
+        val backup = SettingsBackup(
+            removeEmptyLines = prefs[PreferencesKeys.REMOVE_EMPTY_LINES]
+                ?: SettingsDefaults.REMOVE_EMPTY_LINES,
+
+            lyricFormat = prefs[PreferencesKeys.LYRIC_FORMAT]
+                ?: SettingsDefaults.LYRIC_FORMAT.name,
+
+            sortBy = prefs[PreferencesKeys.SORT_BY]
+                ?: SettingsDefaults.SORT_BY.name,
+
+            sortOrder = prefs[PreferencesKeys.SORT_ORDER]
+                ?: SettingsDefaults.SORT_ORDER.name,
+
+            separator = prefs[PreferencesKeys.SEPARATOR]
+                ?: SettingsDefaults.SEPARATOR,
+
+            romaEnabled = prefs[PreferencesKeys.ROMA_ENABLED]
+                ?: SettingsDefaults.ROMA_ENABLED,
+
+            checkUpdateEnabled = prefs[PreferencesKeys.CHECK_UPDATE_ENABLED]
+                ?: SettingsDefaults.CHECK_UPDATE_ENABLED,
+
+            translationEnabled = prefs[PreferencesKeys.TRANSLATION_ENABLED]
+                ?: SettingsDefaults.TRANSLATION_ENABLED,
+
+            ignoreShortAudio = prefs[PreferencesKeys.IGNORE_SHORT_AUDIO]
+                ?: SettingsDefaults.IGNORE_SHORT_AUDIO,
+
+            searchSourceOrder = prefs[PreferencesKeys.SEARCH_SOURCE_ORDER]
+                ?: SettingsDefaults.SEARCH_SOURCE_ORDER.joinToString(",") { it.name },
+
+            searchPageSize = prefs[PreferencesKeys.SEARCH_PAGE_SIZE]
+                ?: SettingsDefaults.SEARCH_PAGE_SIZE,
+
+            themeMode = prefs[PreferencesKeys.THEME_MODE]
+                ?: SettingsDefaults.THEME_MODE.name,
+
+            onlyTranslationIfAvailable = prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE]
+                ?: SettingsDefaults.ONLY_TRANSLATION_IF_AVAILABLE
+        )
+
+        return jsonFormatter.encodeToString(backup)
+    }
+
+
+    override suspend fun importSettings(jsonString: String): Boolean {
+        return try {
+            val backup = jsonFormatter.decodeFromString<SettingsBackup>(jsonString)
+
+            context.settingsDataStore.edit { prefs ->
+                backup.removeEmptyLines?.let { prefs[PreferencesKeys.REMOVE_EMPTY_LINES] = it }
+                backup.lyricFormat?.let { prefs[PreferencesKeys.LYRIC_FORMAT] = it }
+                backup.sortBy?.let { prefs[PreferencesKeys.SORT_BY] = it }
+                backup.sortOrder?.let { prefs[PreferencesKeys.SORT_ORDER] = it }
+                backup.separator?.let { prefs[PreferencesKeys.SEPARATOR] = it }
+                backup.romaEnabled?.let { prefs[PreferencesKeys.ROMA_ENABLED] = it }
+                backup.checkUpdateEnabled?.let { prefs[PreferencesKeys.CHECK_UPDATE_ENABLED] = it }
+                backup.translationEnabled?.let { prefs[PreferencesKeys.TRANSLATION_ENABLED] = it }
+                backup.ignoreShortAudio?.let { prefs[PreferencesKeys.IGNORE_SHORT_AUDIO] = it }
+                backup.searchSourceOrder?.let { prefs[PreferencesKeys.SEARCH_SOURCE_ORDER] = it }
+                backup.searchPageSize?.let { prefs[PreferencesKeys.SEARCH_PAGE_SIZE] = it }
+                backup.themeMode?.let { prefs[PreferencesKeys.THEME_MODE] = it }
+                backup.onlyTranslationIfAvailable?.let {
+                    prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE] = it
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 
 }
 

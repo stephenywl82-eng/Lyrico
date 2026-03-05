@@ -1,8 +1,10 @@
 package com.lonx.lyrico.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.CacheCategory
 import com.lonx.lyrico.data.model.ThemeMode
@@ -13,8 +15,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import com.lonx.lyrico.data.model.toArtistSeparator
 import com.lonx.lyrico.utils.CacheManager
+import com.lonx.lyrico.utils.UiMessage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
@@ -32,7 +38,9 @@ data class SettingsUiState(
     val categorizedCacheSize: Map<CacheCategory, Long> = emptyMap(),
     val totalCacheSize: Long = 0L,
 )
-
+sealed class SettingsEvent {
+    data class ShowToast(val message: UiMessage) : SettingsEvent()
+}
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
@@ -62,7 +70,8 @@ class SettingsViewModel(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState()
     )
-
+    private val _events = MutableSharedFlow<SettingsEvent>()
+    val events = _events.asSharedFlow()
     fun setLyricFormat(mode: LyricFormat) {
         viewModelScope.launch {
             settingsRepository.saveLyricDisplayMode(mode)
@@ -129,6 +138,47 @@ class SettingsViewModel(
             settingsRepository.saveThemeMode(mode)
         }
     }
+    fun exportSettings(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val jsonString = settingsRepository.exportSettings()
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonString.toByteArray())
+                }
+                _events.emit(SettingsEvent.ShowToast(UiMessage.StringResource(R.string.export_success)))
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _events.emit(SettingsEvent.ShowToast(UiMessage.StringResource(R.string.export_failed, e.message ?: "Unknown error")))
+            }
+        }
+    }
 
+    fun importSettings(context: Context, uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val jsonString = context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    inputStream.bufferedReader().use { it.readText() }
+                }
+
+                if (jsonString != null) {
+                    val success = settingsRepository.importSettings(jsonString)
+                    if (success) {
+                        _events.emit(SettingsEvent.ShowToast(
+                            UiMessage.StringResource(R.string.import_success)
+                        ))
+                    } else {
+                        _events.emit(SettingsEvent.ShowToast(
+                            UiMessage.StringResource(R.string.import_failed_format)
+                        ))
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _events.emit(SettingsEvent.ShowToast(
+                    UiMessage.StringResource(R.string.import_failed, e.message ?: "Unknown error")
+                ))
+            }
+        }
+    }
 }
 

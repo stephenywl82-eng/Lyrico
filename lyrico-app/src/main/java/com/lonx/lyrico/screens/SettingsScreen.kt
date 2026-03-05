@@ -1,6 +1,9 @@
 package com.lonx.lyrico.screens
 
 import android.annotation.SuppressLint
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +25,7 @@ import com.lonx.lyrico.data.model.LyricFormat
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.utils.formatSize
 import com.lonx.lyrico.viewmodel.FolderManagerViewModel
+import com.lonx.lyrico.viewmodel.SettingsEvent
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.moriafly.salt.ui.Item
 import com.moriafly.salt.ui.ItemCheck
@@ -78,6 +82,32 @@ fun SettingsScreen(
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         settingsViewModel.refreshCache(context)
+    }
+    // 导出 Launcher：创建一个文件
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { settingsViewModel.exportSettings(context, it) }
+    }
+
+    // 导入 Launcher：打开一个文件
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { settingsViewModel.importSettings(context, it) }
+    }
+
+    // 监听 ViewModel 的事件（显示 Toast）
+    LaunchedEffect(Unit) {
+        settingsViewModel.events.collect { event ->
+            when (event) {
+                is SettingsEvent.ShowToast -> {
+                    val text = event.message.asString(context)
+
+                    Toast.makeText(context, text, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
     val calculatingText = stringResource(R.string.calculating_cache)
     val confirmText = stringResource(R.string.clear_cache_confirm)
@@ -295,7 +325,24 @@ fun SettingsScreen(
                     }
                 )
             }
-
+            ItemOuterTitle(stringResource(R.string.section_backup))
+            RoundedColumn {
+                Item(
+                    text = stringResource(R.string.export_config),
+                    sub = stringResource(R.string.export_config_hint),
+                    onClick = {
+                        val currentTime = System.currentTimeMillis()
+                        exportLauncher.launch("lyrico_settings_backup_${currentTime}.json")
+                    }
+                )
+                Item(
+                    text = stringResource(R.string.import_config),
+                    sub = stringResource(R.string.import_config_hint),
+                    onClick = {
+                        importLauncher.launch(arrayOf("application/json"))
+                    }
+                )
+            }
             ItemOuterTitle(stringResource(R.string.section_other))
             RoundedColumn {
                 Item(

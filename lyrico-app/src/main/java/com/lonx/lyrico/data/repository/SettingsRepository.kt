@@ -53,4 +53,6 @@ interface SettingsRepository {
     suspend fun saveOnlyTranslationIfAvailable(enabled: Boolean)
     suspend fun saveRemoveEmptyLines(enabled: Boolean)
     suspend fun getLyricRenderConfig(): LyricRenderConfig
+    suspend fun exportSettings(): String
+    suspend fun importSettings(jsonString: String): Boolean
 }

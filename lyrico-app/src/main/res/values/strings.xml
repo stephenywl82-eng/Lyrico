@@ -270,4 +270,14 @@
     <string name="remove_empty_lines_hint">Remove lines that are empty or contain only placeholders</string>
 
     <string name="permission_denied_cannot_save">Permission denied. Unable to save changes.</string>
+    <string name="import_config">Import Settings</string>
+    <string name="section_backup"><![CDATA[Backup & Restore]]></string>
+    <string name="export_config">Export Settings</string>
+    <string name="export_config_hint">Save current settings to a JSON file</string>
+    <string name="import_config_hint">Restore settings from a JSON file</string>
+    <string name="export_success">Configuration exported successfully.</string>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="import_success">Configuration imported successfully.</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <string name="import_failed_format">Invalid configuration file format.</string>
 </resources>
