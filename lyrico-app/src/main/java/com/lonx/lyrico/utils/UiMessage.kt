@@ -1,4 +1,4 @@
-package com.lonx.lyrico.utils // 建议放在 util 包下
+package com.lonx.lyrico.utils
 
 import android.content.Context
 import androidx.annotation.StringRes
