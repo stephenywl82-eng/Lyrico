@@ -5,7 +5,7 @@ set -e
 # 参数处理
 # --------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT=${1:-"$SCRIPT_DIR/../.."}   # 默认项目根目录为脚本上两级
+PROJECT_ROOT="${PROJECT_ROOT_OVERRIDE:-$(realpath "$SCRIPT_DIR/..")}"
 NDK_PATH=${2:-${ANDROID_NDK_HOME:-""}}
 
 if [ -z "$NDK_PATH" ]; then
