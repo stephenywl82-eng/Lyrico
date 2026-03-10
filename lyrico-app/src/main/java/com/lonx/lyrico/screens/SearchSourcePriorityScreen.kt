@@ -37,8 +37,10 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.lonx.lyrics.model.Source
 import com.moriafly.salt.ui.Icon
+import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.ItemTip
 import com.moriafly.salt.ui.JustifiedRow
+import com.moriafly.salt.ui.SaltDimens
 import com.moriafly.salt.ui.SaltTheme
 import com.moriafly.salt.ui.Text
 import com.moriafly.salt.ui.UnstableSaltUiApi
@@ -85,8 +87,10 @@ fun SearchSourcePriorityScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            ItemTip(text = stringResource(id = R.string.search_source_priority_tip))
-            Spacer(modifier = Modifier.height(8.dp))
+            ItemOuterTip(text = stringResource(id = R.string.search_source_priority_tip))
+
+            Spacer(Modifier.height(SaltDimens.RoundedColumnInListEdgePadding))
+
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier.fillMaxWidth()
@@ -189,12 +193,12 @@ private fun ReorderableSourceItem(
             )
 
 
-                Icon(
-                    modifier = Modifier.size(20.dp),
-                    painter = painterResource(R.drawable.ic_draghandle_24dp),
-                    contentDescription = stringResource(R.string.cd_drag_to_reorder),
-                    tint = SaltTheme.colors.subText.copy(alpha = 0.5f)
-                )
+            Icon(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(R.drawable.ic_draghandle_24dp),
+                contentDescription = stringResource(R.string.cd_drag_to_reorder),
+                tint = SaltTheme.colors.subText.copy(alpha = 0.5f)
+            )
 
         }
 

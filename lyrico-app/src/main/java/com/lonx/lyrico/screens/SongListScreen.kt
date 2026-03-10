@@ -1207,6 +1207,18 @@ fun SongDetailBottomSheetContent(context: Context, song: SongEntity) {
                     value = song.uri
                 )
             }
+            item {
+                SongDetailItem(
+                    label = "文件ID",
+                    value = song.id.toString()
+                )
+            }
+            item {
+                SongDetailItem(
+                    label = "文件名",
+                    value = song.fileName
+                )
+            }
         }
 
     }

@@ -38,6 +38,7 @@ import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.moriafly.salt.ui.Icon
 import com.moriafly.salt.ui.Item
 import com.moriafly.salt.ui.ItemArrowType
+import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.ItemOuterTitle
 import com.moriafly.salt.ui.ItemSwitcher
 import com.moriafly.salt.ui.ItemTip
@@ -166,17 +167,14 @@ fun FolderManagerScreen(
                 .fillMaxSize()
         ) {
             item {
-                // TODO Replace ItemOuterTip when Salt UI 2.9.0-alpha07 released
-                ItemTip(
-                    text = stringResource(R.string.folder_tip_disabled_logic),
-                    modifier = Modifier
-                        .outerPadding(vertical = false)
+                ItemOuterTip(
+                    text = stringResource(R.string.folder_tip_disabled_logic)
                 )
             }
 
-            item {
-                ItemOuterTitle(stringResource(R.string.section_folder_discovered))
-            }
+//            item {
+//                ItemOuterTitle(stringResource(R.string.section_folder_discovered))
+//            }
 
             item {
                 Spacer(Modifier.height(SaltDimens.RoundedColumnInListEdgePadding))

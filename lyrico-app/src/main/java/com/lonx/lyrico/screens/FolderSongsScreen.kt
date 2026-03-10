@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
 import com.lonx.lyrico.viewmodel.FolderSongsViewModel
+import com.moriafly.salt.ui.ItemOuterTip
 import com.moriafly.salt.ui.ItemTip
 import com.moriafly.salt.ui.RoundedColumn
 import com.moriafly.salt.ui.RoundedColumnType
@@ -58,7 +59,7 @@ fun FolderSongsScreen(
                     RoundedColumn(
                         type = RoundedColumnType.InList
                     ) {
-                        ItemTip(stringResource(R.string.no_songs_in_folder))
+                        ItemOuterTip(stringResource(R.string.no_songs_in_folder))
                     }
                 }
             } else {

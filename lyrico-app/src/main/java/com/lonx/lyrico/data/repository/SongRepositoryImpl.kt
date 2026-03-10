@@ -338,7 +338,7 @@ class SongRepositoryImpl(
                 updates["LYRICS"] = it
             }
 
-            AudioTagWriter.writeTags(pfdDescriptor, updates,false)
+            AudioTagWriter.writeTags(pfdDescriptor, updates)
 
             // 图片写入
             audioTagData.picUrl?.let { picUrl ->
