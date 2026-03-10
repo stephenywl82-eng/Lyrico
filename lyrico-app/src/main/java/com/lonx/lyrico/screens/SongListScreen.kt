@@ -91,6 +91,7 @@ import com.moriafly.salt.ui.popup.PopupMenuItem
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.BatchMatchHistoryDetailDestination
+import com.ramcosta.composedestinations.generated.destinations.BatchRenameDestination
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
 import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
@@ -585,6 +586,31 @@ fun SongListScreen(
                     label = {
                         Text(
                             text = stringResource(R.string.action_batch_match),
+                            color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
+                            fontSize = 12.sp
+                        )
+                    }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    enabled = hasSelection,
+                    onClick = {
+                        val selectedSongs = songs.filter { selectedPaths.contains(it.mediaId) }
+                        if (selectedSongs.isNotEmpty()) {
+                            val filePaths = selectedSongs.map { it.filePath }.toTypedArray()
+                            navigator.navigate(BatchRenameDestination(filePaths = filePaths))
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_rename_24dp),
+                            contentDescription = "Batch Rename",
+                            tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = stringResource(R.string.action_batch_rename),
                             color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
                             fontSize = 12.sp
                         )

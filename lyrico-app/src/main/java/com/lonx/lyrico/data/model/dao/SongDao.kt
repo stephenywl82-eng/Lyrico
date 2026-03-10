@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Update
 import androidx.room.Upsert
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.lonx.lyrico.data.model.entity.SongEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -69,7 +71,6 @@ interface SongDao {
     suspend fun getSongByPath(filePath: String): SongEntity?
 
     // ================= 查询操作 (同步与元数据) =================
-
     /**
      * 获取同步所需信息
      * 关键修改：确保 SELECT 的列名与 SongSyncInfo 的字段名匹配
@@ -133,100 +134,14 @@ interface SongDao {
     """)
     fun getSongsByFolderId(folderId: Long): Flow<List<SongEntity>>
 
-    // ================= 排序查询 =================
 
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.titleSortKey ASC
-    """)
-    fun getAllSongsOrderByTitleAsc(): Flow<List<SongEntity>>
+    /**
+     * 使用指定的查询来获取歌曲列表
+     * 使用 RawQuery，并指定 observedEntities 参数，以监听数据库变化
+     */
+    @RawQuery(observedEntities = [SongEntity::class])
+    fun getSongs(query: SupportSQLiteQuery): Flow<List<SongEntity>>
 
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.titleSortKey DESC
-    """)
-    fun getAllSongsOrderByTitleDesc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.artistSortKey ASC
-    """)
-    fun getAllSongsOrderByArtistAsc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.artistSortKey DESC
-    """)
-    fun getAllSongsOrderByArtistDesc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.fileLastModified ASC
-    """)
-    fun getAllSongsOrderByDateModifiedAsc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.fileLastModified DESC
-    """)
-    fun getAllSongsOrderByDateModifiedDesc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.fileAdded ASC
-    """)
-    fun getAllSongsOrderByDateAddedAsc(): Flow<List<SongEntity>>
-
-    @Query("""
-        SELECT s.* FROM songs AS s
-        INNER JOIN folders AS f ON s.folderId = f.id
-        WHERE f.isIgnored = 0
-        ORDER BY s.fileAdded DESC
-    """)
-    fun getAllSongsOrderByDateAddedDesc(): Flow<List<SongEntity>>
-
-    @Query("""
-    SELECT s.* FROM songs AS s
-    INNER JOIN folders AS f ON s.folderId = f.id
-    WHERE f.isIgnored = 0
-    ORDER BY s.fileSize ASC
-""")
-    fun getAllSongsOrderByFileSizeAsc(): Flow<List<SongEntity>>
-
-    @Query("""
-    SELECT s.* FROM songs AS s
-    INNER JOIN folders AS f ON s.folderId = f.id
-    WHERE f.isIgnored = 0
-    ORDER BY s.fileSize DESC
-""")
-    fun getAllSongsOrderByFileSizeDesc(): Flow<List<SongEntity>>
-    @Query("""
-    SELECT s.* FROM songs AS s
-    INNER JOIN folders AS f ON s.folderId = f.id
-    WHERE f.isIgnored = 0
-    ORDER BY s.durationMilliseconds ASC
-""")
-    fun getAllSongsOrderByDurationAsc(): Flow<List<SongEntity>>
-
-    @Query("""
-    SELECT s.* FROM songs AS s
-    INNER JOIN folders AS f ON s.folderId = f.id
-    WHERE f.isIgnored = 0
-    ORDER BY s.durationMilliseconds DESC
-""")
-    fun getAllSongsOrderByDurationDesc(): Flow<List<SongEntity>>
+    @Query("UPDATE songs SET filePath = :newPath, fileName = :newFileName, uri = :newUri WHERE filePath = :oldPath")
+    suspend fun updatePathInfo(oldPath: String, newPath: String, newFileName: String, newUri: String)
 }

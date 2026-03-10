@@ -17,9 +17,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.LyricFormat
@@ -47,6 +49,7 @@ import com.ramcosta.composedestinations.generated.destinations.BatchMatchHistory
 import com.ramcosta.composedestinations.generated.destinations.FolderManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.SearchSourcePriorityDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.roundToInt
 
@@ -76,6 +79,7 @@ fun SettingsScreen(
     val ignoredFolders = folders.count { it.isIgnored }
     val searchSourceOrder = settingsUiState.searchSourceOrder
     val searchPageSize = settingsUiState.searchPageSize
+    val scope = rememberCoroutineScope()
 
     val showClearCacheDialog = remember { mutableStateOf(false) }
 
@@ -363,6 +367,21 @@ fun SettingsScreen(
                         showClearCacheDialog.value = true
                     }
                 )
+                if (BuildConfig.DEBUG){
+                    Item(
+                        text = stringResource(R.string.clear_songs),
+                        onClick = {
+                            scope.launch {
+                                val success = settingsViewModel.clearSongs()
+                                if (success) {
+                                    Toast.makeText(context, "已清空数据库", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "清空数据库失败", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    )
+                }
                 Item(
                     text = stringResource(R.string.about),
                     onClick = {

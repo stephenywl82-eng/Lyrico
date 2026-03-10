@@ -12,7 +12,9 @@ enum class SortBy(
     DATE_MODIFIED(R.string.label_date_modified, false),
     DATE_ADDED(R.string.label_date_added, false),
     FILE_SIZE(R.string.label_file_size, false),
-    DURATION(R.string.label_duration, false)
+    DURATION(R.string.label_duration, false),
+    EXTENSION(R.string.label_extension, false),
+
 }
 
 enum class SortOrder {

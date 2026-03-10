@@ -201,6 +201,7 @@
     <string name="label_date_modified">Date Modified</string>
     <string name="label_file_path">File Path</string>
     <string name="label_cover">Cover</string>
+    <string name="label_extension">Extension</string>
     <!-- Screen Titles -->
     <string name="folder_manager_title">Folder Management</string>
 
@@ -293,4 +294,6 @@
     <string name="show_scroll_top_button">Quick back to top</string>
     <string name="show_scroll_top_button_hint">Shows a floating button when scrolling</string>
     <string name="action_reset">Reset</string>
+    <string name="action_batch_rename">Batch Rename</string>
+
 </resources>

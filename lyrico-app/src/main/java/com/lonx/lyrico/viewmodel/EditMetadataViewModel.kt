@@ -1,6 +1,5 @@
 package com.lonx.lyrico.viewmodel
 
-import android.app.Application
 import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.IntentSender
@@ -43,11 +42,9 @@ data class EditMetadataUiState(
 
 class EditMetadataViewModel(
     private val songRepository: SongRepository,
-    private val playbackRepository: PlaybackRepository,
-    application: Application
+    private val playbackRepository: PlaybackRepository
 ) : ViewModel() {
 
-    private val contentResolver = application.contentResolver
     private val TAG = "EditMetadataVM"
 
     private var currentSong: SongEntity? = null

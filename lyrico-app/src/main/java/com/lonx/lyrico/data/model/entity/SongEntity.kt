@@ -96,6 +96,7 @@ data class SongEntity(
     @ColumnInfo(defaultValue = "0")
     val fileSize: Long = 0,
 
+    val fileExtension: String? = null,
     val title: String? = null,
     val artist: String? = null,
     val albumArtist: String? = null,

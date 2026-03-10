@@ -20,6 +20,7 @@ import com.lonx.lyrico.utils.UpdateManager
 import com.lonx.lyrico.utils.UpdateManagerImpl
 import com.lonx.lyrico.viewmodel.AboutViewModel
 import com.lonx.lyrico.viewmodel.BatchMatchHistoryViewModel
+import com.lonx.lyrico.viewmodel.BatchRenameViewModel
 import com.lonx.lyrico.viewmodel.EditMetadataViewModel
 import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.lonx.lyrico.viewmodel.FolderSongsViewModel
@@ -167,7 +168,7 @@ val appModule = module {
     viewModel { SongListViewModel(get(), get(), get(),get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(),get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { EditMetadataViewModel(get(), get(), get()) }
+    viewModel { EditMetadataViewModel(get(), get()) }
     viewModel { LocalSearchViewModel(get()) }
     viewModel { BatchMatchHistoryViewModel(get()) }
     viewModel { FolderManagerViewModel(get()) }
@@ -177,5 +178,6 @@ val appModule = module {
             database = get()
         )
     }
+    viewModel { BatchRenameViewModel(get()) }
 }
 

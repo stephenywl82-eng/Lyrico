@@ -2,6 +2,8 @@ package com.lonx.lyrico.data.repository
 
 import android.app.RecoverableSecurityException
 import android.content.Context
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.OpenableColumns
@@ -14,20 +16,25 @@ import com.lonx.audiotag.rw.AudioTagReader
 import com.lonx.audiotag.rw.AudioTagWriter
 import com.lonx.lyrico.data.LyricoDatabase
 import com.lonx.lyrico.data.exception.RequiresUserPermissionException
+import com.lonx.lyrico.data.model.RenamePreview
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.SongFile
+import com.lonx.lyrico.data.utils.SongQueryBuilder
 import com.lonx.lyrico.data.utils.SortKeyUtils
 import com.lonx.lyrico.utils.MusicScanner
 import com.lonx.lyrico.viewmodel.SortBy
+import com.lonx.lyrico.viewmodel.SortInfo
 import com.lonx.lyrico.viewmodel.SortOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import kotlin.coroutines.resume
 
 /**
  * 歌曲数据存储库实现类 (基于 Uri 版本)
@@ -37,12 +44,13 @@ class SongRepositoryImpl(
     private val context: Context,
     private val musicScanner: MusicScanner,
     private val settingsRepository: SettingsRepository,
-    private val okHttpClient: OkHttpClient
+    private val okHttpClient: OkHttpClient,
 ) : SongRepository {
 
     private val songDao = database.songDao()
     private val folderDao = database.folderDao()
 
+    private val songQueryBuilder = SongQueryBuilder
     private companion object {
         const val TAG = "SongRepository"
     }
@@ -233,6 +241,7 @@ class SongRepositoryImpl(
                 fileName = songFile.fileName,
                 title = audioData.title,
                 fileSize = songFile.fileSize,
+                fileExtension = songFile.fileName.substringAfterLast(".").uppercase(),
                 artist = audioData.artist,
                 album = audioData.album,
                 genre = audioData.genre,
@@ -397,14 +406,9 @@ class SongRepositoryImpl(
     }
 
     override fun getAllSongsSorted(sortBy: SortBy, order: SortOrder): Flow<List<SongEntity>> {
-        return when (sortBy) {
-            SortBy.TITLE -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByTitleAsc() else songDao.getAllSongsOrderByTitleDesc()
-            SortBy.ARTISTS -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByArtistAsc() else songDao.getAllSongsOrderByArtistDesc()
-            SortBy.DATE_MODIFIED -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByDateModifiedAsc() else songDao.getAllSongsOrderByDateModifiedDesc()
-            SortBy.DATE_ADDED -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByDateAddedAsc() else songDao.getAllSongsOrderByDateAddedDesc()
-            SortBy.FILE_SIZE -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByFileSizeAsc() else songDao.getAllSongsOrderByFileSizeDesc()
-            SortBy.DURATION -> if (order == SortOrder.ASC) songDao.getAllSongsOrderByDurationAsc() else songDao.getAllSongsOrderByDurationDesc()
-        }
+        val sortInfo = SortInfo(sortBy, order)
+        val query = songQueryBuilder.build(sortInfo)
+        return songDao.getSongs(query)
     }
 
     private suspend fun downloadImageBytes(url: String): ByteArray =
@@ -447,5 +451,38 @@ class SongRepositoryImpl(
         }
         // 最后的 fallback
         return contentUri.substringAfterLast("/")
+    }
+    override suspend fun handleRenameSuccess(previews: List<RenamePreview>) {
+        withContext(Dispatchers.IO) {
+            previews.forEach { preview ->
+                val newUri = suspendCancellableCoroutine<Uri?> { continuation ->
+                    MediaScannerConnection.scanFile(
+                        context,
+                        arrayOf(preview.newPath),
+                        null
+                    ) { _, uri ->
+                        continuation.resume(uri)
+                    }
+                }
+
+                if (newUri != null) {
+                    val oldPath = preview.originalPath
+                    val newPath = preview.newPath
+                    val newFileName = newPath.substringAfterLast('/')
+
+                    songDao.updatePathInfo(
+                        oldPath = oldPath,
+                        newPath = newPath,
+                        newFileName = newFileName,
+                        newUri = newUri.toString()
+                    )
+
+                    val song = songDao.getSongByUri(newUri.toString())
+                    song?.let {
+                        folderDao.refreshSongCount(it.folderId)
+                    }
+                }
+            }
+        }
     }
 }
