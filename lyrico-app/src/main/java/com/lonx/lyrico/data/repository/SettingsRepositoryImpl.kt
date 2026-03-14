@@ -14,7 +14,6 @@ import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortInfo
 import com.lonx.lyrico.viewmodel.SortOrder
-import com.lonx.lyrics.model.SearchSource
 import com.lonx.lyrics.model.Source
 import com.lonx.lyrics.model.toSourceCsv
 import com.lonx.lyrics.model.toSourceList
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toSet
 import kotlinx.serialization.json.Json
 
 

@@ -18,11 +18,14 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -96,6 +99,8 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
@@ -136,6 +141,9 @@ fun SongListScreen(
             showScrollTopButton && listState.firstVisibleItemIndex > 0
         }
     }
+    var initialDragIndex by remember { mutableStateOf<Int?>(null) }
+    var currentDragIndex by remember { mutableStateOf<Int?>(null) }
+    var autoScrollSpeed by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val sectionIndexMap = remember(songs, sortInfo) {
@@ -158,7 +166,69 @@ fun SongListScreen(
             SECTIONS_DESC
         }
     }
+    LaunchedEffect(autoScrollSpeed) {
+        if (autoScrollSpeed != 0f) {
+            while (isActive) {
+                listState.scrollBy(autoScrollSpeed)
+                delay(16) // 大约 60 帧的刷新率
+            }
+        }
+    }
+    val dragSelectionModifier = if (isSelectionMode) {
+        Modifier.pointerInput(songs, isSelectionMode) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { offset ->
+                    // 找出手指长按处的 Item
+                    val itemInfo = listState.layoutInfo.visibleItemsInfo.find {
+                        offset.y >= it.offset && offset.y <= (it.offset + it.size)
+                    }
+                    itemInfo?.let {
+                        initialDragIndex = it.index
+                        currentDragIndex = it.index
+                        viewModel.startDragSelection(it.index, songs)
+                    }
+                },
+                onDrag = { change, _ ->
+                    val y = change.position.y
+                    val viewportHeight = listState.layoutInfo.viewportSize.height
+                    val topThreshold = 150f // 距离顶部多少像素开始向上滚动
+                    val bottomThreshold = viewportHeight - 150f
 
+                    // 计算自动滚动速度
+                    autoScrollSpeed = when {
+                        y < topThreshold -> - (topThreshold - y) * 0.2f
+                        y > bottomThreshold -> (y - bottomThreshold) * 0.2f
+                        else -> 0f
+                    }
+
+                    // 更新滑动经过的区间
+                    val itemInfo = listState.layoutInfo.visibleItemsInfo.find {
+                        y >= it.offset && y <= (it.offset + it.size)
+                    }
+                    if (itemInfo != null && initialDragIndex != null) {
+                        if (itemInfo.index != currentDragIndex) {
+                            currentDragIndex = itemInfo.index
+                            viewModel.updateDragSelection(initialDragIndex!!, currentDragIndex!!, songs)
+                        }
+                    }
+                },
+                onDragEnd = {
+                    initialDragIndex = null
+                    currentDragIndex = null
+                    autoScrollSpeed = 0f
+                    viewModel.endDragSelection()
+                },
+                onDragCancel = {
+                    initialDragIndex = null
+                    currentDragIndex = null
+                    autoScrollSpeed = 0f
+                    viewModel.endDragSelection()
+                }
+            )
+        }
+    } else {
+        Modifier
+    }
     BackHandler(enabled = isSelectionMode) {
         viewModel.exitSelectionMode()
     }
@@ -194,6 +264,97 @@ fun SongListScreen(
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_up_24dp),
                             contentDescription = stringResource(R.string.cd_sort) // 或者 "Scroll to top"
+                        )
+                    }
+                }
+            },
+            bottomBar = {
+                if(isSelectionMode) {
+                    val hasSelection = selectedPaths.isNotEmpty()
+                    NavigationBar(
+                        containerColor = SaltTheme.colors.background
+                    ) {
+                        NavigationBarItem(
+                            selected = false,
+                            enabled = hasSelection,
+                            onClick = { viewModel.batchShare(context, songs) },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_share_24dp),
+                                    contentDescription = stringResource(R.string.action_share),
+                                    tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.action_share),
+                                    color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        )
+                        NavigationBarItem(
+                            selected = false,
+                            enabled = hasSelection,
+                            onClick = { viewModel.showBatchDeleteDialog() },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_delete_24dp),
+                                    contentDescription = stringResource(R.string.action_delete),
+                                    tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.action_delete),
+                                    color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        )
+                        NavigationBarItem(
+                            selected = false,
+                            enabled = hasSelection,
+                            onClick = { viewModel.openBatchMatchConfig() },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_match_24dp),
+                                    contentDescription = stringResource(R.string.action_batch_match),
+                                    tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.action_batch_match),
+                                    color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        )
+                        NavigationBarItem(
+                            selected = false,
+                            enabled = hasSelection,
+                            onClick = {
+                                val selectedSongs = songs.filter { selectedPaths.contains(it.mediaId) }
+                                if (selectedSongs.isNotEmpty()) {
+                                    val filePaths = selectedSongs.map { it.filePath }.toTypedArray()
+                                    navigator.navigate(BatchRenameDestination(filePaths = filePaths))
+                                }
+                            },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_rename_24dp),
+                                    contentDescription = "Batch Rename",
+                                    tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(R.string.action_batch_rename),
+                                    color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
+                                    fontSize = 12.sp
+                                )
+                            }
                         )
                     }
                 }
@@ -355,14 +516,16 @@ fun SongListScreen(
                 }
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(dragSelectionModifier),
                     state = listState,
                     overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
                 ) {
-                    items(
+                    itemsIndexed(
                         items = songs,
-                        key = { song -> song.mediaId }
-                    ) { song ->
+                        key = { _, song -> song.mediaId }
+                    ) { index, song ->
                         SongListItem(
                             song = song,
                             navigator = navigator,
@@ -521,100 +684,6 @@ fun SongListScreen(
                     historyId = uiState.batchHistoryId,
                     navigator = navigator,
                     onClose = { viewModel.closeBatchMatchDialog() }
-                )
-            }
-        }
-        AnimatedVisibility(
-            visible = isSelectionMode,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically { it },
-            exit = slideOutVertically { it }
-        ) {
-            val hasSelection = selectedPaths.isNotEmpty()
-            NavigationBar(
-                containerColor = SaltTheme.colors.background
-            ) {
-                NavigationBarItem(
-                    selected = false,
-                    enabled = hasSelection,
-                    onClick = { viewModel.batchShare(context, songs) },
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_share_24dp),
-                            contentDescription = stringResource(R.string.action_share),
-                            tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.action_share),
-                            color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
-                            fontSize = 12.sp
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    enabled = hasSelection,
-                    onClick = { viewModel.showBatchDeleteDialog() },
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_delete_24dp),
-                            contentDescription = stringResource(R.string.action_delete),
-                            tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.action_delete),
-                            color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
-                            fontSize = 12.sp
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    enabled = hasSelection,
-                    onClick = { viewModel.openBatchMatchConfig() },
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_match_24dp),
-                            contentDescription = stringResource(R.string.action_batch_match),
-                            tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.action_batch_match),
-                            color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
-                            fontSize = 12.sp
-                        )
-                    }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    enabled = hasSelection,
-                    onClick = {
-                        val selectedSongs = songs.filter { selectedPaths.contains(it.mediaId) }
-                        if (selectedSongs.isNotEmpty()) {
-                            val filePaths = selectedSongs.map { it.filePath }.toTypedArray()
-                            navigator.navigate(BatchRenameDestination(filePaths = filePaths))
-                        }
-                    },
-                    icon = {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_rename_24dp),
-                            contentDescription = "Batch Rename",
-                            tint = if (hasSelection) SaltTheme.colors.highlight else SaltTheme.colors.subText
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = stringResource(R.string.action_batch_rename),
-                            color = if (hasSelection) SaltTheme.colors.text else SaltTheme.colors.subText,
-                            fontSize = 12.sp
-                        )
-                    }
                 )
             }
         }
@@ -905,12 +974,10 @@ fun SongListItem(
                         navigator.navigate(EditMetadataDestination(songFileUri = song.uri))
                     }
                 },
-                onLongClick = {
-                    isSelectionMode?.let {
-                        if (!it) {
-                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                            onToggleSelection?.let { it1 -> it1() }
-                        }
+                onLongClick = if (isSelectionMode == true) null else {
+                    {
+                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        onToggleSelection?.let { it() }
                     }
                 }
             )

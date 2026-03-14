@@ -102,7 +102,8 @@ class SongListViewModel(
     private var musicContentObserver: MusicContentObserver? = null
     private val scanRequest = MutableSharedFlow<Unit>(replay = 0)
     private var batchMatchJob: Job? = null
-
+    private var preDragSelectedIds = emptySet<Long>()
+    private var isDraggingToSelect = true
     val sortInfo: StateFlow<SortInfo> = settingsRepository.sortInfo
         .stateIn(viewModelScope, SharingStarted.Eagerly, SortInfo())
 
@@ -178,6 +179,43 @@ class SongListViewModel(
         }
     }
 
+    /**
+     * 触发滑动选择的起点
+     */
+    fun startDragSelection(index: Int, songs: List<SongEntity>) {
+        val song = songs.getOrNull(index) ?: return
+        preDragSelectedIds = _selectedSongIds.value
+
+        // 起点只包含当前长按的这一个元素
+        val rangeIds = setOf(song.mediaId)
+
+        // 取对称差集：划过的项状态反转，未划过的保持原样
+        _selectedSongIds.value = (preDragSelectedIds - rangeIds) + (rangeIds - preDragSelectedIds)
+    }
+
+    /**
+     * 拖动过程中更新选中区间
+     */
+    fun updateDragSelection(startIndex: Int, endIndex: Int, songs: List<SongEntity>) {
+        val start = minOf(startIndex, endIndex).coerceAtLeast(0)
+        val end = maxOf(startIndex, endIndex).coerceAtMost(songs.size - 1)
+        if (start > end) return
+
+        // 获取当前手指划过的所有歌曲 ID
+        val rangeIds = songs.subList(start, end + 1).map { it.mediaId }.toSet()
+
+        // preDragSelectedIds - rangeIds  -> 找出原本被选中，且没被划过的项保留下来
+        // rangeIds - preDragSelectedIds  -> 找出划过的项中，原本没被选中的项，让它们变成选中
+        _selectedSongIds.value = (preDragSelectedIds - rangeIds) + (rangeIds - preDragSelectedIds)
+    }
+
+    /**
+     * 结束滑动选择
+     */
+    fun endDragSelection() {
+        // 滑动结束，清空基准状态
+        preDragSelectedIds = emptySet()
+    }
     fun onStart() {
         viewModelScope.launch {
             val checkUpdateEnabled = settingsRepository.checkUpdateEnabled.first()
