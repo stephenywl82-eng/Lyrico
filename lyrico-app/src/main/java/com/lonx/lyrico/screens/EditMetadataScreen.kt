@@ -68,7 +68,9 @@ fun EditMetadataScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
+    // 控制 BottomSheet 显示的 State
+    var showOffsetSheet by remember { mutableStateOf(false) }
+    val currentShiftOffset by viewModel.currentShiftOffset.collectAsState()
     onLyricsResult.onResult { result ->
         viewModel.updateMetadataFromSearchResult(result)
     }
@@ -136,17 +138,36 @@ fun EditMetadataScreen(
             .background(SaltTheme.colors.background),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(
-                containerColor = SaltTheme.colors.highlight,
-                onClick = {
-                    viewModel.play(context)
-                }
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_play_24dp),
-                    contentDescription = null,
-                    tint = null
-                )
+                if (!editingTagData?.lyrics.isNullOrBlank()) {
+                    FloatingActionButton(
+                        containerColor = SaltTheme.colors.highlight,
+                        onClick = {
+                            viewModel.prepareLyricsOffset()
+                            showOffsetSheet = true
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_timer_24dp),
+                            contentDescription = null,
+                            tint = SaltTheme.colors.onHighlight
+                        )
+                    }
+                }
+
+                FloatingActionButton(
+                    containerColor = SaltTheme.colors.highlight,
+                    onClick = { viewModel.play(context) }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_play_24dp),
+                        contentDescription = null,
+                        tint = SaltTheme.colors.onHighlight
+                    )
+                }
             }
         },
         topBar = {
@@ -424,7 +445,53 @@ fun EditMetadataScreen(
             Spacer(modifier = Modifier.height(200.dp))
         }
     }
+    if (showOffsetSheet) {
+        val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(
+            onDismissRequest = { showOffsetSheet = false },
+            sheetState = bottomSheetState,
+            containerColor = SaltTheme.colors.background
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 歌词预览窗口
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f, fill = false)
+                        .heightIn(min = 150.dp, max = 350.dp)
+                        .padding(horizontal = 16.dp)
+                        .background(SaltTheme.colors.subBackground, RoundedCornerShape(8.dp)) // 使用主题色
+                        .padding(12.dp)
+                ) {
+                    val previewScrollState = rememberScrollState()
+                    Text(
+                        text = editingTagData?.lyrics ?: "",
+                        color = SaltTheme.colors.text,
+                        fontSize = 13.sp,
+                        modifier = Modifier.verticalScroll(previewScrollState)
+                    )
+                }
 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OffsetAdjustPanel(
+                    currentOffset = currentShiftOffset,
+                    onOffsetChange = { newOffset ->
+                        viewModel.applyLyricsOffset(newOffset)
+                    },
+                    onReset = {
+                        viewModel.resetLyricsOffset()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
 }
 
 @Composable

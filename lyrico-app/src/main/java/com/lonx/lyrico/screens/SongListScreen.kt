@@ -263,7 +263,8 @@ fun SongListScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_up_24dp),
-                            contentDescription = stringResource(R.string.cd_sort) // 或者 "Scroll to top"
+                            contentDescription = stringResource(R.string.cd_sort),
+                            tint = SaltTheme.colors.onHighlight
                         )
                     }
                 }

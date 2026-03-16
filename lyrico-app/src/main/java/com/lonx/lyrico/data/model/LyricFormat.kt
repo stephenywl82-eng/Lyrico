@@ -8,5 +8,6 @@ enum class LyricFormat(
 ) {
     PLAIN_LRC(R.string.lyric_format_plain),
     VERBATIM_LRC(R.string.lyric_format_verbatim),
-    ENHANCED_LRC(R.string.lyric_format_enhanced)
+    ENHANCED_LRC(R.string.lyric_format_enhanced),
+    TTML(R.string.lyric_format_ttml),
 }

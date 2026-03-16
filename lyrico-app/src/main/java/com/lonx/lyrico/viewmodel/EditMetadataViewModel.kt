@@ -14,6 +14,7 @@ import com.lonx.lyrico.data.model.LyricsSearchResult
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.repository.PlaybackRepository
 import com.lonx.lyrico.data.repository.SongRepository
+import com.lonx.lyrico.utils.LyricsUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,7 +52,11 @@ class EditMetadataViewModel(
 
     // 存储当前正在操作的 URI 字符串
     private var currentSongUri: String? = null
+    private var preOffsetLyrics: String? = null
 
+    // 记录当前的累计偏移量，供 UI 显示
+    private val _currentShiftOffset = MutableStateFlow(0L)
+    val currentShiftOffset: StateFlow<Long> = _currentShiftOffset.asStateFlow()
     private val _uiState = MutableStateFlow(EditMetadataUiState())
     val uiState: StateFlow<EditMetadataUiState> = _uiState.asStateFlow()
 
@@ -100,8 +105,46 @@ class EditMetadataViewModel(
             )
         }
     }
+    /**
+     * 打开弹窗前准备：拍快照，并重置累计偏移量
+     */
+    fun prepareLyricsOffset() {
+        preOffsetLyrics = _uiState.value.editingTagData?.lyrics
+        _currentShiftOffset.value = 0L
+    }
 
-    // ... updateMetadataFromSearchResult 保持不变 ...
+    /**
+     * 应用绝对偏移量（相对于快照）
+     */
+    fun applyLyricsOffset(totalOffset: Long) {
+        val originalLyrics = preOffsetLyrics ?: return
+
+        // 1. 更新当前显示的数值
+        _currentShiftOffset.value = totalOffset
+
+        // 2. 永远基于 originalLyrics (快照) 进行偏移，避免来回计算导致的精度丢失或触底失真
+        val shiftedLyrics = LyricsUtils.shiftLyricsOffset(originalLyrics, totalOffset)
+
+        _uiState.update { state ->
+            state.copy(
+                editingTagData = state.editingTagData?.copy(lyrics = shiftedLyrics),
+                isEditing = true
+            )
+        }
+    }
+    /**
+     * 重置回打开 BottomSheet 时的状态
+     */
+    fun resetLyricsOffset() {
+        _currentShiftOffset.value = 0L
+        preOffsetLyrics?.let { original ->
+            _uiState.update { state ->
+                state.copy(
+                    editingTagData = state.editingTagData?.copy(lyrics = original)
+                )
+            }
+        }
+    }
     fun updateMetadataFromSearchResult(result: LyricsSearchResult) {
         _uiState.update { state ->
             val current = state.editingTagData ?: AudioTagData()
@@ -199,6 +242,7 @@ class EditMetadataViewModel(
             }
         }
     }
+
 
     /**
      * UI层在成功发起弹窗或处理完权限请求后调用此方法清理状态
