@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.lonx.lyrico.data.model.CharacterMappingConfig
+import com.lonx.lyrico.data.model.CharacterMappingDefaults
 import com.lonx.lyrico.data.model.LyricFormat
 import com.lonx.lyrico.data.model.LyricRenderConfig
 import com.lonx.lyrico.data.model.SettingsBackup
@@ -68,8 +70,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val SEARCH_SOURCE_ORDER = stringPreferencesKey("search_source_order")
         val SEARCH_PAGE_SIZE = intPreferencesKey("search_page_size")
         val THEME_MODE = stringPreferencesKey("theme_mode")
-
         val ONLY_TRANSLATION_IF_AVAILABLE = booleanPreferencesKey("only_translation_if_available")
+        val CHARACTER_MAPPING_CONFIG = stringPreferencesKey("character_mapping_config")
     }
 
     override val lyricFormat: Flow<LyricFormat>
@@ -439,5 +441,44 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
+
+    override val characterMappingConfig: Flow<CharacterMappingConfig>
+        get() = context.settingsDataStore.data.map { preferences ->
+            val configJson = preferences[PreferencesKeys.CHARACTER_MAPPING_CONFIG]
+            if (configJson.isNullOrBlank()) {
+                CharacterMappingConfig(
+                    rules = CharacterMappingDefaults.ALL_BUILTIN_RULES
+                )
+            } else {
+                try {
+                    jsonFormatter.decodeFromString<CharacterMappingConfig>(configJson)
+                } catch (e: Exception) {
+                    CharacterMappingConfig(
+                        rules = CharacterMappingDefaults.ALL_BUILTIN_RULES
+                    )
+                }
+            }
+        }
+
+    override suspend fun saveCharacterMappingConfig(config: CharacterMappingConfig) {
+        context.settingsDataStore.edit { preferences ->
+            val configJson = jsonFormatter.encodeToString(config)
+            preferences[PreferencesKeys.CHARACTER_MAPPING_CONFIG] = configJson
+        }
+    }
+
+    override suspend fun updateCharacterMappingInRule(ruleId: String, charMappings: Map<String, String?>) {
+        val currentConfig = characterMappingConfig.first()
+        val updatedRules = currentConfig.rules.map { rule ->
+            if (rule.id == ruleId) {
+                rule.copy(charMappings = charMappings)
+            } else rule
+        }
+        saveCharacterMappingConfig(currentConfig.copy(rules = updatedRules))
+    }
+
+    override suspend fun getCharacterMappingConfig(): CharacterMappingConfig {
+        return characterMappingConfig.first()
+    }
 }
 

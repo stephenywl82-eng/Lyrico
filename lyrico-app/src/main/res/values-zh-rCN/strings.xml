@@ -112,7 +112,7 @@
     <string name="lyric_format_plain">逐行歌词</string>
     <string name="lyric_format_verbatim">逐字歌词</string>
     <string name="lyric_format_enhanced">增强型逐字歌词</string>
-
+    <string name="lyric_format_ttml">TTML (实验性)</string>
 
     <!-- 主题模式 -->
     <string name="theme_mode_auto">跟随系统</string>
@@ -327,4 +327,13 @@
 
     <string name="rename_result_summary">成功: %1$d / 总数: %2$d</string>
     <string name="rename_result_failure">失败: %1$d</string>
+
+    <!-- 字符映射 -->
+    <string name="configure_character_mapping">配置字符映射</string>
+
+    <string name="select_replacement_character">选择替换字符</string>
+    <string name="character_mapping_description">点击字符可修改其替换规则。每个字符可以映射到不同的替换值。</string>
+    <string name="character_to_replace">字符 %1$s</string>
+    <string name="no_character_mappings">暂无字符映射</string>
+    <string name="character_replacement_selector_subtitle">选择替换选项</string>
 </resources>

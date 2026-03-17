@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -32,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.RenamePreview
+import com.ramcosta.composedestinations.generated.destinations.CharacterMappingDestination
 import com.lonx.lyrico.ui.theme.LyricoColors.modifiedBorder
 import com.lonx.lyrico.utils.RenameEngine
 import com.lonx.lyrico.utils.TagField
@@ -67,7 +65,6 @@ fun BatchRenameScreen(
     val viewModel: BatchRenameViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
     LaunchedEffect(filePaths) {
         if (filePaths.isNotEmpty()) {
             val songList = filePaths.map { path ->
@@ -126,6 +123,11 @@ fun BatchRenameScreen(
                         onClick = { viewModel.executeRename() },
                         enabled = uiState.previews.isNotEmpty() && !uiState.isRenamingInProgress,
                         text = stringResource(id = R.string.action_rename),
+                    )
+                    ItemDivider()
+                    ItemButton(
+                        onClick = { navigator.navigate(CharacterMappingDestination()) },
+                        text = stringResource(id = R.string.configure_character_mapping),
                     )
                 }
             }

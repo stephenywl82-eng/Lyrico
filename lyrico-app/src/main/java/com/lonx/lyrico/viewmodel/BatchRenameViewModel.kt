@@ -5,7 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.rw.AudioTagReader
+import com.lonx.lyrico.data.model.CharacterMappingConfig
+import com.lonx.lyrico.data.model.CharacterMappingRule
+import com.lonx.lyrico.data.model.ReplacementCharOptions
 import com.lonx.lyrico.data.model.RenamePreview
+import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.utils.RenameEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import android.net.Uri
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.repository.SongRepository
 import com.lonx.lyrico.utils.UiMessage
 import java.io.File
 
@@ -25,7 +28,8 @@ data class BatchRenameUiState(
     val isGeneratingPreview: Boolean = false,
     val isRenamingInProgress: Boolean = false,
     val renameResult: RenameEngine.Result? = null,
-    val errorMessage: UiMessage? = null
+    val errorMessage: UiMessage? = null,
+    val characterMappingConfig: CharacterMappingConfig? = null
 )
 
 data class SongForBatchRename(
@@ -35,7 +39,7 @@ data class SongForBatchRename(
 )
 
 class BatchRenameViewModel(
-    private val songRepository: SongRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BatchRenameUiState())
@@ -45,8 +49,15 @@ class BatchRenameViewModel(
         _uiState.value = _uiState.value.copy(
             presetFormats = RenameEngine.getPresetFormats()
         )
-    }
 
+        viewModelScope.launch {
+            settingsRepository.characterMappingConfig.collect { config ->
+                _uiState.value = _uiState.value.copy(
+                    characterMappingConfig = config
+                )
+            }
+        }
+    }
     fun setSongs(context: Context, songs: List<SongForBatchRename>) {
         _uiState.value = _uiState.value.copy(
             songs = songs,
@@ -93,9 +104,12 @@ class BatchRenameViewModel(
                     return@launch
                 }
 
+                val mappingRules = currentState.characterMappingConfig?.rules ?: emptyList()
+
                 val request = RenameEngine.RenameRequest(
                     songs = songsForRename,
-                    format = currentState.format
+                    format = currentState.format,
+                    characterMappingRules = mappingRules
                 )
 
                 val previews = RenameEngine.generatePreviews(request)
@@ -160,5 +174,20 @@ class BatchRenameViewModel(
         _uiState.value = _uiState.value.copy(
             errorMessage = null
         )
+    }
+
+    fun updateCharacterMappingInRule(ruleId: String, character: String, replacementChar: String?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // 获取当前规则
+            val currentConfig = _uiState.value.characterMappingConfig ?: return@launch
+            val rule = currentConfig.rules.find { it.id == ruleId } ?: return@launch
+            
+            // 更新该字符的映射
+            val updatedMappings = rule.charMappings.toMutableMap()
+            // 保持映射关系，使用空字符串表示"移除"，不删除键
+            updatedMappings[character] = replacementChar ?: ""
+            
+            settingsRepository.updateCharacterMappingInRule(ruleId, updatedMappings)
+        }
     }
 }
