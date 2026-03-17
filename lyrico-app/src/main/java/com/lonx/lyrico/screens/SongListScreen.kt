@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.provider.MediaStore
 import android.text.format.Formatter
 import android.view.HapticFeedbackConstants
@@ -14,8 +13,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -24,7 +21,6 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -55,6 +51,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
@@ -63,6 +62,7 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.entity.getUri
+import com.lonx.lyrico.ui.components.bar.SearchBar
 import com.lonx.lyrico.ui.dialog.BatchMatchConfigDialog
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.utils.coil.CoverRequest
@@ -96,7 +96,6 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.BatchMatchHistoryDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.BatchRenameDestination
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
-import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.delay
@@ -166,6 +165,8 @@ fun SongListScreen(
             SECTIONS_DESC
         }
     }
+    var isSearchMode by rememberSaveable { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
     LaunchedEffect(autoScrollSpeed) {
         if (autoScrollSpeed != 0f) {
             while (isActive) {
@@ -229,8 +230,13 @@ fun SongListScreen(
     } else {
         Modifier
     }
-    BackHandler(enabled = isSelectionMode) {
-        viewModel.exitSelectionMode()
+    BackHandler(enabled = isSelectionMode || isSearchMode) {
+        if (isSelectionMode) {
+            viewModel.exitSelectionMode()
+        } else if (isSearchMode) {
+            isSearchMode = false
+            viewModel.clearSearch() // 清空搜索并恢复全列表
+        }
     }
     Box {
         Scaffold(
@@ -395,6 +401,42 @@ fun SongListScreen(
                             }
                         }
                     )
+                } else if (isSearchMode) {
+                    TopAppBar(
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = SaltTheme.colors.background,
+                            navigationIconContentColor = SaltTheme.colors.text,
+                            actionIconContentColor = SaltTheme.colors.text
+                        ),
+                        title = {
+                            SearchBar(
+                                value = uiState.searchQuery,
+                                onValueChange = {
+                                    viewModel.onSearchQueryChanged(it)
+                                },
+                                placeholder = stringResource(R.string.local_search_hint),
+                                modifier = Modifier
+                                    .focusRequester(focusRequester)
+                            )
+
+                            LaunchedEffect(Unit) {
+                                focusRequester.requestFocus()
+                            }
+                        },
+                        actions = {
+                            TextButton(
+                                onClick = {
+                                    isSearchMode = false
+                                    viewModel.clearSearch()
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.cancel),
+                                    color = SaltTheme.colors.highlight
+                                )
+                            }
+                        }
+                    )
                 } else {
                     CenterAlignedTopAppBar(
                         colors = TopAppBarColors(
@@ -434,7 +476,7 @@ fun SongListScreen(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .noRippleClickable(role = Role.Button) {
-                                        navigator.navigate(LocalSearchDestination())
+                                        isSearchMode = true
                                     }
                                     .padding(12.dp)
                             )
@@ -553,24 +595,25 @@ fun SongListScreen(
                         ItemDivider()
                     }
                 }
-                if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
-                    AlphabetSideBar(
-                        sections = sections,
-                        onSectionSelected = { section ->
-                            val index = findScrollIndex(
-                                section = section,
-                                sectionIndexMap = sectionIndexMap,
-                                order = sortInfo.order
-                            )
-                            scope.launch {
-                                listState.scrollToItem(index)
-                            }
-                        },
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                    )
-                }
 
+
+            }
+            if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
+                AlphabetSideBar(
+                    sections = sections,
+                    onSectionSelected = { section ->
+                        val index = findScrollIndex(
+                            section = section,
+                            sectionIndexMap = sectionIndexMap,
+                            order = sortInfo.order
+                        )
+                        scope.launch {
+                            listState.scrollToItem(index)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                )
             }
             sheetUiState.menuSong?.let { song ->
                 ModalBottomSheet(

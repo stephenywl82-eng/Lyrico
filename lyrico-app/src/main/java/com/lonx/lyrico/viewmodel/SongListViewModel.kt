@@ -51,7 +51,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -78,7 +82,10 @@ data class SongListUiState(
     val showScrollTopButton: Boolean = false,
     val currentFile: String = "",
     val batchHistoryId: Long = 0,
-    val batchTimeMillis: Long = 0  // 批量匹配总用时（毫秒）
+    val batchTimeMillis: Long = 0,  // 批量匹配总用时（毫秒）
+
+    val searchQuery: String = "",
+    val isSearching: Boolean = false
 )
 data class SheetUiState(
     val menuSong: SongEntity? = null,
@@ -125,11 +132,11 @@ class SongListViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, LyricFormat.VERBATIM_LRC)
 
     // 当排序信息改变时，歌曲列表自动重新加载
-    val songs: StateFlow<List<SongEntity>> = sortInfo
-        .flatMapLatest { sort ->
-            songRepository.getAllSongsSorted(sort.sortBy, sort.order)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+//    val songs: StateFlow<List<SongEntity>> = sortInfo
+//        .flatMapLatest { sort ->
+//            songRepository.getAllSongsSorted(sort.sortBy, sort.order)
+//        }
+//        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // UI 交互状态
     private val _uiState = MutableStateFlow(SongListUiState())
@@ -142,6 +149,25 @@ class SongListViewModel(
     val isSelectionMode = _isSelectionMode.asStateFlow()
     private val _sheetState = MutableStateFlow(SheetUiState())
     val sheetState = _sheetState.asStateFlow()
+    // 监听 sortInfo 和 搜索词(searchQuery) 的变化。
+    // 使用 flatMapLatest，一旦输入新搜索词，会自动取消上一次尚未完成的数据库查询
+    val songs: StateFlow<List<SongEntity>> = combine(
+        sortInfo,
+        _uiState.map { it.searchQuery }.distinctUntilChanged()
+    ) { sort, query ->
+        Pair(sort, query)
+    }.flatMapLatest { (sort, query) ->
+        if (query.isBlank()) {
+            // 没有搜索词，返回全部歌曲（应用排序）
+            songRepository.getAllSongsSorted(sort.sortBy, sort.order)
+        } else {
+            // 有搜索词，进行搜索
+            songRepository.searchSongs(query)
+        }
+    }.onEach {
+        // 数据库查询出结果后，关闭 isSearching 状态
+        _uiState.update { it.copy(isSearching = false) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     fun showMenu(song: SongEntity) {
         _sheetState.value = SheetUiState(menuSong = song)
     }
@@ -178,7 +204,18 @@ class SongListViewModel(
             }
         }
     }
-
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update {
+            it.copy(
+                searchQuery = query,
+                // 如果搜索词不为空，立即显示加载状态，直到 songs Flow 的 onEach 将其置为 false
+                isSearching = query.isNotBlank()
+            )
+        }
+    }
+    fun clearSearch() {
+        onSearchQueryChanged("")
+    }
     /**
      * 触发滑动选择的起点
      */
