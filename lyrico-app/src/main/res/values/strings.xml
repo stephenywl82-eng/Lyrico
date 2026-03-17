@@ -109,7 +109,7 @@
     <string name="lyric_format_plain">Line-by-line lyrics</string>
     <string name="lyric_format_verbatim">Word-by-word lyrics</string>
     <string name="lyric_format_enhanced">Enhanced word-by-word lyrics</string>
-
+    <string name="lyric_format_ttml">TTML (Experimental)</string>
     <!-- Theme Mode -->
     <string name="theme_mode_auto">Follow system</string>
     <string name="theme_mode_light">Light mode</string>
