@@ -98,6 +98,7 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.reorderable)
     implementation(libs.compose.markdown)
+    implementation(libs.lazycolumnscrollbar)
 
     // AndroidX
     implementation(libs.androidx.core.ktx)

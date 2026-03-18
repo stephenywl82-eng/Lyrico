@@ -21,6 +21,7 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -101,6 +102,9 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import my.nanihadesuka.compose.LazyColumnScrollbar
+import my.nanihadesuka.compose.ScrollbarSelectionMode
+import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -165,6 +169,7 @@ fun SongListScreen(
             SECTIONS_DESC
         }
     }
+    val enableIndex = sections.isNotEmpty() && sortInfo.sortBy.supportsIndex
     var isSearchMode by rememberSaveable { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(autoScrollSpeed) {
@@ -558,47 +563,61 @@ fun SongListScreen(
                     viewModel.refreshSongs()
                 }
             ) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .then(dragSelectionModifier),
+                LazyColumnScrollbar(
                     state = listState,
-                    overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
+                    settings = ScrollbarSettings.Default.copy(
+                        enabled = !enableIndex,
+                        alwaysShowScrollbar = !enableIndex,
+                        selectionMode = ScrollbarSelectionMode.Full,
+                        thumbUnselectedColor = SaltTheme.colors.subText,
+                        thumbSelectedColor = SaltTheme.colors.subText
+                    )
                 ) {
-                    itemsIndexed(
-                        items = songs,
-                        key = { _, song -> song.mediaId }
-                    ) { index, song ->
-                        SongListItem(
-                            song = song,
-                            navigator = navigator,
-                            modifier = Modifier.animateItem(),
-                            isSelectionMode = isSelectionMode,
-                            isSelected = selectedPaths.contains(song.mediaId),
-                            onToggleSelection = { viewModel.toggleSelection(song.mediaId) },
-                            trailingContent = {
-                                if (!isSelectionMode) {
-                                    IconButton(onClick = { viewModel.showMenu(song) }) {
-                                        Icon(painterResource(R.drawable.ic_info_24dp), "Info")
-                                    }
-                                } else {
-                                    IconButton(onClick = { viewModel.toggleSelection(song.mediaId) }) {
-                                        Icon(
-                                            imageVector = if (selectedPaths.contains(song.mediaId)) SaltIcons.Check else SaltIcons.Uncheck,
-                                            contentDescription = null,
-                                            tint = if (selectedPaths.contains(song.mediaId)) SaltTheme.colors.highlight else SaltTheme.colors.text
-                                        )
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .then(dragSelectionModifier),
+                        state = listState,
+                        overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
+                    ) {
+                        itemsIndexed(
+                            items = songs,
+                            key = { _, song -> song.mediaId }
+                        ) { index, song ->
+                            SongListItem(
+                                song = song,
+                                navigator = navigator,
+                                modifier = Modifier.animateItem(),
+                                isSelectionMode = isSelectionMode,
+                                isSelected = selectedPaths.contains(song.mediaId),
+                                onToggleSelection = { viewModel.toggleSelection(song.mediaId) },
+                                trailingContent = {
+                                    if (!isSelectionMode) {
+                                        IconButton(onClick = { viewModel.showMenu(song) }) {
+                                            Icon(
+                                                painterResource(R.drawable.ic_info_24dp),
+                                                "Info"
+                                            )
+                                        }
+                                    } else {
+                                        IconButton(onClick = { viewModel.toggleSelection(song.mediaId) }) {
+                                            Icon(
+                                                imageVector = if (selectedPaths.contains(song.mediaId)) SaltIcons.Check else SaltIcons.Uncheck,
+                                                contentDescription = null,
+                                                tint = if (selectedPaths.contains(song.mediaId)) SaltTheme.colors.highlight else SaltTheme.colors.text
+                                            )
+                                        }
                                     }
                                 }
-                            }
-                        )
-                        ItemDivider()
+                            )
+                            ItemDivider()
+                        }
                     }
                 }
 
 
             }
-            if (sections.isNotEmpty() && sortInfo.sortBy.supportsIndex) {
+            if (enableIndex) {
                 AlphabetSideBar(
                     sections = sections,
                     onSectionSelected = { section ->
@@ -733,7 +752,57 @@ fun SongListScreen(
         }
     }
 }
-
+@OptIn(UnstableSaltUiApi::class)
+@Composable
+private fun SongListContent(
+    songs: List<SongEntity>,
+    listState: LazyListState,
+    navigator: DestinationsNavigator,
+    isSelectionMode: Boolean,
+    selectedPaths: Set<Long>,
+    modifier: Modifier,
+    viewModel: SongListViewModel
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier),
+        state = listState,
+        overscrollEffect = rememberCupertinoOverscrollEffect(allowTopOverscroll = false)
+    ) {
+        itemsIndexed(
+            items = songs,
+            key = { _, song -> song.mediaId }
+        ) { _, song ->
+            SongListItem(
+                song = song,
+                navigator = navigator,
+                modifier = Modifier.animateItem(),
+                isSelectionMode = isSelectionMode,
+                isSelected = selectedPaths.contains(song.mediaId),
+                onToggleSelection = { viewModel.toggleSelection(song.mediaId) },
+                trailingContent = {
+                    if (!isSelectionMode) {
+                        IconButton(onClick = { viewModel.showMenu(song) }) {
+                            Icon(painterResource(R.drawable.ic_info_24dp), "Info")
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.toggleSelection(song.mediaId) }) {
+                            Icon(
+                                imageVector = if (selectedPaths.contains(song.mediaId))
+                                    SaltIcons.Check else SaltIcons.Uncheck,
+                                contentDescription = null,
+                                tint = if (selectedPaths.contains(song.mediaId))
+                                    SaltTheme.colors.highlight else SaltTheme.colors.text
+                            )
+                        }
+                    }
+                }
+            )
+            ItemDivider()
+        }
+    }
+}
 @Composable
 fun BatchMatchingDialog(
     currentFile: String,

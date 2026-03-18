@@ -1,6 +1,7 @@
 package com.lonx.lyrico.utils
 
 import com.lonx.audiotag.model.AudioTagData
+import com.lonx.lyrico.data.model.CharacterMappingRule
 import com.lonx.lyrico.data.model.RenamePreview
 import java.io.File
 
@@ -8,6 +9,7 @@ object RenameEngine {
     data class RenameRequest(
         val songs: List<SongForRename>,
         val format: String,
+        val characterMappingRules: List<CharacterMappingRule> = emptyList(),
         val createSubdirectories: Boolean = false
     )
 
@@ -27,7 +29,7 @@ object RenameEngine {
 
             // Generate new file name
             var newFileName = FormatParser.buildFileName(tokens, song.tagData)
-            newFileName = FileNameSanitizer.sanitize(newFileName)
+            newFileName = FileNameSanitizer.sanitize(newFileName, request.characterMappingRules)
 
             if (newFileName.isEmpty()) {
                 newFileName = file.nameWithoutExtension

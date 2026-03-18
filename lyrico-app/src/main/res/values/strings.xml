@@ -109,7 +109,7 @@
     <string name="lyric_format_plain">Line-by-line lyrics</string>
     <string name="lyric_format_verbatim">Word-by-word lyrics</string>
     <string name="lyric_format_enhanced">Enhanced word-by-word lyrics</string>
-    <string name="lyric_format_ttml">TTML (Experimental)</string>
+    <string name="lyric_format_ttml">TTML(Experimental)</string>
     <!-- Theme Mode -->
     <string name="theme_mode_auto">Follow system</string>
     <string name="theme_mode_light">Light mode</string>
@@ -316,4 +316,19 @@
 
     <string name="rename_result_summary">Success: %1$d / Total: %2$d</string>
     <string name="rename_result_failure">Failed: %1$d</string>
+
+    <!-- Character Mapping -->
+    <string name="configure_character_mapping">Configure Character Mapping</string>
+    <string name="select_replacement_character">Select Replacement Character</string>
+    <string name="character_mapping_description">Click on a character to modify its replacement rule. Each character can be mapped to a different replacement.</string>
+    <string name="character_to_replace">Character %1$s</string>
+    <string name="no_character_mappings">No character mappings</string>
+    <string name="character_replacement_selector_subtitle">Select replacement option</string>
+
+    <string name="replacement_remove">Remove</string>
+    <string name="replacement_ideographic_comma">Ideographic comma (、)</string>
+    <string name="replacement_half_width_comma">Half-width comma (,)</string>
+    <string name="replacement_full_width_comma">Full-width comma (，)</string>
+    <string name="replacement_ampersand">Ampersand (&amp;)</string>
+    <string name="replacement_not_selected">Not selected</string>
 </resources>
