@@ -1,5 +1,6 @@
 package com.lonx.lyrico.di
 
+import android.app.Application
 import androidx.room.Room
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.lonx.lyrico.data.LyricoDatabase
@@ -177,6 +178,6 @@ val appModule = module {
             database = get()
         )
     }
-    viewModel { BatchRenameViewModel(get()) }
+    viewModel { BatchRenameViewModel(get(), androidContext()) }
 }
 

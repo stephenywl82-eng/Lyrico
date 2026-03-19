@@ -74,7 +74,7 @@ fun BatchRenameScreen(
                 val lastModified = fileLastModifieds.getOrNull(index) ?: File(path).lastModified()
                 SongForBatchRename(path, path.substringAfterLast('/'), null, lastModified)
             }
-            viewModel.setSongs(context, songList)
+            viewModel.setSongs(songList)
         }
     }
 
@@ -93,7 +93,7 @@ fun BatchRenameScreen(
                 RoundedColumn {
                     ItemEdit(
                         value = uiState.format,
-                        onValueChange = { viewModel.setFormat(context, it) },
+                        onValueChange = { viewModel.setFormat(it) },
                         placeholder = stringResource(id = R.string.format_placeholder),
                         hintText = stringResource(id = R.string.format_hint)
                     )
@@ -107,7 +107,6 @@ fun BatchRenameScreen(
                                     state = uiState.format == format,
                                     onChange = {
                                         viewModel.setFormat(
-                                            context,
                                             format
                                         ); state.dismiss()
                                     }

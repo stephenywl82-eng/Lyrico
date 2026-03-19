@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 import android.net.Uri
 import com.lonx.lyrico.R
 import com.lonx.lyrico.utils.UiMessage
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import java.io.File
 
 data class BatchRenameUiState(
@@ -38,161 +41,232 @@ data class SongForBatchRename(
 )
 
 class BatchRenameViewModel(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val appContext: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BatchRenameUiState())
     val uiState: StateFlow<BatchRenameUiState> = _uiState
 
+    /** 独立的状态流，用于 combine */
+    private val songsFlow = MutableStateFlow<List<SongForBatchRename>>(emptyList())
+    private val formatFlow = MutableStateFlow("@1 - @2")
+
     init {
+
         _uiState.value = _uiState.value.copy(
             presetFormats = RenameEngine.getPresetFormats()
         )
 
+        /** 同步 characterMappingConfig 到 uiState */
         viewModelScope.launch {
             settingsRepository.characterMappingConfig.collect { config ->
-                _uiState.value = _uiState.value.copy(
-                    characterMappingConfig = config
-                )
+                _uiState.update {
+                    it.copy(characterMappingConfig = config)
+                }
             }
         }
-    }
-    fun setSongs(context: Context, songs: List<SongForBatchRename>) {
-        _uiState.value = _uiState.value.copy(
-            songs = songs,
-            previews = emptyList(),
-            renameResult = null,
-            errorMessage = null
-        )
-        generatePreviews(context)
-    }
 
-    fun setFormat(context: Context, format: String) {
-        _uiState.value = _uiState.value.copy(format = format)
-        generatePreviews(context)
-    }
-
-    fun generatePreviews(context: Context) {
-        val currentState = _uiState.value
-        if (currentState.songs.isEmpty()) return
-
+        /** preview 自动生成 */
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                _uiState.value = _uiState.value.copy(
-                    isGeneratingPreview = true,
-                    errorMessage = null
-                )
 
-                val songsForRename = currentState.songs.mapNotNull { song ->
-                    val tagData = song.tagData ?: loadTagData(context, song.filePath)
-                    if (tagData != null) {
-                        RenameEngine.SongForRename(
-                            originalPath = song.filePath,
-                            tagData = tagData
+            combine(
+                songsFlow,
+                formatFlow,
+                settingsRepository.characterMappingConfig
+            ) { songs, format, mapping ->
+                Triple(songs, format, mapping)
+            }
+                .collectLatest { (songs, format, mapping) ->
+
+                    if (songs.isEmpty()) {
+                        _uiState.update { it.copy(previews = emptyList()) }
+                        return@collectLatest
+                    }
+
+                    _uiState.update { it.copy(isGeneratingPreview = true) }
+
+                    try {
+
+                        val songsForRename = songs.mapNotNull { song ->
+
+                            val tagData = song.tagData ?: loadTagData(song.filePath)
+
+                            tagData?.let {
+                                RenameEngine.SongForRename(
+                                    originalPath = song.filePath,
+                                    tagData = it
+                                )
+                            }
+                        }
+
+                        if (songsForRename.isEmpty()) {
+                            _uiState.update {
+                                it.copy(
+                                    previews = emptyList(),
+                                    isGeneratingPreview = false,
+                                    errorMessage = UiMessage.StringResource(R.string.no_tag_data)
+                                )
+                            }
+                            return@collectLatest
+                        }
+
+                        val request = RenameEngine.RenameRequest(
+                            songs = songsForRename,
+                            format = format,
+                            characterMappingRules = mapping.rules
                         )
-                    } else {
-                        null
+
+                        val previews = RenameEngine.generatePreviews(request)
+
+                        _uiState.update {
+                            it.copy(
+                                previews = previews,
+                                isGeneratingPreview = false
+                            )
+                        }
+
+                    } catch (e: Exception) {
+
+                        _uiState.update {
+                            it.copy(
+                                isGeneratingPreview = false,
+                                errorMessage = UiMessage.DynamicString(e.message)
+                            )
+                        }
                     }
                 }
-
-                if (songsForRename.isEmpty()) {
-                    _uiState.value = _uiState.value.copy(
-                        isGeneratingPreview = false,
-                        errorMessage = UiMessage.StringResource(R.string.no_tag_data)
-                    )
-                    return@launch
-                }
-
-                val mappingRules = currentState.characterMappingConfig?.rules ?: emptyList()
-
-                val request = RenameEngine.RenameRequest(
-                    songs = songsForRename,
-                    format = currentState.format,
-                    characterMappingRules = mappingRules
-                )
-
-                val previews = RenameEngine.generatePreviews(request)
-
-                _uiState.value = _uiState.value.copy(
-                    previews = previews,
-                    isGeneratingPreview = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isGeneratingPreview = false,
-                    errorMessage = UiMessage.DynamicString(e.message)
-                )
-            }
         }
     }
 
+    /**
+     * 设置歌曲列表
+     */
+    fun setSongs(songs: List<SongForBatchRename>) {
+
+        songsFlow.value = songs
+
+        _uiState.update {
+            it.copy(
+                songs = songs,
+                renameResult = null,
+                errorMessage = null
+            )
+        }
+    }
+
+    /**
+     * 修改格式
+     */
+    fun setFormat(format: String) {
+
+        formatFlow.value = format
+
+        _uiState.update {
+            it.copy(format = format)
+        }
+    }
+
+    /**
+     * 执行重命名
+     */
     fun executeRename() {
+
         val currentState = _uiState.value
         val previews = currentState.previews
+
         if (previews.isEmpty()) return
 
-        val timeMap = currentState.songs.associate { it.filePath to it.fileLastModified }
+        val timeMap = currentState.songs.associate {
+            it.filePath to it.fileLastModified
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
+
             try {
-                _uiState.value = _uiState.value.copy(
-                    isRenamingInProgress = true,
-                    errorMessage = null
-                )
+
+                _uiState.update {
+                    it.copy(
+                        isRenamingInProgress = true,
+                        errorMessage = null
+                    )
+                }
 
                 val sortedPreviews = previews.sortedBy { preview ->
                     timeMap[preview.originalPath] ?: 0L
                 }
+
                 val result = RenameEngine.renameFiles(sortedPreviews)
 
-                _uiState.value = _uiState.value.copy(
-                    renameResult = result,
-                    isRenamingInProgress = false
-                )
+                _uiState.update {
+                    it.copy(
+                        renameResult = result,
+                        isRenamingInProgress = false
+                    )
+                }
+
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isRenamingInProgress = false,
-                    errorMessage = UiMessage.DynamicString(e.message)
-                )
+
+                _uiState.update {
+                    it.copy(
+                        isRenamingInProgress = false,
+                        errorMessage = UiMessage.DynamicString(e.message)
+                    )
+                }
             }
         }
     }
 
-    private suspend fun loadTagData(context: Context,filePath: String): AudioTagData? {
+    /**
+     * 读取标签
+     */
+    private suspend fun loadTagData(filePath: String): AudioTagData? {
+
         return try {
+
             val uri = Uri.fromFile(File(filePath))
-            context.contentResolver.openFileDescriptor(uri, "r")?.use { descriptor ->
-                AudioTagReader.read(descriptor, true)
-            }
+
+            appContext.contentResolver
+                .openFileDescriptor(uri, "r")
+                ?.use { descriptor ->
+
+                    AudioTagReader.read(descriptor, true)
+                }
+
         } catch (e: Exception) {
             null
         }
     }
 
     fun clearResult() {
-        _uiState.value = _uiState.value.copy(
-            renameResult = null
-        )
+        _uiState.update { it.copy(renameResult = null) }
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(
-            errorMessage = null
-        )
+        _uiState.update { it.copy(errorMessage = null) }
     }
 
-    fun updateCharacterMappingInRule(ruleId: String, character: String, replacementChar: String?) {
+    fun updateCharacterMappingInRule(
+        ruleId: String,
+        character: String,
+        replacementChar: String?
+    ) {
+
         viewModelScope.launch(Dispatchers.IO) {
-            // 获取当前规则
+
             val currentConfig = _uiState.value.characterMappingConfig ?: return@launch
+
             val rule = currentConfig.rules.find { it.id == ruleId } ?: return@launch
             
             // 更新该字符的映射
             val updatedMappings = rule.charMappings.toMutableMap()
-            // 保持映射关系，使用空字符串表示"移除"，不删除键
+
             updatedMappings[character] = replacementChar ?: ""
-            
-            settingsRepository.updateCharacterMappingInRule(ruleId, updatedMappings)
+
+            settingsRepository.updateCharacterMappingInRule(
+                ruleId,
+                updatedMappings
+            )
         }
     }
 }

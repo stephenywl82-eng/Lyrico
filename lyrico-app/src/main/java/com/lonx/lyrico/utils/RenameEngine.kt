@@ -7,6 +7,7 @@ import kotlinx.coroutines.delay
 import java.io.File
 
 object RenameEngine {
+    private const val TAG = "RenameEngine"
     data class RenameRequest(
         val songs: List<SongForRename>,
         val format: String,
