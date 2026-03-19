@@ -27,12 +27,32 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:mimeType="audio/*" />
-                <data android:scheme="content" />
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:mimeType="audio/*"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.SEND"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="audio/*"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="com.lonx.lyrico.action.EDIT_TAG"/>
+
+                <category android:name="android.intent.category.DEFAULT"/>
+
+                <data android:mimeType="audio/*"/>
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+            </intent-filter>
+
         </activity>
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -41,11 +61,11 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@xml/file_paths"/>
         </provider>
         <meta-data
             android:name="ScopedStorage"
-            android:value="true" />
+            android:value="true"/>
     </application>
 
 </manifest>

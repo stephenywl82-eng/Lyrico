@@ -49,7 +49,9 @@ import com.moriafly.salt.ui.icons.SaltIcons
 import com.moriafly.salt.ui.verticalScroll
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
 import com.ramcosta.composedestinations.generated.destinations.SearchResultsDestination
+import com.ramcosta.composedestinations.generated.destinations.SongListDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.ramcosta.composedestinations.result.onResult
@@ -74,6 +76,7 @@ fun EditMetadataScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val activity = context as  Activity
     // 控制 BottomSheet 显示的 State
     var showOffsetSheet by remember { mutableStateOf(false) }
     val currentShiftOffset by viewModel.currentShiftOffset.collectAsState()
@@ -207,9 +210,13 @@ fun EditMetadataScreen(
                     subtitleContentColor = SaltTheme.colors.subText
                 ),
                 navigationIcon = {
-                    IconButton(onClick = {
-                        navigator.popBackStack()
-                    }) {
+                    IconButton(
+                        onClick = {
+                            if (!navigator.popBackStack()) {
+                                activity.finish()
+                            }
+                        }
+                    ) {
                         Icon(
                             SaltIcons.ArrowBack,
                             contentDescription = stringResource(R.string.action_back)

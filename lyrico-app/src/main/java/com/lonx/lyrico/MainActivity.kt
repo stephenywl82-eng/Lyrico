@@ -23,6 +23,7 @@ import com.hjq.permissions.OnPermissionCallback
 import com.hjq.permissions.XXPermissions
 import com.hjq.permissions.permission.PermissionLists
 import com.hjq.permissions.permission.base.IPermission
+import com.lonx.lyrico.App.Companion.ACTION_EDIT_TAG
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.dialog.UpdateDialog
@@ -51,9 +52,13 @@ open class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         edgeToEdge()
         super.onCreate(savedInstanceState)
-        songListViewModel.onStart()
+
         // 解析启动时的 Intent
         handleIntent(intent)
+        // 仅当 externalUri 为 null 时才检查更新，即不是通过分享/打开方式/自定义action启动时，才检查更新
+        if (externalUri == null){
+            songListViewModel.checkForUpdate()
+        }
         hasPermission = PermissionUtil.hasNecessaryPermission(this)
         if (!hasPermission) {
 
@@ -144,8 +149,24 @@ open class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_VIEW) {
-            externalUri = intent.data
+        if (intent == null) return
+
+        when (intent.action) {
+
+            // 打开方式
+            Intent.ACTION_VIEW -> {
+                externalUri = intent.data
+            }
+
+            // 分享
+            Intent.ACTION_SEND -> {
+                externalUri = intent.getParcelableExtra(Intent.EXTRA_STREAM)
+            }
+
+            // 工具调用
+            ACTION_EDIT_TAG -> {
+                externalUri = intent.data
+            }
         }
     }
 

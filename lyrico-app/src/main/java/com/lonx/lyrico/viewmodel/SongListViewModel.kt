@@ -254,7 +254,7 @@ class SongListViewModel(
         // 滑动结束，清空基准状态
         preDragSelectedIds = emptyMap()
     }
-    fun onStart() {
+    fun checkForUpdate() {
         viewModelScope.launch {
             val checkUpdateEnabled = settingsRepository.checkUpdateEnabled.first()
             if (checkUpdateEnabled) {

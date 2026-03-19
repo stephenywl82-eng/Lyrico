@@ -51,6 +51,7 @@ class App : SaltApplication(), SingletonImageLoader.Factory {
 
     companion object {
         private const val TAG = "App"
+        const val ACTION_EDIT_TAG = "com.lonx.lyrico.action.EDIT_TAG"
         const val TELEGRAM_GROUP_LINK = "https://t.me/lyrico_app"
         const val OWNER_ID = "Replica0110"
         const val REPO_NAME = "Lyrico"

@@ -22,7 +22,9 @@ import com.ramcosta.composedestinations.DestinationsNavHost
 import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationStyle
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
+import com.ramcosta.composedestinations.spec.Direction
 import com.ramcosta.composedestinations.utils.rememberDestinationsNavigator
+import com.ramcosta.composedestinations.utils.startDestination
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -49,9 +51,13 @@ fun LyricoApp(externalUri: Uri?) {
             .fillMaxSize()
             .background(SaltTheme.colors.background),
     ) {
+        val startDirection: Direction =
+            externalUri?.let { EditMetadataDestination(it.toString()) }
+                ?: NavGraphs.root.defaultStartDirection
         DestinationsNavHost(
             navGraph = NavGraphs.root,
             navController = navController,
+            start = startDirection,
             dependenciesContainerBuilder = {
 
             },
