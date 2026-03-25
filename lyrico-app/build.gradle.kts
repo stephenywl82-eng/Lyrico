@@ -114,7 +114,7 @@ dependencies {
     // Utilities
     implementation(libs.xxpermissions)
     implementation(libs.tinypinyin)
-
+    implementation(libs.opencc4j)
     // KSP
     ksp(libs.compose.destinations.ksp)
     ksp(libs.androidx.room.compiler)

@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.ArtistSeparator
+import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.LyricFormat
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.viewmodel.FolderManagerViewModel
@@ -76,6 +77,7 @@ fun SettingsScreen(
     val scrollState = rememberScrollState()
     val folders = folderUiState.folders
     val totalFolders = folders.size
+    val conversionMode = settingsUiState.conversionMode
     val ignoredFolders = folders.count { it.isIgnored }
     val searchSourceOrder = settingsUiState.searchSourceOrder
     val searchPageSize = settingsUiState.searchPageSize
@@ -302,6 +304,22 @@ fun SettingsScreen(
                         settingsViewModel.setRemoveEmptyLines(!removeEmptyLines)
                     }
                 )
+                ItemDropdown(
+                    text = stringResource(R.string.conversion_mode),
+                    value = stringResource(conversionMode.labelRes)
+                ) {
+                    val modes = ConversionMode.entries.toList()
+                    modes.forEach { mode ->
+                        ItemCheck(
+                            text = stringResource(mode.labelRes),
+                            state = conversionMode == mode,
+                            onChange = {
+                                settingsViewModel.setConversionMode(mode)
+                                state.dismiss()
+                            }
+                        )
+                    }
+                }
             }
             ItemOuterTitle(stringResource(R.string.section_metadata))
             RoundedColumn {
@@ -310,12 +328,7 @@ fun SettingsScreen(
                     value = artistSeparator.toText(),
                     sub = stringResource(R.string.artist_separator_hint),
                     content = {
-                        val separators = listOf(
-                            ArtistSeparator.ENUMERATION_COMMA,
-                            ArtistSeparator.SLASH,
-                            ArtistSeparator.COMMA,
-                            ArtistSeparator.SEMICOLON
-                        )
+                        val separators = ArtistSeparator.entries.toList()
                         separators.forEach { separator ->
                             ItemCheck(
                                 text = separator.toText(),
