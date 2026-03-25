@@ -14,7 +14,7 @@ enum class Source(
     SODA(R.string.soda_source_name);
 
     companion object {
-        val DEFAULT_ORDER = listOf(QM, KG, NE)
+        val DEFAULT_ORDER = entries.toList()
         private val NAME_MAP = entries.associateBy { it.name }
 
         fun fromNameOrNull(name: String?): Source? = NAME_MAP[name?.trim()]

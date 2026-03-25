@@ -47,7 +47,7 @@ object SettingsDefaults {
     const val REMOVE_EMPTY_LINES = true
 
     // 搜索源顺序默认值
-    val SEARCH_SOURCE_ORDER = listOf(Source.QM, Source.KG, Source.NE)
+    val SEARCH_SOURCE_ORDER = Source.entries.toList()
     const val SEARCH_PAGE_SIZE = 10
 
     val THEME_MODE = ThemeMode.AUTO
