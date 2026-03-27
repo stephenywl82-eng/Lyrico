@@ -129,8 +129,7 @@ fun FolderManagerScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
                             TextButton(
                                 text = stringResource(R.string.cancel),

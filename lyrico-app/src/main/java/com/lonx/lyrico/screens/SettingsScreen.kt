@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,12 +49,14 @@ import com.ramcosta.composedestinations.generated.destinations.SearchSourcePrior
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import top.yukonga.miuix.kmp.basic.BasicComponentDefaults
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Slider
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
+import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDialog
 import top.yukonga.miuix.kmp.extra.SuperDropdown
@@ -87,6 +91,12 @@ fun SettingsScreen(
     val searchPageSize = settingsUiState.searchPageSize
     val scope = rememberCoroutineScope()
 
+    val minSearchSize = 1
+    val maxSearchSize = 20
+    val tempSearchPageSize = remember(searchPageSize) {
+        mutableIntStateOf(searchPageSize)
+    }
+    val showSearchLimitConfigDialog = remember { mutableStateOf(false) }
     val showClearCacheDialog = remember { mutableStateOf(false) }
 
     val themeModeItems = ThemeMode.entries.map { stringResource(it.labelRes) }
@@ -95,6 +105,8 @@ fun SettingsScreen(
     val lyricFormatItems = LyricFormat.entries.map { stringResource(it.labelRes) }
     val selectedLyricFormatIndex = LyricFormat.entries.indexOf(lyricFormat).coerceAtLeast(0)
 
+    val conversionModeItems = ConversionMode.entries.map { stringResource(it.labelRes) }
+    val selectedConversionModeIndex = ConversionMode.entries.indexOf(conversionMode).coerceAtLeast(0)
     val artistSeparators = remember {
         listOf(
             ArtistSeparator.ENUMERATION_COMMA,
@@ -106,9 +118,6 @@ fun SettingsScreen(
     val artistSeparatorItems = artistSeparators.map { it.toText() }
     val selectedArtistSeparatorIndex = artistSeparators.indexOf(artistSeparator).coerceAtLeast(0)
 
-    val tempPageSize = remember(searchPageSize) {
-        mutableIntStateOf(searchPageSize)
-    }
 
     val context = LocalContext.current
     LaunchedEffect(Unit) {
@@ -193,27 +202,83 @@ fun SettingsScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     TextButton(
                         text = stringResource(R.string.cancel),
-                        onClick = { showClearCacheDialog.value = false },
-                        modifier = Modifier.weight(1f)
+                        onClick = {
+                            showClearCacheDialog.value = false
+                        },
+                        modifier = Modifier.weight(1f),
                     )
+                    Spacer(Modifier.width(20.dp))
                     TextButton(
                         text = stringResource(R.string.confirm),
                         onClick = {
-                            showClearCacheDialog.value = false
                             settingsViewModel.clearCache(context)
+                            showClearCacheDialog.value = false
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.textButtonColorsPrimary()
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
                     )
                 }
             }
         }
-
+        SuperDialog(
+            show = showSearchLimitConfigDialog,
+            title = stringResource(R.string.search_limit),
+            onDismissRequest = {
+                showSearchLimitConfigDialog.value = false
+            }
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.search_limit_tip),
+                    fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                var text by remember { mutableStateOf(searchPageSize.toString()) }
+                TextField(
+                    value = text,
+                    maxLines = 1,
+                    onValueChange = { newValue ->
+                        val digits = newValue.filter { it.isDigit() }
+                        if (digits.isEmpty()) {
+                            text = ""
+                        } else {
+                            val limited = digits.take(3)
+                            val num = limited.toIntOrNull()
+                            val clamped = num?.coerceIn(minSearchSize, maxSearchSize)
+                            text = clamped.toString()
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    TextButton(
+                        text = stringResource(R.string.cancel),
+                        onClick = {
+                            showSearchLimitConfigDialog.value = false
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                    Spacer(Modifier.width(20.dp))
+                    TextButton(
+                        text = stringResource(R.string.confirm),
+                        onClick = {
+                            tempSearchPageSize.intValue = text.toIntOrNull() ?: 1
+                            settingsViewModel.setSearchPageSize(tempSearchPageSize.intValue)
+                            showSearchLimitConfigDialog.value = false
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.textButtonColorsPrimary(),
+                    )
+                }
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -265,38 +330,39 @@ fun SettingsScreen(
                     summary = searchSourceSummary,
                     onClick = { navigator.navigate(SearchSourcePriorityDestination()) }
                 )
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.search_limit),
-                        color = MiuixTheme.colorScheme.onBackground
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = tempPageSize.intValue.toString(),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Slider(
-                        value = tempPageSize.intValue.toFloat(),
-                        valueRange = 1f..20f,
-                        steps = 18,
-                        onValueChange = {
-                            tempPageSize.intValue = it.roundToInt()
-                        },
-                        onValueChangeFinished = {
-                            settingsViewModel.setSearchPageSize(tempPageSize.intValue)
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = stringResource(R.string.search_limit_tip),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        fontSize = MiuixTheme.textStyles.body2.fontSize
-                    )
-                }
+                SuperArrow(
+                    title = stringResource(R.string.search_limit),
+                    endActions = {
+                        Text(
+                            text = "${tempSearchPageSize.intValue}",
+                            fontSize = MiuixTheme.textStyles.body2.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        )
+                    },
+                    onClick = {
+                        showSearchLimitConfigDialog.value = true
+                    },
+                    bottomAction = {
+                        Slider(
+                            showKeyPoints = true,
+                            valueRange = minSearchSize.toFloat()..maxSearchSize.toFloat(),
+                            steps = maxSearchSize - minSearchSize - 1,
+                            value = tempSearchPageSize.intValue.toFloat(),
+                            onValueChange = {
+                                tempSearchPageSize.intValue = it.roundToInt()
+                            },
+                            onValueChangeFinished = {
+                                settingsViewModel.setSearchPageSize(tempSearchPageSize.intValue)
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(BasicComponentDefaults.InsideMargin.calculateBottomPadding()))
+                        Text(
+                            text = stringResource(R.string.search_limit_tip),
+                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        )
+                    }
+                )
             }
 
             SmallTitle(text = stringResource(R.string.section_lyrics))
@@ -336,22 +402,14 @@ fun SettingsScreen(
                     checked = removeEmptyLines,
                     onCheckedChange = { settingsViewModel.setRemoveEmptyLines(it) }
                 )
-                ItemDropdown(
-                    text = stringResource(R.string.conversion_mode),
-                    value = stringResource(conversionMode.labelRes)
-                ) {
-                    val modes = ConversionMode.entries.toList()
-                    modes.forEach { mode ->
-                        ItemCheck(
-                            text = stringResource(mode.labelRes),
-                            state = conversionMode == mode,
-                            onChange = {
-                                settingsViewModel.setConversionMode(mode)
-                                state.dismiss()
-                            }
-                        )
-                    }
-                }
+                SuperDropdown(
+                    title = stringResource(R.string.conversion_mode),
+                    items = conversionModeItems,
+                    selectedIndex =  selectedConversionModeIndex,
+                    onSelectedIndexChange = {
+                        settingsViewModel.setConversionMode(ConversionMode.entries[it])
+                    },
+                )
             }
 
             SmallTitle(text = stringResource(R.string.section_metadata))
