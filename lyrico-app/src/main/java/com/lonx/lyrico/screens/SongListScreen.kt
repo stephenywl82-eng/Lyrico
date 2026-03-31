@@ -1184,7 +1184,7 @@ fun SongDetailBottomSheetContent(context: Context, song: SongEntity) {
                 AsyncImage(
                     model = CoverRequest(song.getUri, song.fileLastModified),
                     contentDescription = stringResource(R.string.cd_cover),
-                    modifier = Modifier.size(100.dp),
+                    modifier = Modifier.size(100.dp).clip(RoundedCornerShape(12.dp)),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(R.drawable.ic_album_24dp),
                     error = painterResource(R.drawable.ic_album_24dp)

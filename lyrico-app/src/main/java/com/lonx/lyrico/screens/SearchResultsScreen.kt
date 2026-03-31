@@ -443,10 +443,9 @@ fun SearchResultItem(
     onApplyLyricsOnlyClick: (Long) -> Unit
 ) {
     val context = LocalContext.current
-    var offset by remember { mutableLongStateOf(0L) } // 偏移量（毫秒）
-    var isOffsetVisible by remember { mutableStateOf(false) } // 是否展开调节面板
+    var offset by remember { mutableLongStateOf(0L) }
+    var isOffsetVisible by remember { mutableStateOf(false) }
 
-    // 原图尺寸状态
     var imageSize by remember(song.picUrl) { mutableStateOf<Pair<Int, Int>?>(null) }
 
     LaunchedEffect(song.picUrl) {
@@ -479,8 +478,9 @@ fun SearchResultItem(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
+                // 左侧图片
                 Box(
                     modifier = Modifier
                         .size(72.dp)
@@ -502,16 +502,11 @@ fun SearchResultItem(
                         )
                     )
 
+                    // 尺寸标注
                     val isDark = when (MiuixTheme.colorSchemeMode) {
-                        Dark,
-                        MonetDark -> true
-
-                        Light,
-                        MonetLight -> false
-
-                        System,
-                        MonetSystem -> isSystemInDarkTheme()
-
+                        Dark, MonetDark -> true
+                        Light, MonetLight -> false
+                        System, MonetSystem -> isSystemInDarkTheme()
                         null -> false
                     }
                     val textColor = if (isDark) Color.Black else Color.White
@@ -546,8 +541,7 @@ fun SearchResultItem(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = song.title,
@@ -586,77 +580,80 @@ fun SearchResultItem(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // 偏移调节开关
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                                .clickable { isOffsetVisible = !isOffsetVisible }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Settings,
+                                contentDescription = "Offset",
+                                modifier = Modifier.size(12.dp),
+                                tint = MiuixTheme.colorScheme.onSurfaceVariantActions
+                            )
+                            Text(
+                                text = if (offset == 0L) stringResource(R.string.offset_adjust_hint)
+                                else "${if (offset > 0) "+" else ""}${offset}ms",
+                                fontSize = 11.sp,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        // 应用按钮组
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(MiuixTheme.colorScheme.surfaceVariant)
+                                    .clickable { onApplyLyricsOnlyClick(offset) }
+                                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.apply_lyrics_only_action),
+                                    fontSize = 11.sp,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(MiuixTheme.colorScheme.primary)
+                                    .clickable { onApplyClick(offset) }
+                                    .padding(horizontal = 10.dp, vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.apply_action),
+                                    fontSize = 11.sp,
+                                    color = MiuixTheme.colorScheme.onPrimary,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                        .clickable { isOffsetVisible = !isOffsetVisible }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.Settings,
-                        contentDescription = "Offset",
-                        modifier = Modifier.size(12.dp),
-                        tint = MiuixTheme.colorScheme.onSurfaceVariantActions
-                    )
-                    Text(
-                        text = if (offset == 0L) stringResource(R.string.offset_adjust_hint)
-                        else "${if (offset > 0) "+" else ""}${offset}ms",
-                        fontSize = 11.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.surfaceVariant)
-                            .clickable { onApplyLyricsOnlyClick(offset) }
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.apply_lyrics_only_action),
-                            fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.primary)
-                            .clickable { onApplyClick(offset) }
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.apply_action),
-                            fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
 
             AnimatedVisibility(
                 visible = isOffsetVisible,
