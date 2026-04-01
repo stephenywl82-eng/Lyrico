@@ -73,7 +73,8 @@ object LyricsUtils {
         // 如果是 TTML，先追加 XML 头部和根节点
         if (isTtml) {
             builder.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-            builder.append("<tt xmlns=\"http://www.w3.org/ns/ttml\">\n<body>\n<div>\n")
+            builder.append("<tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\" xmlns:itunes=\"http://music.apple.com/itunes/ttml\">\n")
+            builder.append("  <body>\n    <div>\n")
         }
 
         val romanMap = if (config.showRomanization) {
@@ -99,65 +100,62 @@ object LyricsUtils {
                 if (config.removeEmptyLines && match != null && isBlankOrPlaceholder(match)) null else match
             } else null
 
-            val skipOriginal = config.onlyTranslationIfAvailable && matchedTranslation != null
-
-            if (!skipOriginal) {
-                when (config.format) {
-                    LyricFormat.ENHANCED_LRC -> appendEnhancedLine(builder, line, offset)
-                    LyricFormat.PLAIN_LRC -> appendLineByLine(builder, line, offset)
-                    LyricFormat.VERBATIM_LRC -> appendWordByWord(builder, line, offset)
-                    LyricFormat.TTML -> appendTtmlLine(builder, line, offset)
-                }
+            if (isTtml) {
+                appendTtmlCombinedLine(builder, line, matchedRoman, matchedTranslation, offset, config)
                 builder.append('\n')
-            }
-
-            if (matchedRoman != null && !skipOriginal) {
-                when (config.format) {
-                    LyricFormat.ENHANCED_LRC -> appendEnhancedLine(builder, matchedRoman, offset)
-                    LyricFormat.PLAIN_LRC -> appendLineByLine(builder, matchedRoman, offset)
-                    LyricFormat.VERBATIM_LRC -> appendWordByWord(builder, matchedRoman, offset)
-                    LyricFormat.TTML -> appendTtmlLine(builder, matchedRoman, offset)
+            } else {
+                val skipOriginal = config.onlyTranslationIfAvailable && matchedTranslation != null
+                if (!skipOriginal) {
+                    when (config.format) {
+                        LyricFormat.ENHANCED_LRC -> appendEnhancedLine(builder, line, offset)
+                        LyricFormat.PLAIN_LRC -> appendLineByLine(builder, line, offset)
+                        LyricFormat.VERBATIM_LRC -> appendWordByWord(builder, line, offset)
+                    }
+                    builder.append('\n')
                 }
-                builder.append('\n')
-            }
 
-            if (matchedTranslation != null) {
-                // 翻译行也需要区分 TTML 还是 LRC
-                if (isTtml) {
-                    appendTtmlLine(builder, matchedTranslation, offset)
-                } else {
+                if (matchedRoman != null && !skipOriginal) {
+                    when (config.format) {
+                        LyricFormat.ENHANCED_LRC -> appendEnhancedLine(builder, matchedRoman, offset)
+                        LyricFormat.PLAIN_LRC -> appendLineByLine(builder, matchedRoman, offset)
+                        LyricFormat.VERBATIM_LRC -> appendWordByWord(builder, matchedRoman, offset)
+                    }
+                    builder.append('\n')
+                }
+
+                if (matchedTranslation != null) {
                     builder.append(formatPlainLine(matchedTranslation, offset))
+                    builder.append('\n')
                 }
-                builder.append('\n')
             }
         }
 
         // 如果是 TTML，追加闭合标签
         if (isTtml) {
-            builder.append("</div>\n</body>\n</tt>")
+            builder.append("    </div>\n  </body>\n</tt>")
         }
         val lyrics = when (config.conversionMode) {
-            ConversionMode.TRADITIONAL_TO_SIMPLIFIED -> {
-                ZhHkConverterUtil.toSimple(builder.toString())
-            }
-            ConversionMode.SIMPLIFIED_TO_TRADITIONAL -> {
-                ZhHkConverterUtil.toTraditional(builder.toString())
-            }
-            else -> {
-                builder.toString()
-            }
+            ConversionMode.TRADITIONAL_TO_SIMPLIFIED -> ZhHkConverterUtil.toSimple(builder.toString())
+            ConversionMode.SIMPLIFIED_TO_TRADITIONAL -> ZhHkConverterUtil.toTraditional(builder.toString())
+            else -> builder.toString()
         }
 
         return lyrics.trim()
     }
 
-    /**
-     * TTML 行生成逻辑 (逐字生成 span 支持卡拉OK效果)
-     */
-    private fun appendTtmlLine(builder: StringBuilder, line: LyricsLine, offset: Long) {
+
+    private fun appendTtmlCombinedLine(
+        builder: StringBuilder,
+        line: LyricsLine,
+        romanLine: LyricsLine?,
+        transLine: LyricsLine?,
+        offset: Long,
+        config: LyricRenderConfig
+    ) {
         if (line.words.isEmpty()) return
 
         val start = applyOffset(line.start, offset)
+        // 确定该行的结束时间：以原文最后一个词的结束时间为准
         val lastWord = line.words.last()
         val end = when {
             lastWord.end > 0 -> lastWord.end
@@ -168,16 +166,37 @@ object LyricsUtils {
         val startStr = formatTtmlTimestamp(start)
         val endStr = formatTtmlTimestamp(applyOffset(end, offset))
 
-        builder.append("  <p begin=\"").append(startStr).append("\" end=\"").append(endStr).append("\">")
+        builder.append("      <p begin=\"").append(startStr).append("\" end=\"").append(endStr).append("\">")
 
-        line.words.forEach { word ->
-            val wordStart = formatTtmlTimestamp(applyOffset(word.start, offset))
-            val wordEnd = if (word.end > 0) word.end else word.start + 300
-            val wordEndStr = formatTtmlTimestamp(applyOffset(wordEnd, offset))
+        val showOriginal = !(config.onlyTranslationIfAvailable && transLine != null)
+        if (showOriginal) {
+            line.words.forEach { word ->
+                val wordStart = formatTtmlTimestamp(applyOffset(word.start, offset))
+                val wordEnd = if (word.end > 0) word.end else word.start + 300
+                val wordEndStr = formatTtmlTimestamp(applyOffset(wordEnd, offset))
 
-            builder.append("<span begin=\"").append(wordStart).append("\" end=\"").append(wordEndStr).append("\">")
-            builder.append(escapeXml(word.text))
-            builder.append("</span>")
+                builder.append("<span begin=\"").append(wordStart).append("\" end=\"").append(wordEndStr).append("\">")
+                builder.append(escapeXml(word.text))
+                builder.append("</span>")
+            }
+        }
+
+        if (romanLine != null && showOriginal) {
+            val romanText = romanLine.words.joinToString(" ") { it.text }
+            if (romanText.isNotEmpty()) {
+                builder.append(" <span ttm:role=\"x-romanization\">")
+                builder.append(escapeXml(romanText))
+                builder.append("</span>")
+            }
+        }
+
+        if (transLine != null) {
+            val transText = transLine.words.joinToString("") { it.text }
+            if (transText.isNotEmpty()) {
+                builder.append(" <span ttm:role=\"x-translation\">")
+                builder.append(escapeXml(transText))
+                builder.append("</span>")
+            }
         }
 
         builder.append("</p>")
