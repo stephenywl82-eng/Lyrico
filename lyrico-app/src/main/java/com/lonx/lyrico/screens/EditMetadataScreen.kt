@@ -357,15 +357,10 @@ fun EditMetadataScreen(
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxHeight()
+                .padding(paddingValues)
                 .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
                 .overScrollVertical()
-                .scrollEndHaptic()
-                .imePadding(),
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding() + 80.dp, // 留出空间给 FAB
-            )
+                .scrollEndHaptic(),
         ) {
             // 封面编辑区
             item(key = "cover") {
