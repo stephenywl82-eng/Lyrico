@@ -13,6 +13,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -276,7 +277,7 @@ class AppleSource(
     }
 
     private fun JsonObject.string(key: String): String =
-        this[key]?.jsonPrimitive?.content.orEmpty()
+        this[key]?.takeUnless { it is JsonNull }?.jsonPrimitive?.content.orEmpty()
 
     private fun isAsciiLetterOrDigit(char: Char): Boolean =
         char in 'a'..'z' || char in 'A'..'Z' || char in '0'..'9'

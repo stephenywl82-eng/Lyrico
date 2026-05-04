@@ -290,14 +290,41 @@ object LyricEncoder {
         result: LyricsResult,
         config: LyricRenderConfig
     ): String? {
-        val raw = when (config.format) {
-            PLAIN_LRC -> result.rawPlainLrc
-            VERBATIM_LRC -> result.rawVerbatimLrc
-            ENHANCED_LRC -> result.rawEnhancedLrc
-            TTML -> result.rawTtml
+        val rawCandidates = when (config.format) {
+            PLAIN_LRC -> listOf(
+                result.rawPlainLrc,
+                result.rawEnhancedLrc,
+                result.rawVerbatimLrc,
+                result.rawTtml,
+                result.rawPlainText
+            )
+
+            VERBATIM_LRC -> listOf(
+                result.rawVerbatimLrc,
+                result.rawEnhancedLrc,
+                result.rawPlainLrc,
+                result.rawTtml,
+                result.rawPlainText
+            )
+
+            ENHANCED_LRC -> listOf(
+                result.rawEnhancedLrc,
+                result.rawVerbatimLrc,
+                result.rawPlainLrc,
+                result.rawTtml,
+                result.rawPlainText
+            )
+
+            TTML -> listOf(
+                result.rawTtml,
+                result.rawEnhancedLrc,
+                result.rawVerbatimLrc,
+                result.rawPlainLrc,
+                result.rawPlainText
+            )
         }
 
-        return raw.takeIf { it.isNotBlank() }
+        return rawCandidates.firstOrNull { it.isNotBlank() }
     }
 
 
