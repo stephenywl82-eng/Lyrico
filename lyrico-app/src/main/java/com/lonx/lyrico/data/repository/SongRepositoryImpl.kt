@@ -431,6 +431,11 @@ class SongRepositoryImpl(
             true
         } catch (e: Exception) {
             Log.e(TAG, "更新歌曲元数据失败: $contentUri", e)
+            logMetadataException(
+                message = "Failed to update song metadata in database",
+                throwable = e,
+                relatedId = contentUri
+            )
             false
         }
     }
@@ -444,10 +449,20 @@ class SongRepositoryImpl(
 
             if (e is SecurityException) {
                 Log.e("SongRepository", "权限不足无法写入: $contentUri", e)
+                logMetadataException(
+                    message = "Failed to overwrite audio tags: permission denied",
+                    throwable = e,
+                    relatedId = contentUri
+                )
                 return false
             }
 
             Log.e("SongRepository", "写入失败: $contentUri", e)
+            logMetadataException(
+                message = "Failed to overwrite audio tags",
+                throwable = e,
+                relatedId = contentUri
+            )
             return false
         }
     }
@@ -462,10 +477,20 @@ class SongRepositoryImpl(
 
             if (e is SecurityException) {
                 Log.e("SongRepository", "权限不足无法写入: $contentUri", e)
+                logMetadataException(
+                    message = "Failed to patch audio tags: permission denied",
+                    throwable = e,
+                    relatedId = contentUri
+                )
                 return false
             }
 
             Log.e("SongRepository", "增量更新失败: $contentUri", e)
+            logMetadataException(
+                message = "Failed to patch audio tags",
+                throwable = e,
+                relatedId = contentUri
+            )
             return false
         }
     }
@@ -655,6 +680,11 @@ class SongRepositoryImpl(
                 } ?: AudioTagData(fileName = displayName)
             } catch (e: Exception) {
                 Log.e(TAG, "读取音频元数据失败: $contentUri", e)
+                logMetadataException(
+                    message = "Failed to read audio tags",
+                    throwable = e,
+                    relatedId = contentUri
+                )
                 AudioTagData(fileName = displayName)
             }
         }
@@ -825,6 +855,24 @@ class SongRepositoryImpl(
             )
         } catch (e: Exception) {
             Log.w(TAG, "Failed to write exception log", e)
+        }
+    }
+
+    private suspend fun logMetadataException(
+        message: String,
+        throwable: Throwable,
+        relatedId: String? = null
+    ) {
+        try {
+            appLogRepository.logException(
+                type = AppLogType.METADATA,
+                tag = TAG,
+                message = message,
+                throwable = throwable,
+                relatedId = relatedId
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to write metadata exception log", e)
         }
     }
 }

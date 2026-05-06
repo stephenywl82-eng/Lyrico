@@ -16,6 +16,7 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.audiotag.model.AudioPicture
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.exception.RequiresUserPermissionException
 import com.lonx.lyrico.data.model.AppLogLevel
 import com.lonx.lyrico.data.model.AppLogType
 import com.lonx.lyrico.data.model.ConversionMode
@@ -153,7 +154,11 @@ class EditMetadataViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "读取音频元数据失败: $uriString", e)
-                // 这里可以考虑加一个 error message 状态
+                recordMetadataException(
+                    message = "Failed to read metadata",
+                    relatedId = uriString,
+                    throwable = e
+                )
             }
         }
     }
@@ -343,6 +348,11 @@ class EditMetadataViewModel(
                 val coverSource = state.coverUri ?: state.originalCover ?: state.picture?.data
 
                 if (coverSource == null) {
+                    recordMetadataFailure(
+                        message = "Failed to export cover: no cover source",
+                        relatedId = currentSongUri,
+                        detail = "No embedded cover, selected cover, or original cover is available."
+                    )
                     _uiState.update { it.copy(exportCoverResult = false) }
                     return@launch
                 }
@@ -377,10 +387,20 @@ class EditMetadataViewModel(
                     }
                     _uiState.update { it.copy(exportCoverResult = true) }
                 } else {
+                    recordMetadataFailure(
+                        message = "Failed to export cover: MediaStore insert returned null",
+                        relatedId = currentSongUri,
+                        detail = "Destination image URI could not be created."
+                    )
                     _uiState.update { it.copy(exportCoverResult = false) }
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "导出封面失败", e)
+                recordMetadataException(
+                    message = "Failed to export cover",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
                 _uiState.update { it.copy(exportCoverResult = false) }
             }
         }
@@ -424,18 +444,31 @@ class EditMetadataViewModel(
                 if (success) {
                     val newModifiedTime = System.currentTimeMillis()
 
-                    songRepository.updateSongMetadata(
+                    val updateSuccess = songRepository.updateSongMetadata(
                         audioTagData,
                         uriString, // 传入 URI
                         newModifiedTime
                     )
 
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            saveSuccess = true,
-                            isEditing = false
-                        )
+                    if (updateSuccess) {
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                saveSuccess = true,
+                                isEditing = false
+                            )
+                        }
+                    } else {
+                        val reason = "Database metadata update returned false"
+                        recordSaveFailure(uriString, reason)
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                saveSuccess = false,
+                                saveFailureMessage = reason,
+                                saveFailureLogText = buildSaveFailureLog(uriString, reason)
+                            )
+                        }
                     }
                 } else {
                     // 逻辑上的写入失败（非权限问题）
@@ -452,7 +485,15 @@ class EditMetadataViewModel(
                 }
 
             } catch (e: Exception) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException) {
+                if (e is RequiresUserPermissionException) {
+                    Log.w(TAG, "需要用户授权修改文件: $uriString")
+                    _uiState.update {
+                        it.copy(
+                            isSaving = false,
+                            permissionIntentSender = e.intentSender
+                        )
+                    }
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException) {
                     Log.w(TAG, "需要用户授权修改文件: $uriString")
                     _uiState.update {
                         it.copy(
@@ -504,6 +545,44 @@ class EditMetadataViewModel(
             }
         } catch (logError: Exception) {
             Log.w(TAG, "Failed to write metadata save log", logError)
+        }
+    }
+
+    private suspend fun recordMetadataFailure(
+        message: String,
+        relatedId: String? = currentSongUri,
+        detail: String? = null,
+        level: AppLogLevel = AppLogLevel.ERROR
+    ) {
+        try {
+            appLogRepository.log(
+                level = level,
+                type = AppLogType.METADATA,
+                tag = TAG,
+                message = message,
+                detail = detail,
+                relatedId = relatedId
+            )
+        } catch (logError: Exception) {
+            Log.w(TAG, "Failed to write metadata log", logError)
+        }
+    }
+
+    private suspend fun recordMetadataException(
+        message: String,
+        relatedId: String? = currentSongUri,
+        throwable: Throwable
+    ) {
+        try {
+            appLogRepository.logException(
+                type = AppLogType.METADATA,
+                tag = TAG,
+                message = message,
+                throwable = throwable,
+                relatedId = relatedId
+            )
+        } catch (logError: Exception) {
+            Log.w(TAG, "Failed to write metadata exception log", logError)
         }
     }
 
@@ -576,6 +655,16 @@ class EditMetadataViewModel(
                             is ReplayGainCalculateState.Failed -> {
                                 // 根据 state.error 映射具体的错误信息
                                 val errorMsg = mapErrorToUiMessage(state.mimeType, state.error)
+                                recordMetadataFailure(
+                                    message = "ReplayGain scan failed",
+                                    relatedId = uriString,
+                                    detail = buildString {
+                                        appendLine("Uri: $uriString")
+                                        appendLine("MimeType: ${state.mimeType ?: "unknown"}")
+                                        appendLine("Error: ${state.error::class.java.name}")
+                                        appendLine("Message: ${state.error.toLogMessage()}")
+                                    }
+                                )
                                 _uiState.update { it.copy(
                                     isReplayGainCalculating = false,
                                     replayGainCalculateProgress = 0f,
@@ -592,6 +681,11 @@ class EditMetadataViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "扫描 ReplayGain 失败: $uriString", e)
+                recordMetadataException(
+                    message = "ReplayGain scan crashed",
+                    relatedId = uriString,
+                    throwable = e
+                )
                 _uiState.update { it.copy(
                     isReplayGainCalculating = false,
                     replayGainCalculateProgress = 0f,
@@ -630,6 +724,15 @@ class EditMetadataViewModel(
             }
             is ReplayGainError.GeneralException -> UiMessage.StringResource(R.string.replay_gain_error_general, error.message ?: "")
         }
+    }
+
+    private fun ReplayGainError.toLogMessage(): String = when (this) {
+        is ReplayGainError.NoAudioTrack -> "No audio track"
+        is ReplayGainError.UnknownMimeType -> "Unknown MIME type"
+        is ReplayGainError.ZeroSampleCount -> "Zero sample count"
+        is ReplayGainError.UnsupportedCodec -> "Unsupported codec: ${mimeType ?: "unknown"}"
+        is ReplayGainError.CodecException -> message.orEmpty()
+        is ReplayGainError.GeneralException -> message.orEmpty()
     }
     
     fun cancelScan() {
@@ -701,6 +804,12 @@ class EditMetadataViewModel(
             try {
                 val lyrics = _uiState.value.editingTagData?.lyrics
                 if (lyrics.isNullOrBlank()) {
+                    recordMetadataFailure(
+                        message = "Failed to export lyrics: lyrics are empty",
+                        relatedId = currentSongUri,
+                        detail = "Destination: $uri",
+                        level = AppLogLevel.WARNING
+                    )
                     _uiState.update { it.copy(exportLyricsResult = false) }
                     return@launch
                 }
@@ -712,6 +821,11 @@ class EditMetadataViewModel(
                 Log.d(TAG, "歌词导出成功: ${uri.path}")
             } catch (e: Exception) {
                 Log.e(TAG, "导出歌词失败", e)
+                recordMetadataException(
+                    message = "Failed to export lyrics",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
                 _uiState.update { it.copy(exportLyricsResult = false) }
             }
         }
@@ -734,9 +848,20 @@ class EditMetadataViewModel(
                 } else {
                     _uiState.update { it.copy(importLyricsResult = false) }
                     Log.w(TAG, "歌词导入失败: 文件内容为空")
+                    recordMetadataFailure(
+                        message = "Failed to import lyrics: file content is empty",
+                        relatedId = currentSongUri,
+                        detail = "Source: $uri",
+                        level = AppLogLevel.WARNING
+                    )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "导入歌词失败", e)
+                recordMetadataException(
+                    message = "Failed to import lyrics",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
                 _uiState.update { it.copy(importLyricsResult = false) }
             }
         }
@@ -786,6 +911,11 @@ class EditMetadataViewModel(
                 updateTag { copy(lyrics = converted) }
             } catch (e: Exception) {
                 Log.e(TAG, "歌词格式转换失败", e)
+                recordMetadataException(
+                    message = "Failed to convert lyrics format",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
             }
         }
     }
@@ -822,6 +952,11 @@ class EditMetadataViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "读取同专辑歌曲封面失败: ${song.uri}", e)
+                recordMetadataException(
+                    message = "Failed to read same-album cover",
+                    relatedId = song.uri,
+                    throwable = e
+                )
             }
         }
 
@@ -850,6 +985,11 @@ class EditMetadataViewModel(
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "加载同专辑封面失败", e)
+                recordMetadataException(
+                    message = "Failed to load same-album cover",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
                 _uiState.update { it.copy(sameAlbumCoverMessage = UiMessage.StringResource(R.string.msg_load_same_album_cover_failed)) }
             }
         }
