@@ -20,13 +20,13 @@ class ReplayGainProcessor(
         val song = songRepository.getSongByUri(item.songUri)
             ?: throw BatchTaskSkippedException("Song not found")
 
-        val rawProps = song.rawProperties
-        if (rawProps != null) {
-            val hasExisting = rawProps.contains("REPLAYGAIN_TRACK_GAIN", ignoreCase = true) ||
-                    rawProps.contains("\"replayGainTrackGain\"", ignoreCase = true)
-            if (hasExisting) {
-                throw BatchTaskSkippedException("ReplayGain already exists")
-            }
+        val hasExisting = !song.replayGainTrackGain.isNullOrBlank() ||
+                !song.replayGainTrackPeak.isNullOrBlank() ||
+                !song.replayGainAlbumGain.isNullOrBlank() ||
+                !song.replayGainAlbumPeak.isNullOrBlank() ||
+                !song.replayGainReferenceLoudness.isNullOrBlank()
+        if (hasExisting) {
+            throw BatchTaskSkippedException("ReplayGain already exists")
         }
 
         var analysisSuccess = false

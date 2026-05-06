@@ -19,6 +19,11 @@ data class SongSyncInfo(
     val folderId: Long
 )
 
+data class SongFieldValue(
+    val sourceUri: String,
+    val value: String
+)
+
 @Dao
 interface SongDao {
 
@@ -155,6 +160,9 @@ interface SongDao {
      */
     @RawQuery(observedEntities = [SongEntity::class])
     fun getSongs(query: SupportSQLiteQuery): Flow<List<SongEntity>>
+
+    @RawQuery
+    suspend fun getDistinctSongFieldValues(query: SupportSQLiteQuery): List<SongFieldValue>
 
     /**
      * 根据专辑和艺术家获取歌曲列表

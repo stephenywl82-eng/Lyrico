@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import androidx.core.net.toUri
 import androidx.room.withTransaction
+import androidx.sqlite.db.SimpleSQLiteQuery
 import com.lonx.audiotag.model.AudioPicture
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.model.AudioTagKeys
@@ -18,6 +19,7 @@ import com.lonx.lyrico.data.exception.RequiresUserPermissionException
 import com.lonx.lyrico.data.model.AppLogLevel
 import com.lonx.lyrico.data.model.AppLogType
 import com.lonx.lyrico.data.model.LocalSearchType
+import com.lonx.lyrico.data.model.dao.SongFieldValue
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.SongFile
 import com.lonx.lyrico.data.utils.SongQueryBuilder
@@ -57,6 +59,16 @@ class SongRepositoryImpl(
         const val TAG = "SongRepository"
         const val BATCH_SIZE = 50
         const val MAX_LOG_ITEMS = 20
+    }
+
+    private fun formatRawProperties(rawProperties: Map<String, Array<String>>?): String? {
+        if (rawProperties == null) return null
+        return rawProperties.entries.joinToString(
+            prefix = "{",
+            postfix = "}"
+        ) { (key, values) ->
+            "$key=${values.joinToString("; ")}"
+        }
     }
 
     override suspend fun deleteSong(song: SongEntity) {
@@ -115,6 +127,55 @@ class SongRepositoryImpl(
 
     override suspend fun getSongByUri(uri: String): SongEntity? {
         return songDao.getSongByUri(uri)
+    }
+
+    override suspend fun getDistinctSongFieldValues(
+        uris: List<String>,
+        fieldColumn: String
+    ): List<SongFieldValue> = withContext(Dispatchers.IO) {
+        if (uris.isEmpty()) return@withContext emptyList()
+
+        val valueExpression = when (fieldColumn) {
+            "title",
+            "artist",
+            "albumArtist",
+            "album",
+            "date",
+            "genre",
+            "trackerNumber",
+            "composer",
+            "lyricist",
+            "copyright",
+            "comment",
+            "lyrics",
+            "replayGainTrackGain",
+            "replayGainTrackPeak",
+            "replayGainAlbumGain",
+            "replayGainAlbumPeak",
+            "replayGainReferenceLoudness" -> fieldColumn
+            "discNumber" -> "CAST(discNumber AS TEXT)"
+            else -> return@withContext emptyList()
+        }
+
+        val placeholders = uris.joinToString(",") { "?" }
+        val selectionOrder = uris.indices.joinToString(" ") { index ->
+            "WHEN ? THEN $index"
+        }
+        val sql = """
+            SELECT
+                MIN(uri) AS sourceUri,
+                TRIM($valueExpression) AS value
+            FROM songs
+            WHERE uri IN ($placeholders)
+                AND $valueExpression IS NOT NULL
+                AND TRIM($valueExpression) != ''
+            GROUP BY TRIM($valueExpression)
+            ORDER BY MIN(CASE uri $selectionOrder ELSE ${uris.size} END)
+        """.trimIndent()
+
+        songDao.getDistinctSongFieldValues(
+            SimpleSQLiteQuery(sql, (uris + uris).toTypedArray())
+        )
     }
 
     override suspend fun synchronize(fullRescan: Boolean) {
@@ -301,11 +362,16 @@ class SongRepositoryImpl(
                 discNumber = audioData.discNumber,
                 copyright = audioData.copyright,
                 rating = audioData.rating,
+                replayGainTrackGain = audioData.replayGainTrackGain,
+                replayGainTrackPeak = audioData.replayGainTrackPeak,
+                replayGainAlbumGain = audioData.replayGainAlbumGain,
+                replayGainAlbumPeak = audioData.replayGainAlbumPeak,
+                replayGainReferenceLoudness = audioData.replayGainReferenceLoudness,
                 durationMilliseconds = audioData.durationMilliseconds,
                 bitrate = audioData.bitrate,
                 sampleRate = audioData.sampleRate,
                 channels = audioData.channels,
-                rawProperties = audioData.rawProperties.toString(),
+                rawProperties = formatRawProperties(audioData.rawProperties),
                 fileLastModified = songFile.lastModified,
                 fileAdded = songFile.dateAdded,
                 folderId = folderId
@@ -345,7 +411,17 @@ class SongRepositoryImpl(
                 lyrics = audioTagData.lyrics ?: existingSong.lyrics,
                 copyright = audioTagData.copyright ?: existingSong.copyright,
                 rating = audioTagData.rating ?: existingSong.rating,
-                rawProperties = audioTagData.rawProperties.toString(),
+                replayGainTrackGain = audioTagData.replayGainTrackGain
+                    ?: existingSong.replayGainTrackGain,
+                replayGainTrackPeak = audioTagData.replayGainTrackPeak
+                    ?: existingSong.replayGainTrackPeak,
+                replayGainAlbumGain = audioTagData.replayGainAlbumGain
+                    ?: existingSong.replayGainAlbumGain,
+                replayGainAlbumPeak = audioTagData.replayGainAlbumPeak
+                    ?: existingSong.replayGainAlbumPeak,
+                replayGainReferenceLoudness = audioTagData.replayGainReferenceLoudness
+                    ?: existingSong.replayGainReferenceLoudness,
+                rawProperties = formatRawProperties(audioTagData.rawProperties) ?: existingSong.rawProperties,
                 fileLastModified = lastModified
             ).withSortKeysUpdated()
 

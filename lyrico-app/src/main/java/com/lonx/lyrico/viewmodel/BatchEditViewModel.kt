@@ -12,6 +12,8 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.data.SharedSelectionManager
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.BatchTaskType
+import com.lonx.lyrico.data.model.entity.SongEntity
+import com.lonx.lyrico.data.model.entity.getUri
 import com.lonx.lyrico.data.repository.BatchTaskRepository
 import com.lonx.lyrico.data.repository.SongRepository
 import com.lonx.lyrico.utils.LyricEncoder
@@ -109,6 +111,21 @@ data class BatchEditUiState(
     val saveTimeMillis: Long = 0  // 保存总用时（毫秒）
 )
 
+data class BatchEditSelectableValue(
+    val title: String,
+    val summary: String,
+    val value: String,
+    val sourceUri: String
+)
+
+data class BatchEditSelectableCover(
+    val title: String,
+    val summary: String,
+    val sourceUri: String,
+    val previewUri: String,
+    val fileLastModified: Long
+)
+
 class BatchEditViewModel(
     private val songRepository: SongRepository,
     private val selectionManager: SharedSelectionManager,
@@ -128,11 +145,17 @@ class BatchEditViewModel(
 
     /** 保存选中的文件uri */
     private var selectedUris: List<String> = emptyList()
+    private var selectedSongs: List<SongEntity> = emptyList()
 
     init {
         val uris = selectionManager.selectedUris.value.toList()
         selectedUris = uris
         _uiState.update { it.copy(songCount = uris.size) }
+        viewModelScope.launch(Dispatchers.IO) {
+            selectedSongs = uris.mapNotNull { uri ->
+                songRepository.getSongByUri(uri)
+            }
+        }
         viewModelScope.launch {
             val runningTask = batchTaskRepository.getRunningTaskByType(BatchTaskType.EDIT_TAGS)
             if (runningTask != null) {
@@ -271,6 +294,80 @@ class BatchEditViewModel(
 
     fun revertCover() {
         _uiState.update { it.copy(coverUri = null, removeCover = false) }
+    }
+
+    suspend fun getSelectedSongFieldValues(field: BatchEditField): List<BatchEditSelectableValue> =
+        withContext(Dispatchers.IO) {
+            val fieldColumn = field.databaseColumnName() ?: return@withContext emptyList()
+            songRepository.getDistinctSongFieldValues(selectedUris, fieldColumn)
+                .map { fieldValue ->
+                    BatchEditSelectableValue(
+                        title = fieldValue.value,
+                        summary = if (fieldValue.value.length > 80)
+                            fieldValue.value.take(80) + "..."
+                        else
+                            fieldValue.value,
+                        value = fieldValue.value,
+                        sourceUri = fieldValue.sourceUri
+                    )
+                }
+        }
+
+    private fun BatchEditField.databaseColumnName(): String? = when (this) {
+        BatchEditField.TITLE -> "title"
+        BatchEditField.ARTIST -> "artist"
+        BatchEditField.ALBUM_ARTIST -> "albumArtist"
+        BatchEditField.ALBUM -> "album"
+        BatchEditField.DATE -> "date"
+        BatchEditField.GENRE -> "genre"
+        BatchEditField.TRACK_NUMBER -> "trackerNumber"
+        BatchEditField.DISC_NUMBER -> "discNumber"
+        BatchEditField.COMPOSER -> "composer"
+        BatchEditField.LYRICIST -> "lyricist"
+        BatchEditField.COPYRIGHT -> "copyright"
+        BatchEditField.COMMENT -> "comment"
+        BatchEditField.LYRICS -> "lyrics"
+        BatchEditField.REPLAY_GAIN_TRACK_GAIN -> "replayGainTrackGain"
+        BatchEditField.REPLAY_GAIN_TRACK_PEAK -> "replayGainTrackPeak"
+        BatchEditField.REPLAY_GAIN_ALBUM_GAIN -> "replayGainAlbumGain"
+        BatchEditField.REPLAY_GAIN_ALBUM_PEAK -> "replayGainAlbumPeak"
+        BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS -> "replayGainReferenceLoudness"
+        BatchEditField.COVER,
+        BatchEditField.RATING -> null
+    }
+
+    suspend fun getSelectedSongCovers(): List<BatchEditSelectableCover> =
+        withContext(Dispatchers.IO) {
+            ensureSelectedSongsLoaded()
+            selectedSongs.map { song ->
+                BatchEditSelectableCover(
+                    title = song.title?.takeIf { title -> title.isNotBlank() } ?: song.fileName,
+                    summary = song.artist.orEmpty(),
+                    sourceUri = song.uri,
+                    previewUri = song.getUri.toString(),
+                    fileLastModified = song.fileLastModified
+                )
+            }
+        }
+
+    suspend fun getSelectedSongCover(uri: String): Any? =
+        withContext(Dispatchers.IO) {
+            try {
+                val tagData = songRepository.readAudioTagData(uri)
+                tagData.pictures.firstOrNull()?.data ?: tagData.picUrl
+            } catch (e: Exception) {
+                Log.e(TAG, "读取已选歌曲封面失败: $uri", e)
+                null
+            }
+        }
+
+    private suspend fun ensureSelectedSongsLoaded() {
+        if (selectedSongs.size == selectedUris.size) return
+        selectedSongs = withContext(Dispatchers.IO) {
+            selectedUris.mapNotNull { uri ->
+                songRepository.getSongByUri(uri)
+            }
+        }
     }
 
     // ── 批量保存 ──────────────────────────────────────────
@@ -679,29 +776,23 @@ class BatchEditViewModel(
                 if (editedArtist != "<keep>" && editedArtist.isNotBlank()) editedArtist else ""
         } else {
             // 如果专辑没被修改，检查所有选中歌曲的专辑和艺术家是否一致
+            ensureSelectedSongsLoaded()
             var commonAlbum: String? = null
             var commonArtist: String? = null
             var hasMismatch = false
 
-            for (uri in selectedUris) {
-                try {
-                    val tagData = songRepository.readAudioTagData(uri)
-                    val album = tagData.album
-                    val artist = tagData.artist
+            for (song in selectedSongs) {
+                val album = song.album
+                val artist = song.artist
 
-                    if (commonAlbum == null && commonArtist == null) {
-                        commonAlbum = album
-                        commonArtist = artist
-                    } else {
-                        if (album != commonAlbum || artist != commonArtist) {
-                            hasMismatch = true
-                            break
-                        }
+                if (commonAlbum == null && commonArtist == null) {
+                    commonAlbum = album
+                    commonArtist = artist
+                } else {
+                    if (album != commonAlbum || artist != commonArtist) {
+                        hasMismatch = true
+                        break
                     }
-                } catch (e: Exception) {
-                    Log.e(TAG, "读取歌曲标签失败: $uri", e)
-                    hasMismatch = true
-                    break
                 }
             }
 
@@ -724,22 +815,20 @@ class BatchEditViewModel(
 
         // 查询同专辑的歌曲封面
         val sameAlbumSongs = songRepository.getSongsByAlbum(targetAlbum, targetArtist)
-        val covers = mutableListOf<Pair<String, Any?>>()
-
         for (song in sameAlbumSongs) {
             try {
                 val tagData = songRepository.readAudioTagData(song.uri)
                 val cover = tagData.pictures.firstOrNull()?.data ?: tagData.picUrl
                 if (cover != null) {
                     val title = "${song.title} - ${song.artist}"
-                    covers.add(title to cover)
+                    return listOf(title to cover)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "读取同专辑歌曲封面失败: ${song.uri}", e)
             }
         }
 
-        return covers
+        return emptyList()
     }
 
     override fun onCleared() {

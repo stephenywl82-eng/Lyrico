@@ -43,6 +43,11 @@ import androidx.room.PrimaryKey
  * @property trackerNumber 音轨号（专辑内排序）
  * @property date 发行或录制日期（字符串形式，保留原始格式）
  * @property lyrics 歌词文本
+ * @property replayGainTrackGain ReplayGain 曲目增益
+ * @property replayGainTrackPeak ReplayGain 曲目峰值
+ * @property replayGainAlbumGain ReplayGain 专辑增益
+ * @property replayGainAlbumPeak ReplayGain 专辑峰值
+ * @property replayGainReferenceLoudness ReplayGain 参考响度
  *
  * —— 音频技术参数（Audio Technical Info） ——
  * @property durationMilliseconds 时长（毫秒）
@@ -113,6 +118,16 @@ data class SongEntity(
     val copyright: String? = null,
     @ColumnInfo(defaultValue = "NULL")
     val rating: Int? = null,
+    @ColumnInfo(defaultValue = "NULL")
+    val replayGainTrackGain: String? = null,
+    @ColumnInfo(defaultValue = "NULL")
+    val replayGainTrackPeak: String? = null,
+    @ColumnInfo(defaultValue = "NULL")
+    val replayGainAlbumGain: String? = null,
+    @ColumnInfo(defaultValue = "NULL")
+    val replayGainAlbumPeak: String? = null,
+    @ColumnInfo(defaultValue = "NULL")
+    val replayGainReferenceLoudness: String? = null,
 
     val durationMilliseconds: Int = 0,
     val bitrate: Int = 0,
@@ -151,6 +166,11 @@ data class SongEntity(
         if (trackerNumber != other.trackerNumber) return false
         if (date != other.date) return false
         if (lyrics != other.lyrics) return false
+        if (replayGainTrackGain != other.replayGainTrackGain) return false
+        if (replayGainTrackPeak != other.replayGainTrackPeak) return false
+        if (replayGainAlbumGain != other.replayGainAlbumGain) return false
+        if (replayGainAlbumPeak != other.replayGainAlbumPeak) return false
+        if (replayGainReferenceLoudness != other.replayGainReferenceLoudness) return false
         if (durationMilliseconds != other.durationMilliseconds) return false
         if (bitrate != other.bitrate) return false
         if (sampleRate != other.sampleRate) return false
@@ -177,6 +197,11 @@ data class SongEntity(
         result = 31 * result + (trackerNumber?.hashCode() ?: 0)
         result = 31 * result + (date?.hashCode() ?: 0)
         result = 31 * result + (lyrics?.hashCode() ?: 0)
+        result = 31 * result + (replayGainTrackGain?.hashCode() ?: 0)
+        result = 31 * result + (replayGainTrackPeak?.hashCode() ?: 0)
+        result = 31 * result + (replayGainAlbumGain?.hashCode() ?: 0)
+        result = 31 * result + (replayGainAlbumPeak?.hashCode() ?: 0)
+        result = 31 * result + (replayGainReferenceLoudness?.hashCode() ?: 0)
         result = 31 * result + durationMilliseconds.hashCode()
         result = 31 * result + bitrate
         result = 31 * result + sampleRate

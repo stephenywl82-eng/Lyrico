@@ -12,17 +12,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,13 +48,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.lonx.audiotag.model.CustomTagField
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
+import com.lonx.lyrico.utils.coil.CoverRequest
 import com.lonx.lyrico.viewmodel.BatchEditField
+import com.lonx.lyrico.viewmodel.BatchEditSelectableCover
+import com.lonx.lyrico.viewmodel.BatchEditSelectableValue
 import com.lonx.lyrico.viewmodel.BatchEditViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -72,6 +82,7 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.basic.ArrowUpDown
 import top.yukonga.miuix.kmp.icon.extended.Add
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Close
@@ -84,7 +95,7 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.window.WindowDialog
-import androidx.core.net.toUri
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 
 @Composable
@@ -96,14 +107,78 @@ fun BatchEditScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var showCoverOptionsSheet by remember { mutableStateOf(false) }
+    var showSelectedCoverSheet by remember { mutableStateOf(false) }
+    var selectedCoverOptions by remember { mutableStateOf<List<BatchEditSelectableCover>>(emptyList()) }
+    var selectedCoverOptionsLoading by remember { mutableStateOf(false) }
     var showInfoDialog by remember { mutableStateOf(false) }
     var showAddCustomTagDialog by remember { mutableStateOf(false) }
+    var showSelectedValueSheet by remember { mutableStateOf(false) }
+    var selectedValueField by remember { mutableStateOf<BatchEditField?>(null) }
+    var selectedValueOptions by remember { mutableStateOf<List<BatchEditSelectableValue>>(emptyList()) }
+    var selectedValueOptionsLoading by remember { mutableStateOf(false) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri -> uri?.let { viewModel.updateCover(it) } }
 
     val scope = rememberCoroutineScope()
+
+    fun applySelectedValue(field: BatchEditField, value: String) {
+        when (field) {
+            BatchEditField.TITLE -> viewModel.updateTitle(value)
+            BatchEditField.ARTIST -> viewModel.updateArtist(value)
+            BatchEditField.ALBUM_ARTIST -> viewModel.updateAlbumArtist(value)
+            BatchEditField.ALBUM -> viewModel.updateAlbum(value)
+            BatchEditField.DATE -> viewModel.updateDate(value)
+            BatchEditField.GENRE -> viewModel.updateGenre(value)
+            BatchEditField.TRACK_NUMBER -> viewModel.updateTrackNumber(value)
+            BatchEditField.DISC_NUMBER -> viewModel.updateDiscNumber(value)
+            BatchEditField.COMPOSER -> viewModel.updateComposer(value)
+            BatchEditField.LYRICIST -> viewModel.updateLyricist(value)
+            BatchEditField.COPYRIGHT -> viewModel.updateCopyright(value)
+            BatchEditField.COMMENT -> viewModel.updateComment(value)
+            BatchEditField.LYRICS -> viewModel.updateLyrics(value)
+            BatchEditField.REPLAY_GAIN_TRACK_GAIN -> viewModel.updateReplayGainTrackGain(value)
+            BatchEditField.REPLAY_GAIN_TRACK_PEAK -> viewModel.updateReplayGainTrackPeak(value)
+            BatchEditField.REPLAY_GAIN_ALBUM_GAIN -> viewModel.updateReplayGainAlbumGain(value)
+            BatchEditField.REPLAY_GAIN_ALBUM_PEAK -> viewModel.updateReplayGainAlbumPeak(value)
+            BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS -> viewModel.updateReplayGainReferenceLoudness(value)
+            BatchEditField.RATING -> Unit
+            BatchEditField.COVER -> Unit
+        }
+    }
+
+    fun openSelectedValueSheet(field: BatchEditField) {
+        selectedValueField = field
+        selectedValueOptions = emptyList()
+        selectedValueOptionsLoading = true
+        showSelectedValueSheet = true
+        scope.launch {
+            selectedValueOptions = viewModel.getSelectedSongFieldValues(field)
+            selectedValueOptionsLoading = false
+        }
+    }
+
+    fun applyCoverSource(cover: Any) {
+        when (cover) {
+            is String -> viewModel.updateCover(cover.toUri())
+            is ByteArray -> {
+                val tempFile = java.io.File.createTempFile("cover", ".jpg")
+                tempFile.writeBytes(cover)
+                viewModel.updateCover(android.net.Uri.fromFile(tempFile))
+            }
+        }
+    }
+
+    fun openSelectedCoverSheet() {
+        selectedCoverOptions = emptyList()
+        selectedCoverOptionsLoading = true
+        showSelectedCoverSheet = true
+        scope.launch {
+            selectedCoverOptions = viewModel.getSelectedSongCovers()
+            selectedCoverOptionsLoading = false
+        }
+    }
 
     // 加载同专辑封面（直接使用第一张）
     fun loadSameAlbumCovers() {
@@ -112,26 +187,7 @@ fun BatchEditScreen(
                 val covers = viewModel.getSameAlbumCovers()
                 if (covers.isNotEmpty()) {
                     val (_, cover) = covers.first()
-                    when (cover) {
-                        is String -> {
-                            viewModel.updateCover(cover.toUri())
-                        }
-
-                        is ByteArray -> {
-                            // 将 ByteArray 转换为 Bitmap，然后保存为临时文件
-                            val bitmap =
-                                android.graphics.BitmapFactory.decodeByteArray(cover, 0, cover.size)
-                            val tempFile = java.io.File.createTempFile("cover", ".jpg")
-                            tempFile.outputStream().use {
-                                bitmap.compress(
-                                    android.graphics.Bitmap.CompressFormat.JPEG,
-                                    100,
-                                    it
-                                )
-                            }
-                            viewModel.updateCover(android.net.Uri.fromFile(tempFile))
-                        }
-                    }
+                    cover?.let { applyCoverSource(it) }
                 }
             } catch (e: Exception) {
                 // 错误处理
@@ -227,9 +283,7 @@ fun BatchEditScreen(
                 BatchEditCoverSection(
                     coverUri = uiState.coverUri,
                     isRemoved = uiState.removeCover,
-                    onCoverClick = { showCoverOptionsSheet = true },
-                    onRemoveClick = { viewModel.removeCover() },
-                    onRevertClick = { viewModel.revertCover() }
+                    onCoverClick = { showCoverOptionsSheet = true }
                 )
             }
             // 评分组
@@ -255,32 +309,38 @@ fun BatchEditScreen(
                             BatchEditFieldItem(
                                 field = BatchEditField.TITLE,
                                 value = uiState.title,
-                                onValueChange = { viewModel.updateTitle(it) }
+                                onValueChange = { viewModel.updateTitle(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.TITLE) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.ARTIST,
                                 value = uiState.artist,
-                                onValueChange = { viewModel.updateArtist(it) }
+                                onValueChange = { viewModel.updateArtist(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.ARTIST) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.ALBUM_ARTIST,
                                 value = uiState.albumArtist,
-                                onValueChange = { viewModel.updateAlbumArtist(it) }
+                                onValueChange = { viewModel.updateAlbumArtist(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.ALBUM_ARTIST) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.ALBUM,
                                 value = uiState.album,
-                                onValueChange = { viewModel.updateAlbum(it) }
+                                onValueChange = { viewModel.updateAlbum(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.ALBUM) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.DATE,
                                 value = uiState.date,
-                                onValueChange = { viewModel.updateDate(it) }
+                                onValueChange = { viewModel.updateDate(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.DATE) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.GENRE,
                                 value = uiState.genre,
-                                onValueChange = { viewModel.updateGenre(it) }
+                                onValueChange = { viewModel.updateGenre(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.GENRE) }
                             )
                         }
                     }
@@ -296,12 +356,14 @@ fun BatchEditScreen(
                             BatchEditFieldItem(
                                 field = BatchEditField.TRACK_NUMBER,
                                 value = uiState.trackNumber,
-                                onValueChange = { viewModel.updateTrackNumber(it) }
+                                onValueChange = { viewModel.updateTrackNumber(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.TRACK_NUMBER) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.DISC_NUMBER,
                                 value = uiState.discNumber,
-                                onValueChange = { viewModel.updateDiscNumber(it) }
+                                onValueChange = { viewModel.updateDiscNumber(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.DISC_NUMBER) }
                             )
                         }
                     }
@@ -317,22 +379,26 @@ fun BatchEditScreen(
                             BatchEditFieldItem(
                                 field = BatchEditField.COMPOSER,
                                 value = uiState.composer,
-                                onValueChange = { viewModel.updateComposer(it) }
+                                onValueChange = { viewModel.updateComposer(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.COMPOSER) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.LYRICIST,
                                 value = uiState.lyricist,
-                                onValueChange = { viewModel.updateLyricist(it) }
+                                onValueChange = { viewModel.updateLyricist(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.LYRICIST) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.COPYRIGHT,
                                 value = uiState.copyright,
-                                onValueChange = { viewModel.updateCopyright(it) }
+                                onValueChange = { viewModel.updateCopyright(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.COPYRIGHT) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.COMMENT,
                                 value = uiState.comment,
-                                onValueChange = { viewModel.updateComment(it) }
+                                onValueChange = { viewModel.updateComment(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.COMMENT) }
                             )
                         }
                     }
@@ -348,27 +414,32 @@ fun BatchEditScreen(
                             BatchEditFieldItem(
                                 field = BatchEditField.REPLAY_GAIN_TRACK_GAIN,
                                 value = uiState.replayGainTrackGain,
-                                onValueChange = { viewModel.updateReplayGainTrackGain(it) }
+                                onValueChange = { viewModel.updateReplayGainTrackGain(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.REPLAY_GAIN_TRACK_GAIN) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.REPLAY_GAIN_TRACK_PEAK,
                                 value = uiState.replayGainTrackPeak,
-                                onValueChange = { viewModel.updateReplayGainTrackPeak(it) }
+                                onValueChange = { viewModel.updateReplayGainTrackPeak(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.REPLAY_GAIN_TRACK_PEAK) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.REPLAY_GAIN_ALBUM_GAIN,
                                 value = uiState.replayGainAlbumGain,
-                                onValueChange = { viewModel.updateReplayGainAlbumGain(it) }
+                                onValueChange = { viewModel.updateReplayGainAlbumGain(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.REPLAY_GAIN_ALBUM_GAIN) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.REPLAY_GAIN_ALBUM_PEAK,
                                 value = uiState.replayGainAlbumPeak,
-                                onValueChange = { viewModel.updateReplayGainAlbumPeak(it) }
+                                onValueChange = { viewModel.updateReplayGainAlbumPeak(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.REPLAY_GAIN_ALBUM_PEAK) }
                             )
                             BatchEditFieldItem(
                                 field = BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS,
                                 value = uiState.replayGainReferenceLoudness,
-                                onValueChange = { viewModel.updateReplayGainReferenceLoudness(it) }
+                                onValueChange = { viewModel.updateReplayGainReferenceLoudness(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS) }
                             )
                         }
                     }
@@ -422,6 +493,7 @@ fun BatchEditScreen(
                                 field = BatchEditField.LYRICS,
                                 value = uiState.lyrics,
                                 onValueChange = { viewModel.updateLyrics(it) },
+                                onSelectFromSongs = { openSelectedValueSheet(BatchEditField.LYRICS) },
                                 isMultiline = true
                             )
                         }
@@ -461,6 +533,13 @@ fun BatchEditScreen(
                         }
                     )
                     ArrowPreference(
+                        title = stringResource(R.string.batch_edit_select_cover_from_selected_songs),
+                        onClick = {
+                            showCoverOptionsSheet = false
+                            openSelectedCoverSheet()
+                        }
+                    )
+                    ArrowPreference(
                         title = "选择同专辑歌曲封面",
                         onClick = {
                             showCoverOptionsSheet = false
@@ -483,6 +562,119 @@ fun BatchEditScreen(
                             }
                         )
                     }
+                }
+            }
+        }
+    }
+
+    WindowBottomSheet(
+        show = showSelectedValueSheet,
+        enableNestedScroll = false,
+        title = selectedValueField?.let { stringResource(it.labelResId) }.orEmpty(),
+        onDismissRequest = { showSelectedValueSheet = false }
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(bottom = 32.dp)
+                .fillMaxWidth()
+        ) {
+
+                when {
+                    selectedValueOptionsLoading || selectedValueOptions.isEmpty() -> {
+                        Card(
+                            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+                        ) {
+                            BasicComponent(
+                                title = stringResource(
+                                    if (selectedValueOptionsLoading)
+                                        R.string.batch_edit_loading_selected_values
+                                    else
+                                        R.string.batch_edit_no_selected_values
+                                )
+                            )
+                        }
+                    }
+
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier
+                                .heightIn(max = 420.dp)
+                                .scrollEndHaptic()
+                                .overScrollVertical(),
+                            overscrollEffect = null
+                        ) {
+                            items(
+                                items = selectedValueOptions,
+                                key = { it.sourceUri }
+                            ) { option ->
+                                BatchEditValueOptionItem(
+                                    option = option,
+                                    onClick = {
+                                        selectedValueField?.let { field ->
+                                            applySelectedValue(field, option.value)
+                                        }
+                                        showSelectedValueSheet = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+        }
+    }
+
+    WindowBottomSheet(
+        show = showSelectedCoverSheet,
+        enableNestedScroll = false,
+        title = stringResource(R.string.batch_edit_select_cover_from_selected_songs),
+        onDismissRequest = { showSelectedCoverSheet = false }
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 96.dp),
+            modifier = Modifier
+                .padding(bottom = 32.dp)
+                .fillMaxWidth()
+                .scrollEndHaptic()
+                .overScrollVertical(),
+            contentPadding = PaddingValues(vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            overscrollEffect = null
+        ) {
+            if (selectedCoverOptionsLoading || selectedCoverOptions.isEmpty()) {
+                item {
+                    Card(
+                        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+                    ) {
+                        BasicComponent(
+                            title = stringResource(
+                                if (selectedCoverOptionsLoading)
+                                    R.string.batch_edit_loading_selected_values
+                                else
+                                    R.string.batch_edit_no_selected_covers
+                            )
+                        )
+                    }
+                }
+            }
+
+            if (!selectedCoverOptionsLoading && selectedCoverOptions.isNotEmpty()) {
+                gridItems(
+                    items = selectedCoverOptions,
+                    key = { it.sourceUri }
+                ) { option ->
+                    BatchEditCoverOptionItem(
+                        option = option,
+                        onClick = {
+                            scope.launch {
+                                viewModel.getSelectedSongCover(option.sourceUri)?.let { cover ->
+                                    applyCoverSource(cover)
+                                    showSelectedCoverSheet = false
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -675,6 +867,82 @@ fun BatchEditScreen(
 }
 
 @Composable
+private fun BatchEditCoverOptionItem(
+    option: BatchEditSelectableCover,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .background(MiuixTheme.colorScheme.secondaryContainer)
+            .clickable { onClick() }
+            .padding(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AsyncImage(
+            model = CoverRequest(option.previewUri.toUri(), option.fileLastModified),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(RoundedCornerShape(6.dp))
+                .background(LyricoColors.coverPlaceholder),
+            placeholder = rememberTintedPainter(
+                painter = painterResource(id = R.drawable.ic_album_24dp),
+                tint = LyricoColors.coverPlaceholderIcon
+            ),
+            error = rememberTintedPainter(
+                painter = painterResource(id = R.drawable.ic_album_24dp),
+                tint = LyricoColors.coverPlaceholderIcon
+            )
+        )
+        Spacer(modifier = Modifier.height(5.dp))
+        Text(
+            text = option.title,
+            style = MiuixTheme.textStyles.footnote1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        if (option.summary.isNotBlank()) {
+            Text(
+                text = option.summary,
+                style = MiuixTheme.textStyles.footnote2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun BatchEditValueOptionItem(
+    option: BatchEditSelectableValue,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.padding(vertical = 6.dp),
+        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 14.dp, vertical = 6.dp)
+        ) {
+            Text(
+                text = option.value,
+                style = MiuixTheme.textStyles.main,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
 private fun BatchEditRatingItem(
     rating: Int,
     isModified: Boolean,
@@ -768,9 +1036,7 @@ private fun BatchEditRatingItem(
 private fun BatchEditCoverSection(
     coverUri: Any?,
     isRemoved: Boolean,
-    onCoverClick: () -> Unit,
-    onRemoveClick: () -> Unit,
-    onRevertClick: () -> Unit
+    onCoverClick: () -> Unit
 ) {
     Column {
         Card(
@@ -840,6 +1106,7 @@ private fun BatchEditFieldItem(
     field: BatchEditField,
     value: String,
     onValueChange: (String) -> Unit,
+    onSelectFromSongs: () -> Unit,
     isMultiline: Boolean = false
 ) {
     val isKeep = value == "<keep>"
@@ -888,6 +1155,12 @@ private fun BatchEditFieldItem(
                         )
                     }
                 }
+                IconButton(onClick = onSelectFromSongs) {
+                    Icon(
+                        imageVector = MiuixIcons.Basic.ArrowUpDown,
+                        contentDescription = stringResource(R.string.batch_edit_select_from_selected_songs)
+                    )
+                }
             }
             TextField(
                 textStyle = MiuixTheme.textStyles.body2,
@@ -908,17 +1181,25 @@ private fun BatchEditFieldItem(
             onValueChange = onValueChange,
             label = stringResource(field.labelResId) + if (isKeep) " (无修改)" else "",
             trailingIcon = {
-                IconButton(onClick = {
-                    onValueChange(if (isKeep) "" else "<keep>")
-                }) {
-                    Icon(
-                        imageVector = if (isKeep) MiuixIcons.Close else MiuixIcons.Undo,
-                        contentDescription = null,
-                        tint = if (isKeep)
-                            MiuixTheme.colorScheme.primary
-                        else
-                            MiuixTheme.colorScheme.error
-                    )
+                Row {
+                    IconButton(onClick = {
+                        onValueChange(if (isKeep) "" else "<keep>")
+                    }) {
+                        Icon(
+                            imageVector = if (isKeep) MiuixIcons.Close else MiuixIcons.Undo,
+                            contentDescription = null,
+                            tint = if (isKeep)
+                                MiuixTheme.colorScheme.primary
+                            else
+                                MiuixTheme.colorScheme.error
+                        )
+                    }
+                    IconButton(onClick = onSelectFromSongs) {
+                        Icon(
+                            imageVector = MiuixIcons.Basic.ArrowUpDown,
+                            contentDescription = stringResource(R.string.batch_edit_select_from_selected_songs)
+                        )
+                    }
                 }
             }
         )

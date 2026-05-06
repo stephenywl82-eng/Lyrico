@@ -80,17 +80,23 @@ class ExtraMetadataResolver(
         return when (rule.target) {
             ExtraMetadataTarget.COMMENT -> writeComment(currentOutput, currentSong, rule, value)
             ExtraMetadataTarget.REPLAY_GAIN_TRACK_GAIN -> {
-                if (canWriteReplayGain(rule.mode, currentTagData?.replayGainTrackGain, currentSong, "REPLAYGAIN_TRACK_GAIN")) {
+                val currentValue = currentTagData?.replayGainTrackGain
+                    ?: currentSong.replayGainTrackGain
+                if (canWriteReplayGain(rule.mode, currentValue)) {
                     currentOutput.copy(replayGainTrackGain = value)
                 } else currentOutput
             }
             ExtraMetadataTarget.REPLAY_GAIN_TRACK_PEAK -> {
-                if (canWriteReplayGain(rule.mode, currentTagData?.replayGainTrackPeak, currentSong, "REPLAYGAIN_TRACK_PEAK")) {
+                val currentValue = currentTagData?.replayGainTrackPeak
+                    ?: currentSong.replayGainTrackPeak
+                if (canWriteReplayGain(rule.mode, currentValue)) {
                     currentOutput.copy(replayGainTrackPeak = value)
                 } else currentOutput
             }
             ExtraMetadataTarget.REPLAY_GAIN_REFERENCE_LOUDNESS -> {
-                if (canWriteReplayGain(rule.mode, currentTagData?.replayGainReferenceLoudness, currentSong, "REPLAYGAIN_REFERENCE_LOUDNESS")) {
+                val currentValue = currentTagData?.replayGainReferenceLoudness
+                    ?: currentSong.replayGainReferenceLoudness
+                if (canWriteReplayGain(rule.mode, currentValue)) {
                     currentOutput.copy(replayGainReferenceLoudness = value)
                 } else currentOutput
             }
@@ -115,14 +121,11 @@ class ExtraMetadataResolver(
 
     private fun canWriteReplayGain(
         mode: ExtraWriteMode,
-        currentValue: String?,
-        currentSong: SongEntity,
-        rawTagName: String
+        currentValue: String?
     ): Boolean {
         return when (mode) {
             ExtraWriteMode.DISABLED -> false
-            ExtraWriteMode.SUPPLEMENT -> currentValue.isNullOrBlank() &&
-                    currentSong.rawProperties?.contains(rawTagName, ignoreCase = true) != true
+            ExtraWriteMode.SUPPLEMENT -> currentValue.isNullOrBlank()
             ExtraWriteMode.OVERWRITE -> true
         }
     }

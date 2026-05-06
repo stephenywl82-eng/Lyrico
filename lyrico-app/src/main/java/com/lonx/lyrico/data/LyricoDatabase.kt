@@ -23,7 +23,7 @@ import com.lonx.lyrico.data.migration.DeleteBatchMatchHistorySpec
         BatchTaskItemEntity::class,
         AppLogEntity::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
@@ -35,7 +35,8 @@ import com.lonx.lyrico.data.migration.DeleteBatchMatchHistorySpec
         AutoMigration(from = 9, to = 10),
         AutoMigration(from = 10, to = 11, spec = DeleteBatchMatchHistorySpec::class),
         AutoMigration(from = 11, to = 12),
-        AutoMigration(from = 12, to = 13)
+        AutoMigration(from = 12, to = 13),
+        AutoMigration(from = 13, to = 14)
     ]
 )
 abstract class LyricoDatabase : RoomDatabase() {

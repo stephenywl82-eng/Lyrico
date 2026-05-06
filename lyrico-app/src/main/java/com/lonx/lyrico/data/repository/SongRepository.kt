@@ -2,6 +2,7 @@ package com.lonx.lyrico.data.repository
 
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.LocalSearchType
+import com.lonx.lyrico.data.model.dao.SongFieldValue
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortOrder
@@ -23,6 +24,11 @@ interface SongRepository {
 
 
     suspend fun getSongByUri(uri: String): SongEntity?
+
+    suspend fun getDistinctSongFieldValues(
+        uris: List<String>,
+        fieldColumn: String
+    ): List<SongFieldValue>
 
     /**
      * 同步数据库与设备文件
