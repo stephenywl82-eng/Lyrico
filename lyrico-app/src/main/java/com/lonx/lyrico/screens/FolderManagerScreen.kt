@@ -258,18 +258,21 @@ private fun FolderListItem(
                 } else {
                     stringResource(R.string.folder_action_hide)
                 },
-                selected = folder.isIgnored,
                 onClick = {
                     onIgnoredChange(!folder.isIgnored)
                 }
             ),
             DropdownItem(
                 text = stringResource(R.string.action_refresh_folder),
-                onClick = onRefresh
+                onClick = {
+                    if (!isBusy){ onRefresh() }
+                }
             ),
             DropdownItem(
                 text = stringResource(R.string.folder_action_remove),
-                onClick = onDelete
+                onClick = {
+                    if (!isBusy){ onDelete() }
+                }
             )
         )
     )

@@ -120,7 +120,7 @@ fun SongListItem(
                             Brush.verticalGradient(
                                 colors = listOf(
                                     Color.Transparent,
-                                    MiuixTheme.colorScheme.onSecondaryContainer
+                                    MiuixTheme.colorScheme.secondary
                                 ),
                             )
                         )
@@ -129,7 +129,7 @@ fun SongListItem(
                         text = song.fileName.substringAfterLast('.', "").uppercase(),
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Gray.copy(alpha = 0.8f),
+                        color = MiuixTheme.colorScheme.onSecondary,
                         modifier = Modifier
                             .align(Alignment.Center)
                             .padding(bottom = 1.dp)
