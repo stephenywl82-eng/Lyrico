@@ -45,11 +45,12 @@ object FileNameSanitizer {
             val char = result[i].toString()
             if (char in charMappings) {
                 val start = i
+                val replacement = charMappings[char]
                 // 连续相同映射的字符可以合并
-                while (i < result.length && result[i].toString() in charMappings) {
+                while (i < result.length && charMappings[result[i].toString()] == replacement) {
                     i++
                 }
-                indices.add(IntRange(start, i - 1) to charMappings[result[start].toString()])
+                indices.add(IntRange(start, i - 1) to replacement)
             } else {
                 i++
             }

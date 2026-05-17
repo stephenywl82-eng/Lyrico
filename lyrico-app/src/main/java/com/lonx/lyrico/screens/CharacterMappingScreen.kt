@@ -22,7 +22,7 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.CharacterMappingRule
 import com.lonx.lyrico.data.model.ReplacementCharOption
 import com.lonx.lyrico.data.model.toReplacementOption
-import com.lonx.lyrico.viewmodel.BatchRenameViewModel
+import com.lonx.lyrico.viewmodel.CharacterMappingViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -46,9 +46,8 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun CharacterMappingScreen(
     navigator: DestinationsNavigator
 ) {
-    val viewModel: BatchRenameViewModel = koinViewModel()
-    val uiState by viewModel.uiState.collectAsState()
-    val characterMappingConfig = uiState.characterMappingConfig
+    val viewModel: CharacterMappingViewModel = koinViewModel()
+    val characterMappingConfig by viewModel.characterMappingConfig.collectAsState()
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     Scaffold(
         topBar = {
@@ -86,8 +85,9 @@ fun CharacterMappingScreen(
                     .fillMaxHeight(),
                 overscrollEffect = null,
             ) {
-                if (characterMappingConfig != null && characterMappingConfig.rules.isNotEmpty()) {
-                    items(items=characterMappingConfig.rules){ rule ->
+                val config = characterMappingConfig
+                if (config != null && config.rules.isNotEmpty()) {
+                    items(items = config.rules) { rule ->
                         CharacterMappingRuleSection(
                             rule = rule,
                             onCharacterMappingChanged = { character, replacementChar ->

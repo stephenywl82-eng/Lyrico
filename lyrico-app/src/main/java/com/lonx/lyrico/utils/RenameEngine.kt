@@ -3,7 +3,6 @@ package com.lonx.lyrico.utils
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.lyrico.data.model.CharacterMappingRule
 import com.lonx.lyrico.data.model.RenamePreview
-import kotlinx.coroutines.delay
 import java.io.File
 
 object RenameEngine {
@@ -65,56 +64,6 @@ object RenameEngine {
         }
 
         return previews
-    }
-
-    suspend fun renameFiles(
-        previews: List<RenamePreview>,
-        onProgressUpdate: ((Int, Int, String, Boolean) -> Unit)? = null
-    ): Result {
-        val result = Result(
-            successful = mutableListOf(),
-            failed = mutableListOf()
-        )
-
-        val total = previews.size
-        for ((index, preview) in previews.withIndex()) {
-            val currentFileName = preview.originalPath.substringAfterLast('/')
-            var isSuccess = false
-            
-            try {
-                val oldFile = File(preview.originalPath)
-                val newFile = File(preview.newPath)
-
-                newFile.parentFile?.mkdirs()
-
-                if (oldFile.renameTo(newFile)) {
-                    result.successful.add(preview)
-                    isSuccess = true
-                } else {
-                    result.failed.add(preview to "Failed to rename file")
-                }
-            } catch (e: Exception) {
-                result.failed.add(preview to e.message.orEmpty())
-            }
-
-
-            val current = index + 1
-            onProgressUpdate?.invoke(current, total, currentFileName, isSuccess)
-
-            if (index < previews.lastIndex) {
-                delay(50L)
-            }
-        }
-
-        return result
-    }
-
-    data class Result(
-        val successful: MutableList<RenamePreview> = mutableListOf(),
-        val failed: MutableList<Pair<RenamePreview, String>> = mutableListOf()
-    ) {
-        val successCount: Int get() = successful.size
-        val failureCount: Int get() = failed.size
     }
 
     fun getPresetFormats(): List<String> {
