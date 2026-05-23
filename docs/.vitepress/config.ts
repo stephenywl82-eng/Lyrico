@@ -10,7 +10,7 @@ export default defineConfig({
   base,
 
   head: [
-    ['link', { rel: 'icon', href: `${base}logo.svg`, type: 'image/svg+xml' }],
+    ['link', { rel: 'icon', href: `/Lyrico/logo.svg`, type: 'image/svg+xml' }],
   ],
 
   vite: {
@@ -23,7 +23,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: `${base}logo.svg`,
+    logo: `/logo.svg`,
 
     nav: [
       { text: '首页', link: '/' },
