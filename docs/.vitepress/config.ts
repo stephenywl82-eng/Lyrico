@@ -5,6 +5,7 @@ export default defineConfig({
   title: 'Lyrico 插件指南',
   description: '为 Lyrico 提供在线元数据搜索能力',
   lang: 'zh-CN',
+  base: '/Lyrico/',
 
   head: [
     ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
