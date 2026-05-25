@@ -479,9 +479,9 @@
 
     <!-- 批量编辑 -->
     <string name="batch_edit_title">编辑标签</string>
+    <string name="batch_edit_tab_config">配置</string>
+    <string name="batch_edit_tab_preview">预览 (%1$d)</string>
     <string name="batch_edit_song_count">已选择 %d 首歌曲</string>
-    <string name="batch_edit_add_field">添加</string>
-    <string name="batch_edit_select_fields">选择要编辑的标签</string>
     <string name="batch_edit_no_fields">尚未添加任何标签。\n点击「添加」按钮选择要编辑的标签。</string>
     <string name="batch_edit_saving_progress">保存中: %1$d / %2$d</string>
     <string name="batch_edit_result_summary">成功: %1$d / 总数: %2$d，跳过: %3$d，失败: %4$d</string>
@@ -497,16 +497,23 @@
     <string name="batch_edit_no_selected_values">已选歌曲中没有可用值</string>
     <string name="batch_edit_no_selected_covers">已选歌曲中没有可用封面</string>
     <string name="batch_edit_cover_mismatch">选中的歌曲有不同的专辑/艺术家，无法应用同专辑封面</string>
+    <string name="batch_edit_preview_empty">暂无可预览的修改</string>
+    <string name="batch_edit_preview_change_count">将修改 %1$d 个字段</string>
+    <string name="batch_edit_preview_old_value">旧: %1$s</string>
+    <string name="batch_edit_preview_new_value">新: %1$s</string>
+    <string name="batch_edit_preview_empty_value">（空）</string>
+    <string name="batch_edit_preview_current_cover">当前封面</string>
+    <string name="batch_edit_preview_remove_cover">移除封面</string>
     <string name="batch_edit_field_remove_hint">移除此标签</string>
-    <string name="batch_edit_info_summary">了解批量编辑的使用方法</string>
+    <string name="batch_edit_info_summary">使用说明</string>
     <string name="batch_edit_info_content">批量编辑说明：
 
-• 所有字段默认显示"&lt;keep&gt;"，表示该字段不会被修改
-• 编辑字段内容后，该字段将被更新到所有选中的歌曲
-• 点击字段右侧的撤销按钮可以恢复到"&lt;keep&gt;"状态
-• 对于评分字段，点击星星可以设置新的评分，或点击"撤销"按钮不修改
-• 封面图片可以点击来更换或移除
-• 点击「保存」按钮后，修改会写入所有选中歌曲的文件标签</string>
+\n• 所有字段默认显示"&lt;keep&gt;"，表示该字段不会被修改
+\n• 编辑字段内容后，该字段将被更新到所有选中的歌曲
+\n• 点击字段右侧的撤销按钮可以恢复到"&lt;keep&gt;"状态
+\n• 对于评分字段，点击星星可以设置新的评分，或点击"撤销"按钮不修改
+\n• 封面图片可以点击来更换或移除
+\n• 点击「保存」按钮后，修改会写入所有选中歌曲的文件标签</string>
     <string name="search_type_all">全部</string>
     <string name="search_type_title">标题</string>
     <string name="search_type_artist">艺术家</string>

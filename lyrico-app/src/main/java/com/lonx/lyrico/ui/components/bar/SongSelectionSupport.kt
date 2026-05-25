@@ -268,6 +268,7 @@ fun BoxScope.SongBatchSelectionActions(
         style = ExpandableFabMenuStyle.default().copy(
             mainIcon = MiuixIcons.Add
         ),
+        itemCount = 9,
         onExpandedChange = onExpandedChange
     ) {
         FabMenuItem(

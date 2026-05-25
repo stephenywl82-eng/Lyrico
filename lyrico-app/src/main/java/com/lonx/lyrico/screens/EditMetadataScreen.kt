@@ -909,10 +909,27 @@ fun EditMetadataScreen(
                 }
             }
         }
+        val fabMenuItemCount = remember(
+            editingTagData?.lyrics,
+            uiState.coverUri
+        ) {
+            var count = 3 // 固定项：添加自定义标签、播放、字段显示设置
+
+            if (!editingTagData?.lyrics.isNullOrBlank()) {
+                count++
+            }
+
+            if (uiState.coverUri != null) {
+                count++
+            }
+
+            count
+        }
         ExpandableFabMenu(
             visible = isFloatingToolbarVisible,
             expanded = isFabMenuExpanded,
             enabled = true,
+            itemCount = fabMenuItemCount,
             onExpandedChange = { isFabMenuExpanded = it }
         ) {
             FabMenuItem(

@@ -1,5 +1,6 @@
 package com.lonx.lyrico.ui.components.fab
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -72,7 +73,15 @@ data class ExpandableFabMenuStyle(
     val fabToMenuSpacing: Dp = 16.dp,
     val menuToFabPadding: Dp = 8.dp,
     val itemEndPadding: Dp = 8.dp,
-    val labelToIconSpacing: Dp = 12.dp
+    
+    val expandedWidth: Dp,
+    val itemHeight: Dp,
+    val minExpandedHeight: Dp,
+    val maxExpandedHeight: Dp,
+    val expandedContainerColor: Color,
+    val cornerRadius: Dp,
+    val contentPadding: PaddingValues,
+
 ) {
     companion object {
         /**
@@ -88,11 +97,18 @@ data class ExpandableFabMenuStyle(
                 mainContainerColor = MiuixTheme.colorScheme.primary,
                 mainContentColor = MiuixTheme.colorScheme.onPrimary,
                 itemContainerColor = MiuixTheme.colorScheme.surface,
-                itemContentColor = MiuixTheme.colorScheme.primary,
+                itemContentColor = MiuixTheme.colorScheme.onSurface,
                 itemDisabledContentColor = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                 labelContainerColor = MiuixTheme.colorScheme.surface,
                 labelTextColor = MiuixTheme.colorScheme.onSurface,
                 labelDisabledTextColor = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                itemHeight = 48.dp,
+                minExpandedHeight = 56.dp,
+                maxExpandedHeight = 320.dp,
+                contentPadding = PaddingValues(vertical = 6.dp),
+                expandedContainerColor = MiuixTheme.colorScheme.surface,
+                expandedWidth = 190.dp,
+                cornerRadius = 12.dp
             )
         }
     }

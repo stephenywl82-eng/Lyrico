@@ -3,6 +3,8 @@ package com.lonx.lyrico.screens
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,6 +28,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,6 +43,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -57,7 +62,11 @@ import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.components.CoverRequest
+import com.lonx.lyrico.ui.components.fab.ExpandableFabMenu
+import com.lonx.lyrico.ui.components.fab.ExpandableFabMenuStyle
+import com.lonx.lyrico.ui.components.fab.FabMenuItem
 import com.lonx.lyrico.viewmodel.BatchEditField
+import com.lonx.lyrico.viewmodel.BatchEditPreview
 import com.lonx.lyrico.viewmodel.BatchEditSelectableCover
 import com.lonx.lyrico.viewmodel.BatchEditSelectableValue
 import com.lonx.lyrico.viewmodel.BatchEditViewModel
@@ -71,7 +80,6 @@ import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.FloatingToolbar
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
@@ -79,10 +87,10 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.basic.ToolbarPosition
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.basic.ArrowUpDown
 import top.yukonga.miuix.kmp.icon.extended.Add
@@ -101,6 +109,10 @@ import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.lazy.grid.items as gridItems
 
+private enum class BatchEditTab(val labelRes: Int) {
+    Config(R.string.batch_edit_tab_config),
+    Preview(R.string.batch_edit_tab_preview)
+}
 
 @Composable
 @Destination<RootGraph>(route = "batch_edit")
@@ -121,6 +133,21 @@ fun BatchEditScreen(
     var selectedValueField by remember { mutableStateOf<BatchEditField?>(null) }
     var selectedValueOptions by remember { mutableStateOf<List<BatchEditSelectableValue>>(emptyList()) }
     var selectedValueOptionsLoading by remember { mutableStateOf(false) }
+    var expandedFabMenu by remember { mutableStateOf(false) }
+
+    val tabs = remember { BatchEditTab.entries }
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val currentTab = tabs[pagerState.currentPage]
+    val visibleFieldCodes = visibleFieldGroups
+        .flatMap { it.fields }
+        .map { it.code }
+        .toSet()
+    val visibleGroupCodes = visibleFieldGroups
+        .map { it.group.code }
+        .toSet()
+    val editPreviews = remember(uiState, visibleFieldCodes) {
+        viewModel.buildEditPreviews(visibleFieldCodes)
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -222,24 +249,6 @@ fun BatchEditScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = {
-                            navigator.navigate(EditFieldVisibilityDestination())
-                        }
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Settings,
-                            contentDescription = null
-                        )
-                    }
-                    IconButton(
-                        onClick = { showInfoDialog = true }
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Info,
-                            contentDescription = null
-                        )
-                    }
-                    IconButton(
                         onClick = { viewModel.saveBatchEdit() },
                         enabled = !uiState.isSaving
                     ) {
@@ -251,57 +260,63 @@ fun BatchEditScreen(
                 },
                 scrollBehavior = topAppBarScrollBehavior
             )
-        },
-        floatingToolbarPosition = ToolbarPosition.CenterEnd,
-        floatingToolbar = {
-            FloatingToolbar() {
-                Column(
-                    modifier = Modifier.padding(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    IconButton(
-                        onClick = {
-                            showAddCustomTagDialog = true
-                        }
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Add,
-                            contentDescription = null
-                        )
-                    }
-                }
-            }
         }
     ) { paddingValues ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding())
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 8.dp)
+                ) {
+                    val tabLabels = tabs.map { tab ->
+                        when (tab) {
+                            BatchEditTab.Config -> stringResource(tab.labelRes)
+                            BatchEditTab.Preview -> stringResource(tab.labelRes, editPreviews.size)
+                        }
+                    }
+                    TabRowWithContour(
+                        tabs = tabLabels,
+                        selectedTabIndex = pagerState.currentPage,
+                        onTabSelected = { index ->
+                            scope.launch {
+                                expandedFabMenu = false
+                                pagerState.animateScrollToPage(index)
+                            }
+                        }
+                    )
+                }
 
-        LazyColumn(
-            modifier = Modifier
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
-                .fillMaxHeight()
-                .imePadding(),
-            contentPadding = PaddingValues(
-                top = paddingValues.calculateTopPadding(),
-                bottom = paddingValues.calculateBottomPadding() + 80.dp,
-            ),
-            overscrollEffect = null,
-        ) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    key = { index -> tabs[index].name }
+                ) { page ->
+                    when (tabs[page]) {
+                        BatchEditTab.Config ->
+                    LazyColumn(
+                        modifier = Modifier
+                            .scrollEndHaptic()
+                            .overScrollVertical()
+                            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+                            .fillMaxHeight()
+                            .imePadding(),
+                        contentPadding = PaddingValues(
+                            bottom = paddingValues.calculateBottomPadding() + 80.dp,
+                        ),
+                        overscrollEffect = null,
+                    ) {
             // 歌曲数量信息
             item(key = "song_count") {
                 SmallTitle(
                     text = stringResource(R.string.batch_edit_song_count, uiState.songCount)
                 )
             }
-
-            val visibleFieldCodes = visibleFieldGroups
-                .flatMap { it.fields }
-                .map { it.code }
-                .toSet()
-
-            val visibleGroupCodes = visibleFieldGroups
-                .map { it.group.code }
-                .toSet()
 
             // 封面编辑区
             if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_COVER)) {
@@ -591,6 +606,54 @@ fun BatchEditScreen(
                 }
             }
 
+        }
+                        BatchEditTab.Preview -> BatchEditPreviewTab(
+                            previews = editPreviews,
+                            bottomPadding = paddingValues.calculateBottomPadding(),
+                            topAppBarNestedScrollConnection = topAppBarScrollBehavior.nestedScrollConnection
+                        )
+                    }
+                }
+            }
+
+            ExpandableFabMenu(
+                visible = currentTab == BatchEditTab.Config,
+                expanded = expandedFabMenu,
+                enabled = !uiState.isSaving,
+                style = ExpandableFabMenuStyle.default().copy(
+                    mainIcon = MiuixIcons.Add
+                ),
+                itemCount = 3,
+                onExpandedChange = { expandedFabMenu = it }
+            ) {
+                FabMenuItem(
+                    label = stringResource(R.string.action_add_custom_tag),
+                    icon = MiuixIcons.Add,
+                    enabled = !uiState.isSaving,
+                    onClick = {
+                        expandedFabMenu = false
+                        showAddCustomTagDialog = true
+                    }
+                )
+                FabMenuItem(
+                    label = stringResource(R.string.edit_field_visibility_settings),
+                    icon = MiuixIcons.Settings,
+                    enabled = !uiState.isSaving,
+                    onClick = {
+                        expandedFabMenu = false
+                        navigator.navigate(EditFieldVisibilityDestination())
+                    }
+                )
+                FabMenuItem(
+                    label = stringResource(R.string.batch_edit_info_summary),
+                    icon = MiuixIcons.Info,
+                    enabled = !uiState.isSaving,
+                    onClick = {
+                        expandedFabMenu = false
+                        showInfoDialog = true
+                    }
+                )
+            }
         }
     }
 
@@ -1182,6 +1245,133 @@ private fun BatchEditCoverSection(
                 )
             }
         }
+    }
+}
+
+
+@Composable
+private fun BatchEditPreviewTab(
+    previews: List<BatchEditPreview>,
+    bottomPadding: androidx.compose.ui.unit.Dp,
+    topAppBarNestedScrollConnection: NestedScrollConnection
+) {
+    var expandedPreviewKey by remember { mutableStateOf<String?>(null) }
+
+    LazyColumn(
+        modifier = Modifier
+            .scrollEndHaptic()
+            .overScrollVertical()
+            .nestedScroll(topAppBarNestedScrollConnection)
+            .fillMaxHeight(),
+        contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
+        overscrollEffect = null,
+    ) {
+        if (previews.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.batch_edit_preview_empty),
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                }
+            }
+        } else {
+            items(
+                items = previews,
+                key = { it.songUri }
+            ) { preview ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 3.dp)
+                        .animateContentSize()
+                        .clickable {
+                            expandedPreviewKey =
+                                if (expandedPreviewKey == preview.songUri) null else preview.songUri
+                        }
+                ) {
+                    BatchEditPreviewItem(
+                        preview = preview,
+                        expanded = expandedPreviewKey == preview.songUri
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BatchEditPreviewItem(
+    preview: BatchEditPreview,
+    expanded: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = preview.fileName,
+            style = MiuixTheme.textStyles.body1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = stringResource(R.string.batch_edit_preview_change_count, preview.changes.size),
+            style = MiuixTheme.textStyles.footnote1,
+            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+        )
+
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                preview.changes.forEach { change ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = change.labelResId?.let { stringResource(it) } ?: change.customLabel.orEmpty(),
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.batch_edit_preview_old_value,
+                                displayBatchEditPreviewValue(change.oldValue)
+                            ),
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.batch_edit_preview_new_value,
+                                displayBatchEditPreviewValue(change.newValue)
+                            ),
+                            style = MiuixTheme.textStyles.footnote1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun displayBatchEditPreviewValue(value: String): String {
+    return when (value) {
+        "<current_cover>" -> stringResource(R.string.batch_edit_preview_current_cover)
+        "<remove_cover>" -> stringResource(R.string.batch_edit_preview_remove_cover)
+        "" -> stringResource(R.string.batch_edit_preview_empty_value)
+        else -> value
     }
 }
 

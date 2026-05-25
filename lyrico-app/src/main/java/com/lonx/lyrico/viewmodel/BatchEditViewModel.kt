@@ -117,7 +117,21 @@ data class BatchEditUiState(
     val successCount: Int = 0,  // 成功计数
     val skippedCount: Int = 0,  // 跳过计数
     val failureCount: Int = 0,  // 失败计数
-    val saveTimeMillis: Long = 0  // 保存总用时（毫秒）
+    val saveTimeMillis: Long = 0,  // 保存总用时（毫秒）
+    val selectedSongsVersion: Int = 0
+)
+
+data class BatchEditPreview(
+    val songUri: String,
+    val fileName: String,
+    val changes: List<BatchEditPreviewChange>
+)
+
+data class BatchEditPreviewChange(
+    val labelResId: Int?,
+    val customLabel: String?,
+    val oldValue: String,
+    val newValue: String
 )
 
 data class BatchEditSelectableValue(
@@ -176,6 +190,7 @@ class BatchEditViewModel(
             selectedSongs = uris.mapNotNull { uri ->
                 songRepository.getSongByUri(uri)
             }
+            _uiState.update { it.copy(selectedSongsVersion = it.selectedSongsVersion + 1) }
         }
         viewModelScope.launch {
             val runningTask = batchTaskRepository.getRunningTaskByType(BatchTaskType.EDIT_TAGS)
@@ -387,6 +402,122 @@ class BatchEditViewModel(
             }
         }
 
+    fun buildEditPreviews(visibleFieldCodes: Set<String>): List<BatchEditPreview> {
+        val state = _uiState.value.filterHiddenEditFields(visibleFieldCodes)
+        if (selectedSongs.isEmpty()) return emptyList()
+        return selectedSongs.mapNotNull { song ->
+            val changes = buildPreviewChanges(song, state, visibleFieldCodes)
+            if (changes.isEmpty()) {
+                null
+            } else {
+                BatchEditPreview(
+                    songUri = song.uri,
+                    fileName = song.fileName,
+                    changes = changes
+                )
+            }
+        }
+    }
+
+    private fun buildPreviewChanges(
+        song: SongEntity,
+        state: BatchEditUiState,
+        visibleFieldCodes: Set<String>
+    ): List<BatchEditPreviewChange> {
+        val keep = EditTagsTaskConfig.KEEP_VALUE
+        fun visible(code: String): Boolean = code in visibleFieldCodes
+        fun value(text: String?): String = text.orEmpty()
+        fun addTextChange(
+            changes: MutableList<BatchEditPreviewChange>,
+            code: String,
+            labelResId: Int,
+            oldValue: String?,
+            newValue: String
+        ) {
+            if (visible(code) && newValue != keep) {
+                changes += BatchEditPreviewChange(
+                    labelResId = labelResId,
+                    customLabel = null,
+                    oldValue = value(oldValue),
+                    newValue = newValue
+                )
+            }
+        }
+
+        return buildList {
+            addTextChange(this, "basic_info.title", BatchEditField.TITLE.labelResId, song.title, state.title)
+            addTextChange(this, "basic_info.artist", BatchEditField.ARTIST.labelResId, song.artist, state.artist)
+            addTextChange(this, "basic_info.album_artist", BatchEditField.ALBUM_ARTIST.labelResId, song.albumArtist, state.albumArtist)
+            addTextChange(this, "basic_info.album", BatchEditField.ALBUM.labelResId, song.album, state.album)
+            addTextChange(this, "basic_info.date", BatchEditField.DATE.labelResId, song.date, state.date)
+            addTextChange(this, "basic_info.language", BatchEditField.LANGUAGE.labelResId, song.language, state.language)
+            addTextChange(this, "basic_info.genre", BatchEditField.GENRE.labelResId, song.genre, state.genre)
+            addTextChange(this, "track_details.track_number", BatchEditField.TRACK_NUMBER.labelResId, song.trackerNumber, state.trackNumber)
+            addTextChange(this, "track_details.disc_number", BatchEditField.DISC_NUMBER.labelResId, song.discNumber?.toString(), state.discNumber)
+            addTextChange(this, "credits_other.composer", BatchEditField.COMPOSER.labelResId, song.composer, state.composer)
+            addTextChange(this, "credits_other.lyricist", BatchEditField.LYRICIST.labelResId, song.lyricist, state.lyricist)
+            addTextChange(this, "credits_other.copyright", BatchEditField.COPYRIGHT.labelResId, song.copyright, state.copyright)
+            addTextChange(this, "credits_other.comment", BatchEditField.COMMENT.labelResId, song.comment, state.comment)
+            addTextChange(this, "lyrics.lyrics", BatchEditField.LYRICS.labelResId, song.lyrics, state.lyrics)
+            addTextChange(this, "replay_gain.track_gain", BatchEditField.REPLAY_GAIN_TRACK_GAIN.labelResId, song.replayGainTrackGain, state.replayGainTrackGain)
+            addTextChange(this, "replay_gain.track_peak", BatchEditField.REPLAY_GAIN_TRACK_PEAK.labelResId, song.replayGainTrackPeak, state.replayGainTrackPeak)
+            addTextChange(this, "replay_gain.album_gain", BatchEditField.REPLAY_GAIN_ALBUM_GAIN.labelResId, song.replayGainAlbumGain, state.replayGainAlbumGain)
+            addTextChange(this, "replay_gain.album_peak", BatchEditField.REPLAY_GAIN_ALBUM_PEAK.labelResId, song.replayGainAlbumPeak, state.replayGainAlbumPeak)
+            addTextChange(this, "replay_gain.reference_loudness", BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS.labelResId, song.replayGainReferenceLoudness, state.replayGainReferenceLoudness)
+
+            if (visible("cover.rating") && state.ratingModified) {
+                add(
+                    BatchEditPreviewChange(
+                        labelResId = BatchEditField.RATING.labelResId,
+                        customLabel = null,
+                        oldValue = song.rating?.toString().orEmpty(),
+                        newValue = state.rating.toString()
+                    )
+                )
+            }
+
+            if (visible("cover.picture") && (state.removeCover || state.coverUri != null)) {
+                add(
+                    BatchEditPreviewChange(
+                        labelResId = BatchEditField.COVER.labelResId,
+                        customLabel = null,
+                        oldValue = "<current_cover>",
+                        newValue = if (state.removeCover) "<remove_cover>" else state.coverUri?.toString().orEmpty()
+                    )
+                )
+            }
+
+            if (visible("lyrics.lyrics_offset") && state.lyricsOffset.isNotBlank()) {
+                val offsetValue = parseLyricsOffset(state.lyricsOffset)
+                if (offsetValue != 0 && song.lyrics != null) {
+                    add(
+                        BatchEditPreviewChange(
+                            labelResId = R.string.label_lyrics_offset,
+                            customLabel = null,
+                            oldValue = song.lyrics,
+                            newValue = LyricEncoder.shiftLyricsOffset(song.lyrics, offsetValue.toLong())
+                        )
+                    )
+                }
+            }
+
+            if (visible("custom_tags.custom_tags")) {
+                state.customFields
+                    .filter { it.key.isNotBlank() }
+                    .forEach { field ->
+                        add(
+                            BatchEditPreviewChange(
+                                labelResId = null,
+                                customLabel = field.key,
+                                oldValue = "",
+                                newValue = field.value
+                            )
+                        )
+                    }
+            }
+        }
+    }
+
     private suspend fun ensureSelectedSongsLoaded() {
         if (selectedSongs.size == selectedUris.size) return
         selectedSongs = withContext(Dispatchers.IO) {
@@ -394,6 +525,7 @@ class BatchEditViewModel(
                 songRepository.getSongByUri(uri)
             }
         }
+        _uiState.update { it.copy(selectedSongsVersion = it.selectedSongsVersion + 1) }
     }
 
     // ── 批量保存 ──────────────────────────────────────────
@@ -932,6 +1064,5 @@ class BatchEditViewModel(
     override fun onCleared() {
         saveJob?.cancel()
         super.onCleared()
-        selectionManager.clearAll()
     }
 }
