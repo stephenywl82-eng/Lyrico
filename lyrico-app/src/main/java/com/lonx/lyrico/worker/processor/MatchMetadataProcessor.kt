@@ -26,7 +26,6 @@ import com.lonx.lyrico.utils.PluginFieldPostProcessor
 import com.lonx.lyrico.data.model.lyrics.SourceRuntimeConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.Serializable
@@ -94,64 +93,88 @@ class MatchMetadataProcessor(
         val allScoredResults = mutableListOf<ScoredSearchResult>()
 
         searchLoop@ for ((queryIndex, query) in queries.withIndex()) {
-            val searchTasks = orderedSources.map { source ->
-                coroutineScope {
-                    async(Dispatchers.IO) {
-                        try {
-                            val results = source.searchSongs(
-                                keyword = query,
-                                separator = separator,
-                                pageSize = 2
-                            )
+            var queryBest: ScoredSearchResult? = null
+            var queryBestDetail: MatchScoreDetail? = null
 
-                            results.mapIndexed { index, res ->
-                                val detail = MusicMatchUtils.calculateMatchScoreDetail(
-                                    result = res,
-                                    song = song,
-                                    preferFileName = matchConfig.preferFileName,
-                                    rankIndex = index
-                                )
+            for ((sourceIndex, source) in orderedSources.withIndex()) {
+                val sourceResults = try {
+                    source.searchSongs(
+                        keyword = query,
+                        separator = separator,
+                        pageSize = 2
+                    ).mapIndexed { index, res ->
+                        val detail = MusicMatchUtils.calculateMatchScoreDetail(
+                            result = res,
+                            song = song,
+                            preferFileName = matchConfig.preferFileName,
+                            rankIndex = index
+                        )
 
-                                ScoredSearchResult(
-                                    result = res,
-                                    score = detail.finalScore,
-                                    source = source
-                                ) to detail
-                            }
-                        } catch (e: Exception) {
-                            emptyList()
-                        }
+                        ScoredSearchResult(
+                            result = res,
+                            score = detail.finalScore,
+                            source = source
+                        ) to detail
+                    }
+                } catch (e: Exception) {
+                    emptyList()
+                }
+
+                allScoredResults += sourceResults.map { (scoredResult, _) ->
+                    scoredResult
+                }
+
+                val sourceBest = sourceResults.maxByOrNull { (_, detail) ->
+                    detail.finalScore
+                }
+
+                if (sourceBest != null) {
+                    val currentScoredResult = sourceBest.first
+                    val currentDetail = sourceBest.second
+
+                    if (
+                        queryBest == null ||
+                        currentDetail.finalScore > (queryBestDetail?.finalScore ?: 0.0)
+                    ) {
+                        queryBest = currentScoredResult
+                        queryBestDetail = currentDetail
+                    }
+
+                    if (
+                        bestMatch == null ||
+                        currentDetail.finalScore > (bestMatchDetail?.finalScore ?: 0.0)
+                    ) {
+                        bestMatch = currentScoredResult
+                        bestMatchDetail = currentDetail
+                    }
+
+                    // 高优先级源已经足够可信，直接采用
+                    if (
+                        currentDetail.finalScore >= 0.92 &&
+                        currentDetail.textScore >= 0.86
+                    ) {
+                        bestMatch = currentScoredResult
+                        bestMatchDetail = currentDetail
+                        break@searchLoop
                     }
                 }
+
+                val totalSteps = queries.size.coerceAtLeast(1) * orderedSources.size.coerceAtLeast(1)
+                val currentStep = queryIndex * orderedSources.size.coerceAtLeast(1) + sourceIndex + 1
+                onProgress(0.05f + 0.45f * currentStep / totalSteps.toFloat())
             }
 
-            val allResults = searchTasks.awaitAll().flatten()
-            onProgress(0.05f + 0.45f * (queryIndex + 1) / queries.size.coerceAtLeast(1).toFloat())
-
-            allScoredResults += allResults.map { (scoredResult, _) ->
-                scoredResult
-            }
-
-            val currentBest = allResults.maxByOrNull { (_, detail) ->
-                detail.finalScore
-            }
-
-            if (currentBest != null) {
-                val currentScoredResult = currentBest.first
-                val currentDetail = currentBest.second
-
-                if (
-                    bestMatch == null ||
-                    currentDetail.finalScore > (bestMatchDetail?.finalScore ?: 0.0)
-                ) {
-                    bestMatch = currentScoredResult
-                    bestMatchDetail = currentDetail
-                }
-
-                // 文本分和最终分都非常高时才提前停止搜索
-                if (currentDetail.finalScore >= 0.92 && currentDetail.textScore >= 0.86) {
-                    break@searchLoop
-                }
+            // 当前 query 搜完后，把当前 query 的最佳结果同步到全局最佳
+            if (
+                queryBest != null &&
+                queryBestDetail != null &&
+                (
+                        bestMatch == null ||
+                                queryBestDetail.finalScore > (bestMatchDetail?.finalScore ?: 0.0)
+                        )
+            ) {
+                bestMatch = queryBest
+                bestMatchDetail = queryBestDetail
             }
         }
 
