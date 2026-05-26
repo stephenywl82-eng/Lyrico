@@ -7,6 +7,7 @@ import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.MetadataWriteMode
 import com.lonx.lyrico.data.model.lyrics.SearchSourceCapability
 import com.lonx.lyrico.data.model.plugin.PluginConfigField
+import com.lonx.lyrico.data.model.plugin.PluginConfigFieldType
 import com.lonx.lyrico.data.model.plugin.PluginFieldProcessConfig
 import com.lonx.lyrico.data.model.plugin.PluginMetadataField
 import com.lonx.lyrico.data.repository.PluginFieldProcessConfigRepository
@@ -56,7 +57,8 @@ class SearchSourceConfigViewModel(
                 return@launch
             }
             val fields = sourceImpl.configFields
-            val defaults = fields.associate { it.key to it.defaultValue }
+            val valueFields = fields.filter { it.type != PluginConfigFieldType.MARKDOWN }
+            val defaults = valueFields.associate { it.key to it.defaultValue }
             val saved = settingsRepository.getSourceSettings(sourceImpl.id).values
             val fieldProcessConfig = pluginFieldProcessConfigRepository.getConfig(sourceImpl.id)
             allMetadataRules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
@@ -157,7 +159,12 @@ class SearchSourceConfigViewModel(
     fun save(requiredMessage: String = "必填") {
         val state = _uiState.value
         val pluginId = state.pluginId.takeIf { it.isNotBlank() } ?: return
-        val visibleFields = state.configFields.filter { it.dependency.isSatisfied(state.values) }
+        val valueFieldKeys = state.configFields
+            .filter { it.type != PluginConfigFieldType.MARKDOWN }
+            .mapTo(mutableSetOf()) { it.key }
+        val visibleFields = state.configFields.filter {
+            it.type != PluginConfigFieldType.MARKDOWN && it.dependency.isSatisfied(state.values)
+        }
         val errors = visibleFields
             .filter { it.required && state.values[it.key].isNullOrBlank() }
             .associate { it.key to requiredMessage }
@@ -167,7 +174,10 @@ class SearchSourceConfigViewModel(
         }
 
         viewModelScope.launch {
-            settingsRepository.saveSourceSettings(pluginId, state.values)
+            settingsRepository.saveSourceSettings(
+                pluginId,
+                state.values.filterKeys { it in valueFieldKeys }
+            )
             val updatedRules = allMetadataRules.map { old ->
                 state.metadataRules.firstOrNull {
                     it.pluginId == old.pluginId && it.normalizedKey == old.normalizedKey

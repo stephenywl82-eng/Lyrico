@@ -12,9 +12,15 @@
 {
   "configFields": [
     {
+      "key": "lyrics_provider_notice",
+      "title": "歌词源说明",
+      "group": "歌词",
+      "type": "markdown",
+      "defaultValue": "### 歌词源说明\n\n- **第三方**：无需登录态。\n- **官方**：需要填写 Token，高频请求可能触发风控。"
+    },
+    {
       "key": "lyrics_provider",
       "title": "歌词源",
-      "summary": "选择歌词数据来源",
       "group": "歌词",
       "type": "dropdown",
       "required": true,
@@ -75,6 +81,10 @@ function searchSongs(request) {
 | `"number"` | 数字输入框 | `"42"` |
 | `"switch"` | 开关 | `"true"` 或 `"false"` |
 | `"dropdown"` | 下拉选择框 | `"option_value"` |
+| `"textarea"` | 多行文本输入框 | `"多行文本"` |
+| `"markdown"` | Markdown 说明块 | 不写入运行时配置 |
+
+`type: "markdown"` 用于在插件设置页展示较长说明、链接或使用限制。它不会保存到 `request.config`，也不会参与必填校验。正文优先使用 `defaultValue`，为空时使用 `summary`。
 
 ### 开关类型说明
 

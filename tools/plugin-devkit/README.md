@@ -46,6 +46,8 @@ lyrico-plugin validate ./my-plugin
 - `metadataFields`
 - 插件目录大小
 
+`configFields` 支持 `text`、`password`、`number`、`switch`、`dropdown`、`textarea` 和只展示说明、不写入运行时配置的 `markdown` 类型。
+
 ### inspect
 
 输出插件摘要：

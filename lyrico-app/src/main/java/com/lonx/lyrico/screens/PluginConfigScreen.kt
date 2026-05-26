@@ -65,6 +65,7 @@ import com.lonx.lyrico.viewmodel.SearchSourceConfigViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -839,6 +840,34 @@ private fun PluginConfigFormItem(
                         } else {
                             MiuixTheme.colorScheme.error
                         }
+                    )
+                }
+            }
+        }
+
+        PluginConfigFieldType.MARKDOWN -> {
+            val markdown = field.defaultValue.ifBlank { field.summary }
+            if (markdown.isNotBlank()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    field.title.takeIf { it.isNotBlank() }?.let { title ->
+                        Text(
+                            text = title,
+                            style = MiuixTheme.textStyles.body2,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    MarkdownText(
+                        modifier = Modifier.fillMaxWidth(),
+                        markdown = markdown,
+                        linkColor = MiuixTheme.colorScheme.primary,
+                        style = MiuixTheme.textStyles.body2.copy(
+                            color = MiuixTheme.colorScheme.onSurface
+                        )
                     )
                 }
             }

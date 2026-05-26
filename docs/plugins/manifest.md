@@ -336,6 +336,23 @@
 | `"number"`   | 数字输入框                       |
 | `"switch"`   | 开关（值为 `"true"` 或 `"false"`） |
 | `"dropdown"` | 下拉选择框（需提供 `options`）        |
+| `"markdown"` | Markdown 说明块，不写入运行时配置       |
+
+### markdown — 说明块
+
+`type` 为 `"markdown"` 时，该字段只在插件设置页面展示说明文本，不会保存到 `request.config`，也不会参与必填校验。正文优先使用 `defaultValue`，为空时使用 `summary`。
+
+适合放置较长的使用说明、外部链接、Token 获取步骤或接口限制：
+
+```json
+{
+  "key": "lyrics_provider_notice",
+  "title": "歌词源说明",
+  "group": "歌词",
+  "type": "markdown",
+  "defaultValue": "### 歌词源说明\n\n- **第三方**：无需登录态。\n- **官方**：需要填写 `media-user-token`，高频请求可能触发风控。"
+}
+```
 
 ### options — 下拉选项
 

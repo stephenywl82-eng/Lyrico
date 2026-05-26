@@ -13,7 +13,8 @@ export const CONFIG_FIELD_TYPES = new Set([
   'number',
   'switch',
   'dropdown',
-  'textarea'
+  'textarea',
+  'markdown'
 ]);
 
 export const METADATA_FIELD_TYPES = new Set([
