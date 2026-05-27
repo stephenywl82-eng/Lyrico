@@ -2,6 +2,7 @@ package com.lonx.lyrico.data.model
 
 
 import com.lonx.lyrico.data.model.artist.ArtistSplitConfig
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
@@ -29,7 +30,7 @@ data class SettingsBackup(
     @SerialName("limit_lyrics_input_lines") val limitLyricsInputLines: Boolean? = null,
     @SerialName("character_mapping_config") val characterMappingConfig: CharacterMappingConfig? = null,
     @SerialName("batch_match_config") val batchMatchConfig: BatchMatchConfig? = null,
-    @SerialName("metadata_field_write_rules") val metadataFieldWriteRules: List<MetadataFieldWriteRule>? = null,
+    @SerialName("metadata_field_write_rules") val metadataFieldWriteRules: List<PluginMetadataFieldWriteRule>? = null,
     @SerialName("source_settings") val sourceSettings: SourceSettingsStore? = null,
     @SerialName("rename_format") val renameFormat: String? = null,
     @SerialName("conversion_mode") val conversionMode: String? = null,

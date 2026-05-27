@@ -5,8 +5,8 @@ import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.BatchMatchField
 import com.lonx.lyrico.data.model.BatchMatchMode
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
-import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.ScoredSearchResult
 import com.lonx.lyrico.data.model.entity.BatchTaskEntity
 import com.lonx.lyrico.data.model.entity.BatchTaskItemEntity
@@ -14,6 +14,8 @@ import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.lyrics.SearchSource
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings
 import com.lonx.lyrico.data.model.plugin.PluginFieldProcessConfig
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldTarget
+import com.lonx.lyrico.data.model.plugin.PluginMetadataWriteMode
 import com.lonx.lyrico.data.model.plugin.defaultPluginFieldProcessConfig
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.repository.SongRepository
@@ -289,14 +291,14 @@ class MatchMetadataProcessor(
 
     private suspend fun buildPlan(
         matchConfig: BatchMatchConfig,
-        metadataRules: List<MetadataFieldWriteRule>,
+        metadataRules: List<PluginMetadataFieldWriteRule>,
         song: SongEntity,
         sources: List<SearchSource>
     ): MatchMetadataPlan {
         val standardFields = matchConfig.fields.mapNotNull { (field, mode) ->
             if (shouldUpdateField(field, mode, song)) field else null
         }.toSet()
-        val applicableMetadataRules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(metadataRules, sources)
+        val applicableMetadataRules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(metadataRules, sources)
             .filter { shouldApplyMetadataRule(it, song) }
 
         return MatchMetadataPlan(
@@ -331,35 +333,35 @@ class MatchMetadataProcessor(
     }
 
     private suspend fun shouldApplyMetadataRule(
-        rule: MetadataFieldWriteRule,
+        rule: PluginMetadataFieldWriteRule,
         song: SongEntity
     ): Boolean {
-        if (rule.mode == com.lonx.lyrico.data.model.MetadataWriteMode.DISABLED) return false
-        if (rule.mode == com.lonx.lyrico.data.model.MetadataWriteMode.OVERWRITE) return true
+        if (rule.mode == PluginMetadataWriteMode.DISABLED) return false
+        if (rule.mode == PluginMetadataWriteMode.OVERWRITE) return true
 
         return when (rule.target) {
-            com.lonx.lyrico.data.model.MetadataFieldTarget.TITLE -> song.title.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.ARTIST -> song.artist.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.ALBUM -> song.album.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.ALBUM_ARTIST -> song.albumArtist.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.GENRE -> song.genre.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.DATE -> song.date.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.TRACK_NUMBER -> song.trackerNumber.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.DISC_NUMBER -> song.discNumber == null
-            com.lonx.lyrico.data.model.MetadataFieldTarget.COMPOSER -> song.composer.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.LYRICIST -> song.lyricist.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.COMMENT -> song.comment.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.LYRICS -> song.lyrics.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.COVER -> !hasEmbeddedCover(song)
-            com.lonx.lyrico.data.model.MetadataFieldTarget.LANGUAGE -> true
-            com.lonx.lyrico.data.model.MetadataFieldTarget.COPYRIGHT -> true
-            com.lonx.lyrico.data.model.MetadataFieldTarget.RATING -> true
-            com.lonx.lyrico.data.model.MetadataFieldTarget.REPLAY_GAIN_TRACK_GAIN -> song.replayGainTrackGain.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.REPLAY_GAIN_TRACK_PEAK -> song.replayGainTrackPeak.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.REPLAY_GAIN_ALBUM_GAIN -> true
-            com.lonx.lyrico.data.model.MetadataFieldTarget.REPLAY_GAIN_ALBUM_PEAK -> true
-            com.lonx.lyrico.data.model.MetadataFieldTarget.REPLAY_GAIN_REFERENCE_LOUDNESS -> song.replayGainReferenceLoudness.isNullOrBlank()
-            com.lonx.lyrico.data.model.MetadataFieldTarget.CUSTOM -> true
+            PluginMetadataFieldTarget.TITLE -> song.title.isNullOrBlank()
+            PluginMetadataFieldTarget.ARTIST -> song.artist.isNullOrBlank()
+            PluginMetadataFieldTarget.ALBUM -> song.album.isNullOrBlank()
+            PluginMetadataFieldTarget.ALBUM_ARTIST -> song.albumArtist.isNullOrBlank()
+            PluginMetadataFieldTarget.GENRE -> song.genre.isNullOrBlank()
+            PluginMetadataFieldTarget.DATE -> song.date.isNullOrBlank()
+            PluginMetadataFieldTarget.TRACK_NUMBER -> song.trackerNumber.isNullOrBlank()
+            PluginMetadataFieldTarget.DISC_NUMBER -> song.discNumber == null
+            PluginMetadataFieldTarget.COMPOSER -> song.composer.isNullOrBlank()
+            PluginMetadataFieldTarget.LYRICIST -> song.lyricist.isNullOrBlank()
+            PluginMetadataFieldTarget.COMMENT -> song.comment.isNullOrBlank()
+            PluginMetadataFieldTarget.LYRICS -> song.lyrics.isNullOrBlank()
+            PluginMetadataFieldTarget.COVER -> !hasEmbeddedCover(song)
+            PluginMetadataFieldTarget.LANGUAGE -> true
+            PluginMetadataFieldTarget.COPYRIGHT -> true
+            PluginMetadataFieldTarget.RATING -> true
+            PluginMetadataFieldTarget.REPLAY_GAIN_TRACK_GAIN -> song.replayGainTrackGain.isNullOrBlank()
+            PluginMetadataFieldTarget.REPLAY_GAIN_TRACK_PEAK -> song.replayGainTrackPeak.isNullOrBlank()
+            PluginMetadataFieldTarget.REPLAY_GAIN_ALBUM_GAIN -> true
+            PluginMetadataFieldTarget.REPLAY_GAIN_ALBUM_PEAK -> true
+            PluginMetadataFieldTarget.REPLAY_GAIN_REFERENCE_LOUDNESS -> song.replayGainReferenceLoudness.isNullOrBlank()
+            PluginMetadataFieldTarget.CUSTOM -> true
         }
     }
 
@@ -385,7 +387,7 @@ class MatchMetadataProcessor(
 
 private data class MatchMetadataPlan(
     val standardFields: Set<BatchMatchField>,
-    val metadataRules: List<MetadataFieldWriteRule>
+    val metadataRules: List<PluginMetadataFieldWriteRule>
 ) {
     val requiresSearch: Boolean
         get() = standardFields.isNotEmpty() || metadataRules.isNotEmpty()
@@ -402,7 +404,7 @@ data class MatchMetadataTaskConfig(
     val matchConfig: BatchMatchConfig,
     val separator: String,
     val enabledSourceOrderIds: List<String>,
-    val metadataFieldWriteRules: List<MetadataFieldWriteRule> = emptyList(),
+    val metadataFieldWriteRules: List<PluginMetadataFieldWriteRule> = emptyList(),
     val sourceSettings: Map<String, Map<String, String>> = emptyMap(),
     val pluginFieldProcessConfigs: Map<String, PluginFieldProcessConfig> = emptyMap(),
     val lyricRenderConfig: LyricRenderConfig? = null,

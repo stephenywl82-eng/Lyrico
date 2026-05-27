@@ -12,7 +12,7 @@ import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.cache.CacheCategory
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.repository.SettingsRepository
@@ -50,7 +50,7 @@ data class SettingsUiState(
     val categorizedCacheSize: Map<CacheCategory, Long> = emptyMap(),
     val totalCacheSize: Long = 0L,
     val conversionMode: ConversionMode = ConversionMode.NONE,
-    val metadataFieldWriteRules: List<MetadataFieldWriteRule> = emptyList()
+    val metadataFieldWriteRules: List<PluginMetadataFieldWriteRule> = emptyList()
 ) {
     /**
      * 返回按优先级排序且启用的搜索源列表
@@ -74,7 +74,7 @@ class SettingsViewModel(
         val search: com.lonx.lyrico.data.model.SearchConfig,
         val theme: com.lonx.lyrico.data.model.ThemeConfig,
         val ignoreShortAudio: Boolean,
-        val metadataFieldRules: List<MetadataFieldWriteRule>
+        val metadataFieldRules: List<PluginMetadataFieldWriteRule>
     )
 
     private val settingsBaseState = combine(
@@ -206,7 +206,7 @@ class SettingsViewModel(
         }
     }
 
-    fun setMetadataFieldWriteRules(rules: List<MetadataFieldWriteRule>) {
+    fun setMetadataFieldWriteRules(rules: List<PluginMetadataFieldWriteRule>) {
         viewModelScope.launch {
             settingsRepository.saveMetadataFieldWriteRules(rules)
         }

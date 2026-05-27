@@ -45,10 +45,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.MetadataFieldTarget
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
-import com.lonx.lyrico.data.model.MetadataWriteMode
-import com.lonx.lyrico.data.model.lyrics.SearchSourceCapability
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldTarget
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataWriteMode
+import com.lonx.lyrico.data.model.plugin.PluginCapability
 import com.lonx.lyrico.data.model.plugin.FieldProcessRule
 import com.lonx.lyrico.data.model.plugin.FieldScriptConversionMode
 import com.lonx.lyrico.data.model.plugin.FollowGlobalBooleanMode
@@ -58,7 +58,6 @@ import com.lonx.lyrico.data.model.plugin.PluginFieldProcessConfig
 import com.lonx.lyrico.data.model.plugin.PluginFieldValueType
 import com.lonx.lyrico.data.model.plugin.PluginMetadataField
 import com.lonx.lyrico.data.model.plugin.valueType
-import com.lonx.lyrico.plugin.source.toMetadataFieldTarget
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
 import com.lonx.lyrico.utils.isSatisfied
 import com.lonx.lyrico.viewmodel.SearchSourceConfigViewModel
@@ -111,7 +110,7 @@ fun PluginConfigScreen(
     val tabs = remember(uiState.capabilities, uiState.metadataFields) {
         buildList {
             add(PluginConfigTab.Basic)
-            if (SearchSourceCapability.GET_LYRICS in uiState.capabilities || uiState.metadataFields.isNotEmpty()) {
+            if (PluginCapability.GET_LYRICS in uiState.capabilities || uiState.metadataFields.isNotEmpty()) {
                 add(PluginConfigTab.FieldProcess)
             }
             if (uiState.metadataFields.isNotEmpty()) {
@@ -306,9 +305,9 @@ fun PluginConfigScreen(
                         metadataRules = uiState.metadataRules,
                         hasContent = hasMetadataContent,
                         topAppBarScrollBehavior = topAppBarScrollBehavior,
-                        onDisableAll = { viewModel.updateAllMetadataRules(MetadataWriteMode.DISABLED) },
-                        onSupplementAll = { viewModel.updateAllMetadataRules(MetadataWriteMode.SUPPLEMENT) },
-                        onOverwriteAll = { viewModel.updateAllMetadataRules(MetadataWriteMode.OVERWRITE) },
+                        onDisableAll = { viewModel.updateAllMetadataRules(PluginMetadataWriteMode.DISABLED) },
+                        onSupplementAll = { viewModel.updateAllMetadataRules(PluginMetadataWriteMode.SUPPLEMENT) },
+                        onOverwriteAll = { viewModel.updateAllMetadataRules(PluginMetadataWriteMode.OVERWRITE) },
                         onEditField = { fieldKey ->
                             editingFieldKey = fieldKey
                             showMetadataRuleSheet = true
@@ -392,7 +391,7 @@ private fun PluginBasicConfigTab(
 private fun PluginMetadataTab(
     pluginId: String,
     metadataFields: List<PluginMetadataField>,
-    metadataRules: List<MetadataFieldWriteRule>,
+    metadataRules: List<PluginMetadataFieldWriteRule>,
     hasContent: Boolean,
     topAppBarScrollBehavior: ScrollBehavior,
     onDisableAll: () -> Unit,
@@ -443,7 +442,7 @@ private fun PluginMetadataTab(
 @Composable
 private fun PluginFieldProcessConfigTab(
     metadataFields: List<PluginMetadataField>,
-    metadataRules: List<MetadataFieldWriteRule>,
+    metadataRules: List<PluginMetadataFieldWriteRule>,
     config: PluginFieldProcessConfig,
     hasContent: Boolean,
     topAppBarScrollBehavior: ScrollBehavior,
@@ -604,7 +603,7 @@ private fun FieldProcessRulePreferences(
 private fun FieldProcessRuleBottomSheet(
     show: Boolean,
     field: PluginMetadataField?,
-    writeRule: MetadataFieldWriteRule?,
+    writeRule: PluginMetadataFieldWriteRule?,
     config: PluginFieldProcessConfig?,
     onDismissRequest: () -> Unit,
     onDismissFinished: () -> Unit,
@@ -882,7 +881,7 @@ private fun PluginConfigFormItem(
 private fun LazyListScope.metadataRuleItems(
     pluginId: String,
     metadataFields: List<PluginMetadataField>,
-    metadataRules: List<MetadataFieldWriteRule>,
+    metadataRules: List<PluginMetadataFieldWriteRule>,
     onEditField: (String) -> Unit
 ) {
     if (metadataFields.isEmpty()) return
@@ -1004,7 +1003,7 @@ private fun FollowGlobalBooleanPreference(
 @Composable
 private fun MetadataRulePreference(
     field: PluginMetadataField,
-    rule: MetadataFieldWriteRule,
+    rule: PluginMetadataFieldWriteRule,
     onClick: () -> Unit
 ) {
     BasicComponent(
@@ -1021,10 +1020,10 @@ private fun MetadataRulePreference(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = when (rule.mode) {
-                        MetadataWriteMode.DISABLED ->
+                        PluginMetadataWriteMode.DISABLED ->
                             MiuixTheme.colorScheme.onSurfaceVariantActions
-                        MetadataWriteMode.SUPPLEMENT,
-                        MetadataWriteMode.OVERWRITE ->
+                        PluginMetadataWriteMode.SUPPLEMENT,
+                        PluginMetadataWriteMode.OVERWRITE ->
                             MiuixTheme.colorScheme.primary
                     },
                     maxLines = 1,
@@ -1071,10 +1070,10 @@ private fun MetadataRulePreference(
 private fun MetadataRuleBottomSheet(
     show: Boolean,
     field: PluginMetadataField?,
-    rule: MetadataFieldWriteRule?,
+    rule: PluginMetadataFieldWriteRule?,
     onDismissRequest: () -> Unit,
     onDismissFinished: () -> Unit,
-    onRuleChanged: (MetadataFieldWriteRule) -> Unit
+    onRuleChanged: (PluginMetadataFieldWriteRule) -> Unit
 ) {
     WindowBottomSheet(
         show = show,
@@ -1087,11 +1086,10 @@ private fun MetadataRuleBottomSheet(
         val targetCandidates = remember(currentField) {
             currentField.targetOptions
                 .takeIf { it.isNotEmpty() }
-                ?.map { it.toMetadataFieldTarget() }
-                ?: listOf(currentField.defaultTarget.toMetadataFieldTarget())
+                ?: listOf(currentField.defaultTarget)
         }
 
-        val selectedModeIndex = MetadataWriteMode.entries
+        val selectedModeIndex = PluginMetadataWriteMode.entries
             .indexOf(currentRule.mode)
             .coerceAtLeast(0)
 
@@ -1117,10 +1115,10 @@ private fun MetadataRuleBottomSheet(
             ) {
                 WindowDropdownPreference(
                     title = stringResource(R.string.source_config_write_mode),
-                    items = MetadataWriteMode.entries.map { stringResource(it.labelRes) },
+                    items = PluginMetadataWriteMode.entries.map { stringResource(it.labelRes) },
                     selectedIndex = selectedModeIndex,
                     onSelectedIndexChange = { index ->
-                        MetadataWriteMode.entries.getOrNull(index)?.let { mode ->
+                        PluginMetadataWriteMode.entries.getOrNull(index)?.let { mode ->
                             onRuleChanged(
                                 currentRule.copy(
                                     fieldKey = currentRule.normalizedKey,
@@ -1142,7 +1140,7 @@ private fun MetadataRuleBottomSheet(
                                 currentRule.copy(
                                     fieldKey = currentRule.normalizedKey,
                                     target = target,
-                                    customTagKey = if (target == MetadataFieldTarget.CUSTOM) {
+                                    customTagKey = if (target == PluginMetadataFieldTarget.CUSTOM) {
                                         currentRule.customTagKey
                                     } else {
                                         null
@@ -1153,7 +1151,7 @@ private fun MetadataRuleBottomSheet(
                     }
                 )
 
-                AnimatedVisibility(visible = currentRule.target == MetadataFieldTarget.CUSTOM) {
+                AnimatedVisibility(visible = currentRule.target == PluginMetadataFieldTarget.CUSTOM) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

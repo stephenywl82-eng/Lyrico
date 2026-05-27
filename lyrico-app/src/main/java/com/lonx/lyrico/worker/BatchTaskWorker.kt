@@ -12,7 +12,7 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
 import com.lonx.lyrico.data.model.BatchTaskType
-import com.lonx.lyrico.data.model.MetadataWriteMode
+import com.lonx.lyrico.data.model.plugin.PluginMetadataWriteMode
 import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.BatchTaskRepository
 import com.lonx.lyrico.worker.processor.BatchTaskProcessorFactory
@@ -384,7 +384,7 @@ class BatchTaskWorker(
             appendLine("enabledSources=${config.enabledSourceOrderIds.joinToString(" > ").ifBlank { "(default)" }}")
             appendLine("fields=${config.matchConfig.fields.toSortedMap(compareBy { it.name }).entries.joinToString(", ") { "${it.key.name}:${it.value.name}" }}")
             val metadataRules = config.metadataFieldWriteRules
-                .filter { it.mode != MetadataWriteMode.DISABLED }
+                .filter { it.mode != PluginMetadataWriteMode.DISABLED }
                 .map { "${it.pluginId}.${it.normalizedKey}:${it.mode.name}" }
             appendLine("metadataFieldWriteRules=${metadataRules.joinToString(", ").ifBlank { "(none)" }}")
         }.trimEnd()

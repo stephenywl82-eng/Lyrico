@@ -2,14 +2,15 @@ package com.lonx.lyrico.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
-import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
-import com.lonx.lyrico.data.model.MetadataWriteMode
-import com.lonx.lyrico.data.model.lyrics.SearchSourceCapability
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
+import com.lonx.lyrico.data.model.plugin.PluginMetadataWriteMode
+import com.lonx.lyrico.data.model.plugin.PluginCapability
 import com.lonx.lyrico.data.model.plugin.PluginConfigField
 import com.lonx.lyrico.data.model.plugin.PluginConfigFieldType
 import com.lonx.lyrico.data.model.plugin.PluginFieldProcessConfig
 import com.lonx.lyrico.data.model.plugin.PluginMetadataField
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldTarget
 import com.lonx.lyrico.data.repository.PluginFieldProcessConfigRepository
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
@@ -24,11 +25,11 @@ import kotlinx.coroutines.launch
 data class SearchSourceConfigUiState(
     val pluginId: String = "",
     val title: String = "",
-    val capabilities: Set<SearchSourceCapability> = emptySet(),
+    val capabilities: Set<PluginCapability> = emptySet(),
     val configFields: List<PluginConfigField> = emptyList(),
     val metadataFields: List<PluginMetadataField> = emptyList(),
     val values: Map<String, String> = emptyMap(),
-    val metadataRules: List<MetadataFieldWriteRule> = emptyList(),
+    val metadataRules: List<PluginMetadataFieldWriteRule> = emptyList(),
     val fieldProcessConfig: PluginFieldProcessConfig? = null,
     val validationErrors: Map<String, String> = emptyMap(),
     val isLoading: Boolean = true,
@@ -44,7 +45,7 @@ class SearchSourceConfigViewModel(
     private val _uiState = MutableStateFlow(SearchSourceConfigUiState())
     val uiState: StateFlow<SearchSourceConfigUiState> = _uiState.asStateFlow()
 
-    private var allMetadataRules: List<MetadataFieldWriteRule> = emptyList()
+    private var allMetadataRules: List<PluginMetadataFieldWriteRule> = emptyList()
 
     fun load(pluginId: String) {
         viewModelScope.launch {
@@ -61,7 +62,7 @@ class SearchSourceConfigViewModel(
             val defaults = valueFields.associate { it.key to it.defaultValue }
             val saved = settingsRepository.getSourceSettings(sourceImpl.id).values
             val fieldProcessConfig = pluginFieldProcessConfigRepository.getConfig(sourceImpl.id)
-            allMetadataRules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
+            allMetadataRules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
                 savedRules = settingsRepository.getMetadataFieldWriteRules(),
                 searchSources = allSources
             )
@@ -97,7 +98,7 @@ class SearchSourceConfigViewModel(
         }
     }
 
-    fun updateMetadataRule(rule: MetadataFieldWriteRule) {
+    fun updateMetadataRule(rule: PluginMetadataFieldWriteRule) {
         _uiState.update {
             it.copy(
                 metadataRules = it.metadataRules.map { old ->
@@ -108,19 +109,19 @@ class SearchSourceConfigViewModel(
         }
     }
 
-    fun updateMetadataRuleTarget(rule: MetadataFieldWriteRule, target: com.lonx.lyrico.data.model.MetadataFieldTarget) {
+    fun updateMetadataRuleTarget(rule: PluginMetadataFieldWriteRule, target: PluginMetadataFieldTarget) {
         updateMetadataRule(rule.copy(target = target))
     }
 
-    fun updateMetadataRuleMode(rule: MetadataFieldWriteRule, mode: com.lonx.lyrico.data.model.MetadataWriteMode) {
+    fun updateMetadataRuleMode(rule: PluginMetadataFieldWriteRule, mode: PluginMetadataWriteMode) {
         updateMetadataRule(rule.copy(mode = mode))
     }
 
-    fun updateMetadataRuleCustomTagKey(rule: MetadataFieldWriteRule, customTagKey: String) {
+    fun updateMetadataRuleCustomTagKey(rule: PluginMetadataFieldWriteRule, customTagKey: String) {
         updateMetadataRule(rule.copy(customTagKey = customTagKey.takeIf { it.isNotBlank() }))
     }
 
-    fun updateAllMetadataRules(mode: MetadataWriteMode) {
+    fun updateAllMetadataRules(mode: PluginMetadataWriteMode) {
         val state = _uiState.value
         val pluginId = state.pluginId
         val writableKeys = state.metadataFields

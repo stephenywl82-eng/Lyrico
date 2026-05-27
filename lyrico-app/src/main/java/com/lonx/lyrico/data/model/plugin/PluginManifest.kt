@@ -1,5 +1,7 @@
 package com.lonx.lyrico.data.model.plugin
 
+import androidx.annotation.StringRes
+import com.lonx.lyrico.R
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -191,34 +193,38 @@ enum class PluginMetadataFieldType {
 }
 
 @Serializable
-enum class PluginMetadataWriteMode {
-    DISABLED,
-    SUPPLEMENT,
-    OVERWRITE
+enum class PluginMetadataWriteMode(
+    @field:StringRes val labelRes: Int
+) {
+    DISABLED(R.string.extra_write_mode_disabled),
+    SUPPLEMENT(R.string.extra_write_mode_supplement),
+    OVERWRITE(R.string.extra_write_mode_overwrite)
 }
 
 @Serializable
-enum class PluginMetadataFieldTarget {
-    TITLE,
-    ARTIST,
-    ALBUM,
-    ALBUM_ARTIST,
-    GENRE,
-    DATE,
-    TRACK_NUMBER,
-    DISC_NUMBER,
-    COMPOSER,
-    LYRICIST,
-    COMMENT,
-    LYRICS,
-    COVER,
-    LANGUAGE,
-    COPYRIGHT,
-    RATING,
-    REPLAY_GAIN_TRACK_GAIN,
-    REPLAY_GAIN_TRACK_PEAK,
-    REPLAY_GAIN_ALBUM_GAIN,
-    REPLAY_GAIN_ALBUM_PEAK,
-    REPLAY_GAIN_REFERENCE_LOUDNESS,
-    CUSTOM
+enum class PluginMetadataFieldTarget(
+    @field:StringRes val labelRes: Int
+) {
+    TITLE(R.string.label_title),
+    ARTIST(R.string.label_artists),
+    ALBUM(R.string.label_album),
+    ALBUM_ARTIST(R.string.label_album_artist),
+    GENRE(R.string.label_genre),
+    DATE(R.string.label_date),
+    TRACK_NUMBER(R.string.label_track_number),
+    DISC_NUMBER(R.string.label_disc_number),
+    COMPOSER(R.string.label_composer),
+    LYRICIST(R.string.label_lyricist),
+    COMMENT(R.string.label_comment),
+    LYRICS(R.string.label_lyrics),
+    COVER(R.string.label_cover),
+    LANGUAGE(R.string.label_language),
+    COPYRIGHT(R.string.label_copyright),
+    RATING(R.string.label_rating),
+    REPLAY_GAIN_TRACK_GAIN(R.string.label_replaygain_track_gain),
+    REPLAY_GAIN_TRACK_PEAK(R.string.label_replaygain_track_peak),
+    REPLAY_GAIN_ALBUM_GAIN(R.string.label_replaygain_album_gain),
+    REPLAY_GAIN_ALBUM_PEAK(R.string.label_replaygain_album_peak),
+    REPLAY_GAIN_REFERENCE_LOUDNESS(R.string.label_replaygain_reference_loudness),
+    CUSTOM(R.string.label_custom)
 }

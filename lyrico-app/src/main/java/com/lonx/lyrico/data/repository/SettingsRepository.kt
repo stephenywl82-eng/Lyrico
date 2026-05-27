@@ -6,7 +6,7 @@ import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.model.log.LogRetentionOption
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import com.lonx.lyrico.data.model.SearchConfig
 import com.lonx.lyrico.data.model.ThemeConfig
 import com.lonx.lyrico.data.model.ThemeMode
@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     val batchMatchConfig: Flow<BatchMatchConfig>
-    val metadataFieldWriteRules: Flow<List<MetadataFieldWriteRule>>
+    val metadataFieldWriteRules: Flow<List<PluginMetadataFieldWriteRule>>
     val sourceSettingsByIdFlow: Flow<Map<String, SourceRuntimeConfig>>
 
     val renameFormat: Flow<String>
@@ -87,7 +87,7 @@ interface SettingsRepository {
     suspend fun exportSettings(): String
     suspend fun importSettings(jsonString: String): Boolean
     suspend fun saveBatchMatchConfig(config: BatchMatchConfig)
-    suspend fun saveMetadataFieldWriteRules(rules: List<MetadataFieldWriteRule>)
+    suspend fun saveMetadataFieldWriteRules(rules: List<PluginMetadataFieldWriteRule>)
     suspend fun saveSourceSettings(sourceId: String, values: Map<String, String>)
     suspend fun getSourceSettings(sourceId: String): SourceRuntimeConfig
     suspend fun removePluginSettings(pluginId: String)
@@ -97,7 +97,7 @@ interface SettingsRepository {
     suspend fun updateCharacterMappingInRule(ruleId: String, charMappings: Map<String, String?>)
     suspend fun getCharacterMappingConfig(): CharacterMappingConfig
     suspend fun getBatchMatchConfig(): BatchMatchConfig
-    suspend fun getMetadataFieldWriteRules(): List<MetadataFieldWriteRule>
+    suspend fun getMetadataFieldWriteRules(): List<PluginMetadataFieldWriteRule>
     suspend fun saveArtistSplitConfig(config: ArtistSplitConfig)
     suspend fun getArtistSplitConfig(): ArtistSplitConfig
     suspend fun getLibraryIndexVersion(): Int

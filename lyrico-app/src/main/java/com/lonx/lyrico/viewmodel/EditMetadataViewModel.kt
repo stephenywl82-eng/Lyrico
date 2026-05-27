@@ -26,7 +26,7 @@ import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.model.search.LyricsSearchResult
-import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.ScoredSearchResult
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings
@@ -286,7 +286,7 @@ class EditMetadataViewModel(
                 fields = result.normalizedFields(),
                 config = processConfig,
                 fieldDefinitions = source?.metadataFields.orEmpty(),
-                writeRules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
+                writeRules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
                     savedRules = metadataFieldWriteRules.value,
                     searchSources = searchSources.value
                 )
@@ -327,7 +327,7 @@ class EditMetadataViewModel(
                                 score = 1.0
                             )
                         ),
-                        rules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
+                        rules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
                             savedRules = metadataFieldWriteRules.value,
                             searchSources = searchSources.value
                         ),

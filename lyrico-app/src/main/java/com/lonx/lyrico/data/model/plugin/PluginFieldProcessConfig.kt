@@ -1,7 +1,6 @@
 package com.lonx.lyrico.data.model.plugin
 
 import com.lonx.lyrico.data.model.ConversionMode
-import com.lonx.lyrico.data.model.MetadataFieldTarget
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -105,29 +104,29 @@ fun FieldScriptConversionMode.resolve(globalValue: ConversionMode): ConversionMo
     }
 }
 
-fun MetadataFieldTarget.valueType(): PluginFieldValueType {
+fun PluginMetadataFieldTarget.valueType(): PluginFieldValueType {
     return when (this) {
-        MetadataFieldTarget.TITLE,
-        MetadataFieldTarget.ALBUM,
-        MetadataFieldTarget.GENRE,
-        MetadataFieldTarget.COMMENT,
-        MetadataFieldTarget.COPYRIGHT,
-        MetadataFieldTarget.LANGUAGE,
-        MetadataFieldTarget.CUSTOM -> PluginFieldValueType.TEXT
-        MetadataFieldTarget.ARTIST,
-        MetadataFieldTarget.ALBUM_ARTIST,
-        MetadataFieldTarget.COMPOSER,
-        MetadataFieldTarget.LYRICIST -> PluginFieldValueType.PERSON_LIST
-        MetadataFieldTarget.LYRICS -> PluginFieldValueType.LYRICS
-        MetadataFieldTarget.TRACK_NUMBER,
-        MetadataFieldTarget.DISC_NUMBER,
-        MetadataFieldTarget.RATING,
-        MetadataFieldTarget.REPLAY_GAIN_TRACK_GAIN,
-        MetadataFieldTarget.REPLAY_GAIN_TRACK_PEAK,
-        MetadataFieldTarget.REPLAY_GAIN_ALBUM_GAIN,
-        MetadataFieldTarget.REPLAY_GAIN_ALBUM_PEAK,
-        MetadataFieldTarget.REPLAY_GAIN_REFERENCE_LOUDNESS -> PluginFieldValueType.NUMBER
-        MetadataFieldTarget.DATE -> PluginFieldValueType.DATE
-        MetadataFieldTarget.COVER -> PluginFieldValueType.IMAGE_URL
+        PluginMetadataFieldTarget.TITLE,
+        PluginMetadataFieldTarget.ALBUM,
+        PluginMetadataFieldTarget.GENRE,
+        PluginMetadataFieldTarget.COMMENT,
+        PluginMetadataFieldTarget.COPYRIGHT,
+        PluginMetadataFieldTarget.LANGUAGE,
+        PluginMetadataFieldTarget.CUSTOM -> PluginFieldValueType.TEXT
+        PluginMetadataFieldTarget.ARTIST,
+        PluginMetadataFieldTarget.ALBUM_ARTIST,
+        PluginMetadataFieldTarget.COMPOSER,
+        PluginMetadataFieldTarget.LYRICIST -> PluginFieldValueType.PERSON_LIST
+        PluginMetadataFieldTarget.LYRICS -> PluginFieldValueType.LYRICS
+        PluginMetadataFieldTarget.TRACK_NUMBER,
+        PluginMetadataFieldTarget.DISC_NUMBER,
+        PluginMetadataFieldTarget.RATING,
+        PluginMetadataFieldTarget.REPLAY_GAIN_TRACK_GAIN,
+        PluginMetadataFieldTarget.REPLAY_GAIN_TRACK_PEAK,
+        PluginMetadataFieldTarget.REPLAY_GAIN_ALBUM_GAIN,
+        PluginMetadataFieldTarget.REPLAY_GAIN_ALBUM_PEAK,
+        PluginMetadataFieldTarget.REPLAY_GAIN_REFERENCE_LOUDNESS -> PluginFieldValueType.NUMBER
+        PluginMetadataFieldTarget.DATE -> PluginFieldValueType.DATE
+        PluginMetadataFieldTarget.COVER -> PluginFieldValueType.IMAGE_URL
     }
 }

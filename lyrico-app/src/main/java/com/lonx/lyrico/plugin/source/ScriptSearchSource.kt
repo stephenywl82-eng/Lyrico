@@ -8,7 +8,7 @@ import com.lonx.lyrico.plugin.runtime.PluginJsRuntime
 import com.lonx.lyrico.plugin.runtime.QuickJsRuntime
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
 import com.lonx.lyrico.data.model.lyrics.SearchSource
-import com.lonx.lyrico.data.model.lyrics.SearchSourceCapability
+import com.lonx.lyrico.data.model.plugin.PluginCapability
 import com.lonx.lyrico.data.model.lyrics.SongSearchResult
 import com.lonx.lyrico.data.model.lyrics.SourceRuntimeConfig
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -27,9 +27,9 @@ class ScriptSearchSource(
 ) : SearchSource, AutoCloseable {
     override val id: String = manifest.id
     override val name: String = manifest.name
-    override val capabilities: Set<SearchSourceCapability> =
-        manifest.capabilities.mapTo(mutableSetOf()) { it.toSearchSourceCapability() }
-            .ifEmpty { setOf(SearchSourceCapability.SEARCH_SONGS) }
+    override val capabilities: Set<PluginCapability> =
+        manifest.capabilities.toSet()
+            .ifEmpty { setOf(PluginCapability.SEARCH_SONGS) }
     override val configFields: List<PluginConfigField> = manifest.configFields
     override val metadataFields: List<PluginMetadataField> = manifest.metadataFields
     private val executor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
@@ -62,7 +62,7 @@ class ScriptSearchSource(
         pageSize: Int
     ): List<SongSearchResult> = withContext(quickJsDispatcher) {
         runCatching {
-            if (SearchSourceCapability.SEARCH_SONGS !in capabilities) {
+            if (PluginCapability.SEARCH_SONGS !in capabilities) {
                 return@withContext emptyList()
             }
 
@@ -86,7 +86,7 @@ class ScriptSearchSource(
 
     override suspend fun getLyrics(song: SongSearchResult): LyricsResult? = withContext(quickJsDispatcher) {
         runCatching {
-            if (SearchSourceCapability.GET_LYRICS !in capabilities) {
+            if (PluginCapability.GET_LYRICS !in capabilities) {
                 return@withContext null
             }
 
@@ -104,7 +104,7 @@ class ScriptSearchSource(
     override suspend fun searchCovers(keyword: String, pageSize: Int): List<SongSearchResult> =
         withContext(quickJsDispatcher) {
             runCatching {
-                if (SearchSourceCapability.SEARCH_COVERS !in capabilities) {
+                if (PluginCapability.SEARCH_COVERS !in capabilities) {
                     return@withContext emptyList()
                 }
 

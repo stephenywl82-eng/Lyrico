@@ -1,7 +1,7 @@
 package com.lonx.lyrico.utils
 
 import com.lonx.lyrico.data.model.ConversionMode
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import com.lonx.lyrico.data.model.lyrics.LyricsLine
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings
@@ -20,7 +20,7 @@ class PluginFieldPostProcessor(
         fields: Map<String, String>,
         config: PluginFieldProcessConfig,
         fieldDefinitions: List<PluginMetadataField>,
-        writeRules: List<MetadataFieldWriteRule>
+        writeRules: List<PluginMetadataFieldWriteRule>
     ): Map<String, String> {
         return fields.mapValues { (key, value) ->
             val writeRule = writeRules.firstOrNull {

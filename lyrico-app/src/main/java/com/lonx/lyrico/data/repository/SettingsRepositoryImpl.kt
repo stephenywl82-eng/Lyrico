@@ -20,7 +20,7 @@ import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.model.log.LogRetentionOption
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import com.lonx.lyrico.data.model.SearchConfig
 import com.lonx.lyrico.data.model.SettingsBackup
 import com.lonx.lyrico.data.model.SourceSettingsStore
@@ -762,7 +762,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             }
         }
 
-    override val metadataFieldWriteRules: Flow<List<MetadataFieldWriteRule>>
+    override val metadataFieldWriteRules: Flow<List<PluginMetadataFieldWriteRule>>
         get() = context.settingsDataStore.data.map { preferences ->
             val rulesJson = preferences[PreferencesKeys.METADATA_FIELD_WRITE_RULES]
             if (!rulesJson.isNullOrBlank()) {
@@ -791,7 +791,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
-    override suspend fun saveMetadataFieldWriteRules(rules: List<MetadataFieldWriteRule>) {
+    override suspend fun saveMetadataFieldWriteRules(rules: List<PluginMetadataFieldWriteRule>) {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.METADATA_FIELD_WRITE_RULES] =
                 jsonFormatter.encodeToString(rules)
@@ -825,7 +825,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         return batchMatchConfig.first()
     }
 
-    override suspend fun getMetadataFieldWriteRules(): List<MetadataFieldWriteRule> {
+    override suspend fun getMetadataFieldWriteRules(): List<PluginMetadataFieldWriteRule> {
         return metadataFieldWriteRules.first()
     }
 
@@ -896,10 +896,10 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
-    private fun decodeMetadataFieldWriteRules(raw: String): List<MetadataFieldWriteRule> {
+    private fun decodeMetadataFieldWriteRules(raw: String): List<PluginMetadataFieldWriteRule> {
         if (raw.isBlank()) return emptyList()
         return runCatching {
-            jsonFormatter.decodeFromString<List<MetadataFieldWriteRule>>(
+            jsonFormatter.decodeFromString<List<PluginMetadataFieldWriteRule>>(
                 raw.replace("\"sourceId\"", "\"pluginId\"")
             )
         }.getOrDefault(emptyList())

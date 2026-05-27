@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.SharedSelectionManager
 import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
-import com.lonx.lyrico.data.model.MetadataFieldWriteRule
-import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
@@ -57,7 +57,7 @@ class BatchMatchViewModel(
     val batchMatchConfig: StateFlow<BatchMatchConfig> = settingsRepository.batchMatchConfig
         .stateIn(viewModelScope, SharingStarted.Eagerly, BatchMatchConfigDefaults.DEFAULT_CONFIG)
 
-    private val metadataFieldWriteRules: StateFlow<List<MetadataFieldWriteRule>> =
+    private val metadataFieldWriteRules: StateFlow<List<PluginMetadataFieldWriteRule>> =
         settingsRepository.metadataFieldWriteRules
             .combineWithDefaults()
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -241,9 +241,9 @@ class BatchMatchViewModel(
         }
     }
 
-    private fun kotlinx.coroutines.flow.Flow<List<MetadataFieldWriteRule>>.combineWithDefaults() =
+    private fun kotlinx.coroutines.flow.Flow<List<PluginMetadataFieldWriteRule>>.combineWithDefaults() =
         map { savedRules ->
-            MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
+            PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
                 savedRules = savedRules,
                 searchSources = allSources.value
             )

@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
-import com.lonx.lyrico.data.model.MetadataFieldWriteRuleFactory
+import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.entity.SourcePluginEntity
 import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.PluginFieldProcessConfigRepository
@@ -235,7 +235,7 @@ class PluginViewModel(
 
     private suspend fun syncMetadataRules() {
         val sources = pluginManager.getEnabledSources()
-        val mergedRules = MetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
+        val mergedRules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
             savedRules = settingsRepository.getMetadataFieldWriteRules(),
             searchSources = sources
         )
