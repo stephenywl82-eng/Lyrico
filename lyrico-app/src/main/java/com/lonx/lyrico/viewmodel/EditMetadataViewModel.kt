@@ -30,9 +30,10 @@ import com.lonx.lyrico.data.model.log.AppLogType
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
+import com.lonx.lyrico.data.model.lyrics.sanitizeStandardFields
+import com.lonx.lyrico.data.model.metadata.MetadataApplyPolicy
+import com.lonx.lyrico.data.model.metadata.SearchResultApplier
 import com.lonx.lyrico.data.model.search.LyricsSearchResult
-import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
-import com.lonx.lyrico.data.model.ScoredSearchResult
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings
 import com.lonx.lyrico.data.model.plugin.defaultPluginFieldProcessConfig
@@ -42,12 +43,13 @@ import com.lonx.lyrico.data.repository.PluginFieldProcessConfigRepository
 import com.lonx.lyrico.data.repository.PlaybackRepository
 import com.lonx.lyrico.data.repository.SettingsDefaults
 import com.lonx.lyrico.data.repository.SettingsRepository
-import com.lonx.lyrico.data.repository.SongRepository
-import com.lonx.lyrico.plugin.source.SearchSourceProvider
+import com.lonx.lyrico.data.song.library.SongLibraryRepository
+import com.lonx.lyrico.data.song.tag.AudioTagRepository
+import com.lonx.lyrico.domain.song.usecase.OverwriteSongTagsUseCase
+import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
 import com.lonx.lyrico.utils.CoverSourceType
 import com.lonx.lyrico.utils.LyricDecoder
 import com.lonx.lyrico.utils.LyricEncoder
-import com.lonx.lyrico.utils.MetadataFieldResolver
 import com.lonx.lyrico.utils.PluginFieldPostProcessor
 import com.lonx.lyrico.utils.ReplayGainCalculateState
 import com.lonx.lyrico.utils.ReplayGainError
@@ -55,7 +57,6 @@ import com.lonx.lyrico.utils.ReplayGainScanner
 import com.lonx.lyrico.utils.UiMessage
 import com.lonx.lyrico.utils.getCoverSourceType
 import com.lonx.lyrico.utils.lyrics.document.LyricsDocumentPipeline
-import com.lonx.lyrico.data.model.lyrics.SongSearchResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -113,34 +114,23 @@ private data class LyricsFormatConversionSession(
 )
 
 class EditMetadataViewModel(
-    private val songRepository: SongRepository,
+    private val songLibraryRepository: SongLibraryRepository,
+    private val audioTagRepository: AudioTagRepository,
+    private val overwriteSongTagsUseCase: OverwriteSongTagsUseCase,
     private val settingsRepository: SettingsRepository,
     private val playbackRepository: PlaybackRepository,
     private val replayGainScanner: ReplayGainScanner,
     private val appLogRepository: AppLogRepository,
     private val editFieldVisibilityRepository: EditFieldVisibilityRepository,
     private val pluginFieldProcessConfigRepository: PluginFieldProcessConfigRepository,
-    private val searchSourceProvider: SearchSourceProvider,
     private val customTagSettingsRepository: CustomTagSettingsRepository,
 ) : ViewModel() {
 
     private val TAG = "EditMetadataVM"
-    private val metadataFieldResolver = MetadataFieldResolver()
-
     val limitLyricsInputLines = settingsRepository.limitLyricsInputLines.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         SettingsDefaults.LIMIT_LYRICS_INPUT_LINES
-    )
-    private val metadataFieldWriteRules = settingsRepository.metadataFieldWriteRules.stateIn(
-        viewModelScope,
-        SharingStarted.Eagerly,
-        emptyList()
-    )
-    private val searchSources = searchSourceProvider.observeAllSources().stateIn(
-        viewModelScope,
-        SharingStarted.Eagerly,
-        emptyList()
     )
     private val pluginFieldProcessConfigs = pluginFieldProcessConfigRepository.configsFlow.stateIn(
         viewModelScope,
@@ -192,11 +182,11 @@ class EditMetadataViewModel(
         viewModelScope.launch {
             try {
                 // 1. 获取数据库实体
-                val song = songRepository.getSongByUri(uriString)
+                val song = songLibraryRepository.getSongByUri(uriString)
                 currentSong = song
 
                 // 2. 读取文件标签
-                val audioTagData = songRepository.readAudioTagData(uriString)
+                val audioTagData = audioTagRepository.read(uriString)
                 val displayFileName = song?.fileName ?: audioTagData.fileName
                 val displayPicture = audioTagData.pictures.frontCoverOrFallback()
                 val displayCover = displayPicture?.data
@@ -359,16 +349,6 @@ class EditMetadataViewModel(
         _uiState.update { state ->
             val current = state.editingTagData ?: AudioTagData()
 
-            if (result.lyricsOnly) {
-                lyricsFormatConversionSession = null
-                return@update state.copy(
-                    isEditing = true,
-                    editingTagData = current.copy(
-                        lyrics = result.lyrics?.takeIf { it.isNotBlank() } ?: current.lyrics
-                    )
-                )
-            }
-            val source = searchSources.value.firstOrNull { it.id == result.pluginId }
             val processConfig = pluginFieldProcessConfigs.value[result.pluginId]
                 ?: defaultPluginFieldProcessConfig(result.pluginId)
             val renderConfig = lyricRenderConfig.value
@@ -378,67 +358,35 @@ class EditMetadataViewModel(
                     removeEmptyLines = renderConfig?.removeEmptyLines ?: SettingsDefaults.REMOVE_EMPTY_LINES
                 )
             )
+            val rawFields = if (result.lyricsOnly) {
+                result.lyrics
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { mapOf("lyrics" to it) }
+                    .orEmpty()
+            } else {
+                result.normalizedFields() +
+                        result.lyrics?.takeIf { it.isNotBlank() }?.let { mapOf("lyrics" to it) }.orEmpty()
+            }
             val processedFields = fieldProcessor.processFields(
                 pluginId = result.pluginId,
-                fields = result.normalizedFields(),
+                fields = rawFields.sanitizeStandardFields(),
                 config = processConfig,
-                fieldDefinitions = source?.metadataFields.orEmpty(),
-                writeRules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
-                    savedRules = metadataFieldWriteRules.value,
-                    searchSources = searchSources.value
-                )
+                fieldDefinitions = emptyList(),
+                writeRules = emptyList()
             )
-            // Resolve plugin-declared metadata fields.
-            val standardTagData = current.copy(
-                title = processedFields["title"]?.takeIf { it.isNotBlank() } ?: current.title,
-                artist = processedFields["artist"]?.takeIf { it.isNotBlank() } ?: current.artist,
-                album = processedFields["album"]?.takeIf { it.isNotBlank() } ?: current.album,
-                lyrics = result.lyrics?.takeIf { it.isNotBlank() } ?: current.lyrics,
-                date = processedFields["date"]?.takeIf { it.isNotBlank() } ?: current.date,
-                trackNumber = processedFields["track_number"]?.takeIf { it.isNotBlank() }
-                    ?: current.trackNumber,
-                picUrl = result.picUrl?.takeIf { it.isNotBlank() } ?: current.picUrl,
-                comment = processedFields["subtitle"]?.takeIf { it.isNotBlank() } ?: current.comment,
+            val applied = SearchResultApplier.applyFields(
+                current = current,
+                fields = processedFields,
+                policy = MetadataApplyPolicy.overwriteAvailableFields(processedFields)
             )
             if (!result.lyrics.isNullOrBlank()) {
                 lyricsFormatConversionSession = null
             }
-            val metadataTagData = currentSong?.let { song ->
-                if (result.pluginId.isBlank()) {
-                    AudioTagData()
-                } else {
-                    metadataFieldResolver.resolve(
-                        currentSong = song,
-                        scoredResults = listOf(
-                            ScoredSearchResult(
-                                result = SongSearchResult(
-                                    id = "",
-                                    pluginId = result.pluginId,
-                                    pluginName = result.pluginName,
-                                    title = result.title.orEmpty(),
-                                    artist = result.artist.orEmpty(),
-                                    album = result.album.orEmpty(),
-                                    duration = 0L,
-                                    date = result.date.orEmpty(),
-                                    trackNumber = result.trackerNumber.orEmpty(),
-                                    picUrl = result.picUrl.orEmpty(),
-                                    fields = processedFields
-                                ),
-                                score = 1.0
-                            )
-                        ),
-                        rules = PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
-                            savedRules = metadataFieldWriteRules.value,
-                            searchSources = searchSources.value
-                        ),
-                        currentTagData = current
-                    )
-                }
-            } ?: AudioTagData()
             state.copy(
                 isEditing = true,
-                editingTagData = metadataFieldResolver.mergeNonNull(standardTagData, metadataTagData),
-                coverUri = result.picUrl?.takeIf { it.isNotBlank() }
+                editingTagData = applied,
+                coverUri = applied.picUrl
+                    ?.takeIf { it.isNotBlank() && it != current.picUrl }
             )
         }
     }
@@ -621,11 +569,24 @@ class EditMetadataViewModel(
         _uiState.update { it.copy(exportCoverResult = null) }
     }
     fun revertCover() {
-        _uiState.update {
-            it.copy(
-                coverUri = it.originalCover,
-                editingTagData = it.editingTagData?.copy(picUrl = null)
-            )
+        _uiState.update { state ->
+            val original = state.originalTagData
+            if (original == null) {
+                state.copy(
+                    coverUri = state.originalCover,
+                    editingTagData = state.editingTagData?.copy(picUrl = null)
+                )
+            } else {
+                val displayPicture = original.pictures.frontCoverOrFallback()
+                state.copy(
+                    coverUri = state.originalCover,
+                    picture = displayPicture,
+                    editingTagData = state.editingTagData?.copy(
+                        pictures = original.pictures,
+                        picUrl = null
+                    )
+                )
+            }
         }
     }
 
@@ -655,41 +616,40 @@ class EditMetadataViewModel(
             }
 
             try {
-                val success = songRepository.overwriteAudioTags(uriString, audioTagData)
-
-                if (success) {
-                    val newModifiedTime = System.currentTimeMillis()
-
-                    val updateSuccess = if (currentSong != null) {
-                        songRepository.updateSongMetadata(
-                            audioTagData,
-                            uriString, // 传入 URI
-                            newModifiedTime
-                        )
-                    } else {
-                        true
-                    }
-
-                    if (updateSuccess) {
-                        val savedDisplayPicture = audioTagData.pictures.frontCoverOrFallback()
+                when (val saveResult = overwriteSongTagsUseCase(uriString, audioTagData)) {
+                    is SaveAudioTagsResult.Success -> {
+                        val savedTagData = saveResult.tagData
+                        val savedDisplayPicture = savedTagData.pictures.frontCoverOrFallback()
                         val savedDisplayCover = savedDisplayPicture?.data
-                            ?: audioTagData.picUrl?.takeIf { picUrl -> picUrl.isNotBlank() }
+                            ?: savedTagData.picUrl?.takeIf { picUrl -> picUrl.isNotBlank() }
 
                         _uiState.update {
                             it.copy(
                                 isSaving = false,
                                 saveSuccess = true,
                                 isEditing = false,
-                                originalTagData = audioTagData,
-                                editingTagData = audioTagData,
+                                originalTagData = savedTagData,
+                                editingTagData = savedTagData,
                                 originalCover = savedDisplayCover,
                                 coverUri = savedDisplayCover,
                                 picture = savedDisplayPicture,
                             )
                         }
-                    } else {
-                        val reason = "Database metadata update returned false"
-                        recordSaveFailure(uriString, reason)
+                        currentSong = saveResult.song
+                    }
+                    is SaveAudioTagsResult.PermissionRequired -> {
+                        Log.w(TAG, "需要用户授权修改文件: $uriString")
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                permissionIntentSender = saveResult.intentSender
+                            )
+                        }
+                    }
+                    is SaveAudioTagsResult.Failed -> {
+                        val reason = saveResult.error.localizedMessage
+                            ?: saveResult.error::class.java.simpleName
+                        recordSaveFailure(uriString, reason, saveResult.error)
                         _uiState.update {
                             it.copy(
                                 isSaving = false,
@@ -698,18 +658,6 @@ class EditMetadataViewModel(
                                 saveFailureLogText = buildSaveFailureLog(uriString, reason)
                             )
                         }
-                    }
-                } else {
-                    // 逻辑上的写入失败（非权限问题）
-                    val reason = "Audio tag writer returned false"
-                    recordSaveFailure(uriString, reason)
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            saveSuccess = false,
-                            saveFailureMessage = reason,
-                            saveFailureLogText = buildSaveFailureLog(uriString, reason)
-                        )
                     }
                 }
 
@@ -1264,14 +1212,14 @@ class EditMetadataViewModel(
         val currentAlbum = _uiState.value.editingTagData?.album ?: return emptyList()
         val currentArtist = _uiState.value.editingTagData?.artist ?: ""
 
-        val sameAlbumSongs = songRepository.getSongsByAlbum(currentAlbum, currentArtist)
+        val sameAlbumSongs = songLibraryRepository.getSongsByAlbum(currentAlbum, currentArtist)
         val covers = mutableListOf<Pair<String, Any?>>()
 
         for (song in sameAlbumSongs) {
             if (song.uri == currentSongUri) continue // 跳过当前歌曲
             
             try {
-                val tagData = songRepository.readAudioTagData(song.uri)
+                val tagData = audioTagRepository.read(song.uri)
                 val cover = tagData.pictures.firstOrNull()?.data ?: tagData.picUrl
                 if (cover != null) {
                     val title = "${song.title} - ${song.artist}"

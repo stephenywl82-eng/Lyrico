@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.SharedSelectionManager
 import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
-import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
-import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRuleFactory
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
@@ -26,7 +24,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -57,9 +54,8 @@ class BatchMatchViewModel(
     val batchMatchConfig: StateFlow<BatchMatchConfig> = settingsRepository.batchMatchConfig
         .stateIn(viewModelScope, SharingStarted.Eagerly, BatchMatchConfigDefaults.DEFAULT_CONFIG)
 
-    private val metadataFieldWriteRules: StateFlow<List<PluginMetadataFieldWriteRule>> =
-        settingsRepository.metadataFieldWriteRules
-            .combineWithDefaults()
+    private val allSources: StateFlow<List<SearchSource>> =
+        searchSourceProvider.observeAllSources()
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val sourceSettings: StateFlow<Map<String, SourceRuntimeConfig>> =
@@ -68,9 +64,6 @@ class BatchMatchViewModel(
     private val pluginFieldProcessConfigs: StateFlow<Map<String, PluginFieldProcessConfig>> =
         pluginFieldProcessConfigRepository.configsFlow
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
-    private val allSources: StateFlow<List<SearchSource>> =
-        searchSourceProvider.observeAllSources()
-            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val separator: StateFlow<String> = settingsRepository.separator
         .stateIn(viewModelScope, SharingStarted.Eagerly, "/")
@@ -191,7 +184,6 @@ class BatchMatchViewModel(
                     matchConfig = matchConfig,
                     separator = separator.value,
                     enabledSourceOrderIds = currentOrderIds,
-                    metadataFieldWriteRules = metadataFieldWriteRules.value,
                     sourceSettings = sourceSettings.value.mapValues { it.value.values },
                     pluginFieldProcessConfigs = pluginFieldProcessConfigs.value,
                     lyricRenderConfig = lyricRenderConfig.value,
@@ -240,14 +232,6 @@ class BatchMatchViewModel(
             )
         }
     }
-
-    private fun kotlinx.coroutines.flow.Flow<List<PluginMetadataFieldWriteRule>>.combineWithDefaults() =
-        map { savedRules ->
-            PluginMetadataFieldWriteRuleFactory.mergeWithDeclaredFields(
-                savedRules = savedRules,
-                searchSources = allSources.value
-            )
-        }
 
     private fun buildEnabledSourceOrderIds(): List<String> {
         return allSources.value.map { it.id }
