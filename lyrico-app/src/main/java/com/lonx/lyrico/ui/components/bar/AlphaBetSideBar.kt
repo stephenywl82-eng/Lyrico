@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,14 +14,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,7 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
@@ -167,25 +163,21 @@ fun AlphabetSideBar(
             return@BoxWithConstraints
         }
 
-        val preferredCellSize = 28.dp
-        val dividerHeight = 0.5.dp
+        val preferredCellSize = 20.dp
         val itemCount = items.size
 
-        val totalDividerHeight = dividerHeight * (itemCount - 1)
-        val availableCellHeight = ((maxHeight - totalDividerHeight) / itemCount.toFloat())
-            .coerceAtLeast(1.dp)
+        val cellSize = (maxHeight / itemCount.toFloat())
+            .coerceAtMost(preferredCellSize)
+            .coerceAtLeast(10.dp)
 
-        val cellSize = minOf(preferredCellSize, availableCellHeight)
-        val barHeight = cellSize * itemCount + totalDividerHeight
+        val barHeight = cellSize * itemCount
 
         val cellHeightPx = with(density) { cellSize.toPx() }
-        val dividerHeightPx = with(density) { dividerHeight.toPx() }
 
         fun getItemIndex(offsetY: Float): Int {
-            val slotHeight = cellHeightPx + dividerHeightPx
-            if (slotHeight <= 0f) return -1
+            if (cellHeightPx <= 0f) return -1
 
-            return (offsetY / slotHeight)
+            return (offsetY / cellHeightPx)
                 .toInt()
                 .coerceIn(0, items.lastIndex)
         }
@@ -203,20 +195,13 @@ fun AlphabetSideBar(
             )
 
             Box(
-                modifier = Modifier.width(16.dp)
+                modifier = Modifier.width(12.dp)
             )
 
             Column(
                 modifier = Modifier
                     .width(cellSize)
                     .height(barHeight)
-                    .clip(RoundedCornerShape(6.dp))
-                    .border(
-                        width = 0.5.dp,
-                        color = MiuixTheme.colorScheme.outline.copy(alpha = 0.46f),
-                        shape = RoundedCornerShape(6.dp)
-                    )
-                    .background(MiuixTheme.colorScheme.surfaceContainer)
                     .pointerInput(items, cellSize, barHeight, resolvedSectionIndexMap) {
                         detectVerticalDragGestures(
                             onDragStart = { offset ->
@@ -245,23 +230,12 @@ fun AlphabetSideBar(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                items.forEachIndexed { index, item ->
+                items.forEach { item ->
                     AlphabetSideBarCell(
                         item = item,
                         selected = currentItem == item,
                         size = cellSize
                     )
-
-                    if (index != items.lastIndex) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(dividerHeight)
-                                .background(
-                                    MiuixTheme.colorScheme.outline.copy(alpha = 0.35f)
-                                )
-                        )
-                    }
                 }
             }
         }
@@ -376,15 +350,7 @@ private fun AlphabetSideBarCell(
         else -> size * 0.62f
     }
     Box(
-        modifier = Modifier
-            .size(size)
-            .background(
-                color = if (selected) {
-                    MiuixTheme.colorScheme.primary.copy(alpha = 0.14f)
-                } else {
-                    MiuixTheme.colorScheme.surfaceContainer
-                }
-            ),
+        modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
         when (item) {
