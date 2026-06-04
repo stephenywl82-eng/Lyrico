@@ -37,6 +37,13 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 - [Manifest 参考](https://replica0110.github.io/Lyrico/plugins/manifest.html)
 - [宿主 API](https://replica0110.github.io/Lyrico/plugins/host-api.html)
 
+## 已适配 Lyrico 外部编辑功能的播放器
+
+| 播放器名称                                          | 适配版本   |
+|------------------------------------------------|--------|
+| [光锥音乐](https://coneplayer.trantor.ink/#/)      | 1.1.4+ |
+| [Ella Music](https://github.com/Kifranei/Ella) | 1.1.0+ |
+
 ## 构建
 
 推荐使用 Android Studio 打开项目，也可以直接通过 Gradle 构建。
