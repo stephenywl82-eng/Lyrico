@@ -13,10 +13,12 @@ import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.LibraryIndexRepository
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.song.mapper.SongMetadataMapper
+import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.utils.MediaScanner
 import com.lonx.lyrico.utils.UriUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -268,7 +270,12 @@ class LibraryScanRepositoryImpl(
         existingId: Long,
         source: String
     ): ScannedSongMetadata? {
-        val audioData = audioTagRepository.read(songFile.uri.toString())
+        val audioData = audioTagRepository.read(
+            uri = songFile.uri.toString(),
+            options = AudioTagReadOptions(
+                multiValueSeparator = settingsRepository.separator.first()
+            )
+        )
         val entity = songMetadataMapper.fromScannedFile(
             file = songFile,
             tag = audioData,

@@ -47,8 +47,8 @@ import com.lonx.lyrico.data.repository.PlaybackRepository
 import com.lonx.lyrico.data.repository.SettingsDefaults
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.song.library.SongLibraryRepository
-import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.domain.song.usecase.OverwriteSongTagsUseCase
+import com.lonx.lyrico.domain.song.usecase.ReadAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
 import com.lonx.lyrico.utils.CoverSourceType
 import com.lonx.lyrico.utils.LyricDecoder
@@ -120,7 +120,7 @@ private data class LyricsFormatConversionSession(
 
 class EditMetadataViewModel(
     private val songLibraryRepository: SongLibraryRepository,
-    private val audioTagRepository: AudioTagRepository,
+    private val readAudioTagsUseCase: ReadAudioTagsUseCase,
     private val overwriteSongTagsUseCase: OverwriteSongTagsUseCase,
     private val settingsRepository: SettingsRepository,
     private val playbackRepository: PlaybackRepository,
@@ -185,7 +185,7 @@ class EditMetadataViewModel(
                 currentSong = song
 
                 // 2. 读取文件标签
-                val audioTagData = audioTagRepository.read(uriString)
+                val audioTagData = readAudioTagsUseCase(uriString)
                 val displayFileName = song?.fileName ?: audioTagData.fileName
                 val displayPicture = audioTagData.pictures.frontCoverOrFallback()
                 val displayCover = displayPicture?.data
@@ -1243,7 +1243,7 @@ class EditMetadataViewModel(
             if (song.uri == currentSongUri) continue // 跳过当前歌曲
             
             try {
-                val tagData = audioTagRepository.read(song.uri)
+                val tagData = readAudioTagsUseCase(song.uri)
                 val cover = tagData.pictures.frontCoverOrFallback()?.data
                 if (cover != null) {
                     val title = "${song.title} - ${song.artist}"

@@ -48,6 +48,7 @@ import com.lonx.lyrico.domain.song.usecase.DeleteSongsUseCase
 import com.lonx.lyrico.domain.song.usecase.BatchEditSongsUseCase
 import com.lonx.lyrico.domain.song.usecase.OverwriteSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.PatchSongTagsUseCase
+import com.lonx.lyrico.domain.song.usecase.ReadAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.RenameSongUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SynchronizeLibraryUseCase
@@ -222,6 +223,7 @@ val appModule = module {
     single<LibraryScanRepository> {
         LibraryScanRepositoryImpl(androidContext(), get(), get(), get(), get(), get(), get(), get())
     }
+    single { ReadAudioTagsUseCase(get(), get()) }
     single { SaveAudioTagsUseCase(get(), get(), get(), get(), get(), get()) }
     single { BatchEditSongsUseCase(get(), get()) }
     single { PatchSongTagsUseCase(get()) }

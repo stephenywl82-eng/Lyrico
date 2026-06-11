@@ -21,12 +21,18 @@ class AudioTagRepositoryImpl(
     private val appLogRepository: AppLogRepository
 ) : AudioTagRepository {
 
-    override suspend fun read(uri: String): AudioTagData = readLenient(uri)
+    override suspend fun read(
+        uri: String,
+        options: AudioTagReadOptions
+    ): AudioTagData = readLenient(uri, options)
 
-    private suspend fun readLenient(uri: String): AudioTagData = withContext(Dispatchers.IO) {
+    private suspend fun readLenient(
+        uri: String,
+        options: AudioTagReadOptions
+    ): AudioTagData = withContext(Dispatchers.IO) {
         val displayName = fileAccess.getDisplayName(uri)
         try {
-            readFromUri(uri, displayName, strict = false)
+            readFromUri(uri, displayName, strict = false, options = options)
         } catch (e: Throwable) {
             Log.e(TAG, "Failed to read audio tags: $uri", e)
             logMetadataException("Failed to read audio tags", e, uri)
@@ -36,7 +42,7 @@ class AudioTagRepositoryImpl(
 
     private suspend fun readStrict(uri: String): AudioTagData = withContext(Dispatchers.IO) {
         val displayName = fileAccess.getDisplayName(uri)
-        readFromUri(uri, displayName, strict = true)
+        readFromUri(uri, displayName, strict = true, options = AudioTagReadOptions())
     }
 
     override suspend fun overwrite(
@@ -107,18 +113,24 @@ class AudioTagRepositoryImpl(
     private suspend fun readFromUri(
         uri: String,
         displayName: String,
-        strict: Boolean
+        strict: Boolean,
+        options: AudioTagReadOptions
     ): AudioTagData {
         fileAccess.openReadableDescriptor(uri)?.use { descriptor ->
-            return AudioTagReader.read(descriptor, readPictures = true).copy(fileName = displayName)
+            return AudioTagReader.read(
+                pfd = descriptor,
+                readPictures = true,
+                multiValueSeparator = options.multiValueSeparator
+            ).copy(fileName = displayName)
         }
-        return readFromStreamCache(uri, displayName, strict)
+        return readFromStreamCache(uri, displayName, strict, options)
     }
 
     private suspend fun readFromStreamCache(
         uriString: String,
         displayName: String,
-        strict: Boolean
+        strict: Boolean,
+        options: AudioTagReadOptions
     ): AudioTagData {
         val uri = uriString.toUri()
         if (uri.scheme != "content") {
@@ -142,7 +154,11 @@ class AudioTagRepositoryImpl(
             }
 
             ParcelFileDescriptor.open(tempFile, ParcelFileDescriptor.MODE_READ_ONLY).use { descriptor ->
-                return AudioTagReader.read(descriptor, readPictures = true).copy(fileName = displayName)
+                return AudioTagReader.read(
+                    pfd = descriptor,
+                    readPictures = true,
+                    multiValueSeparator = options.multiValueSeparator
+                ).copy(fileName = displayName)
             }
         } finally {
             if (!tempFile.delete()) {
