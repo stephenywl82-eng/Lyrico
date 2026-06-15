@@ -80,6 +80,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
+import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.model.CustomTagField
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
@@ -128,6 +129,7 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.SnackbarDuration
+import top.yukonga.miuix.kmp.basic.SnackbarResult
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
@@ -194,6 +196,31 @@ fun EditMetadataScreen(
     val currentShiftOffset by viewModel.currentShiftOffset.collectAsState()
 
     val clipboardManager = LocalClipboard.current
+
+    fun showCancelUndoSnackbar(fieldLabel: String, restoreChange: () -> Unit) {
+        scope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = context.getString(R.string.msg_field_reverted, fieldLabel),
+                actionLabel = context.getString(R.string.action_cancel_undo),
+                duration = SnackbarDuration.Short
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                restoreChange()
+            }
+        }
+    }
+
+    fun <T> revertField(
+        fieldLabel: String,
+        currentValue: T,
+        originalValue: T,
+        applyValue: AudioTagData.(T) -> AudioTagData
+    ) {
+        viewModel.updateTag { applyValue(originalValue) }
+        showCancelUndoSnackbar(fieldLabel) {
+            viewModel.updateTag { applyValue(currentValue) }
+        }
+    }
 
     val imeVisible = WindowInsets.isImeVisible
     val isFloatingToolbarVisible = !imeVisible
@@ -491,7 +518,21 @@ fun EditMetadataScreen(
                             showRating = visibleFieldCodes.contains("cover.rating"),
                             isModified = uiState.coverUri != uiState.originalCover,
                             onCoverClick = { showCoverOptionsSheet = true },
-                            onRevertCoverClick = { viewModel.revertCover() },
+                            onRevertCoverClick = {
+                                val previousCoverUri = uiState.coverUri
+                                val previousPicture = uiState.picture
+                                val previousPictures = editingTagData?.pictures.orEmpty()
+                                val previousPicUrl = editingTagData?.picUrl
+                                viewModel.revertCover()
+                                showCancelUndoSnackbar(context.getString(R.string.label_cover)) {
+                                    viewModel.restoreCoverSnapshot(
+                                        coverUri = previousCoverUri,
+                                        picture = previousPicture,
+                                        pictures = previousPictures,
+                                        picUrl = previousPicUrl
+                                    )
+                                }
+                            },
                             onRatingChange = { newRating ->
                                 viewModel.updateTag { copy(rating = newRating) }
                             }
@@ -512,9 +553,11 @@ fun EditMetadataScreen(
                                         originalTagData?.title
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(title = originalTagData?.title ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_title),
+                                            currentValue = editingTagData?.title ?: "",
+                                            originalValue = originalTagData?.title ?: ""
+                                        ) { copy(title = it) }
                                     }
                                 )
                             }
@@ -527,9 +570,11 @@ fun EditMetadataScreen(
                                         originalTagData?.artist
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(artist = originalTagData?.artist ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_artists),
+                                            currentValue = editingTagData?.artist ?: "",
+                                            originalValue = originalTagData?.artist ?: ""
+                                        ) { copy(artist = it) }
                                     }
                                 )
                             }
@@ -542,9 +587,11 @@ fun EditMetadataScreen(
                                         originalTagData?.albumArtist
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(albumArtist = originalTagData?.albumArtist ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_album_artist),
+                                            currentValue = editingTagData?.albumArtist ?: "",
+                                            originalValue = originalTagData?.albumArtist ?: ""
+                                        ) { copy(albumArtist = it) }
                                     }
                                 )
                             }
@@ -557,9 +604,11 @@ fun EditMetadataScreen(
                                         originalTagData?.album
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(album = originalTagData?.album ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_album),
+                                            currentValue = editingTagData?.album ?: "",
+                                            originalValue = originalTagData?.album ?: ""
+                                        ) { copy(album = it) }
                                     }
                                 )
                             }
@@ -572,9 +621,11 @@ fun EditMetadataScreen(
                                         originalTagData?.date
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(date = originalTagData?.date ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_year),
+                                            currentValue = editingTagData?.date ?: "",
+                                            originalValue = originalTagData?.date ?: ""
+                                        ) { copy(date = it) }
                                     }
                                 )
                             }
@@ -587,9 +638,11 @@ fun EditMetadataScreen(
                                         originalTagData?.language
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(language = originalTagData?.language ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_language),
+                                            currentValue = editingTagData?.language ?: "",
+                                            originalValue = originalTagData?.language ?: ""
+                                        ) { copy(language = it) }
                                     }
                                 )
                             }
@@ -602,9 +655,11 @@ fun EditMetadataScreen(
                                         originalTagData?.genre
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(genre = originalTagData?.genre ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_genre),
+                                            currentValue = editingTagData?.genre ?: "",
+                                            originalValue = originalTagData?.genre ?: ""
+                                        ) { copy(genre = it) }
                                     }
                                 )
                             }
@@ -625,9 +680,11 @@ fun EditMetadataScreen(
                                         originalTagData?.trackNumber
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(trackNumber = originalTagData?.trackNumber ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_track_number),
+                                            currentValue = editingTagData?.trackNumber ?: "",
+                                            originalValue = originalTagData?.trackNumber ?: ""
+                                        ) { copy(trackNumber = it) }
                                     }
                                 )
                             }
@@ -638,9 +695,11 @@ fun EditMetadataScreen(
                                     state = discNumberState,
                                     isModified = editingTagData?.discNumber != originalTagData?.discNumber,
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(discNumber = originalTagData?.discNumber)
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_disc_number),
+                                            currentValue = editingTagData?.discNumber,
+                                            originalValue = originalTagData?.discNumber
+                                        ) { copy(discNumber = it) }
                                     }
                                 )
                             }
@@ -661,9 +720,11 @@ fun EditMetadataScreen(
                                         originalTagData?.composer
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(composer = originalTagData?.composer ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_composer),
+                                            currentValue = editingTagData?.composer ?: "",
+                                            originalValue = originalTagData?.composer ?: ""
+                                        ) { copy(composer = it) }
                                     }
                                 )
                             }
@@ -676,9 +737,11 @@ fun EditMetadataScreen(
                                         originalTagData?.lyricist
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(lyricist = originalTagData?.lyricist ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_lyricist),
+                                            currentValue = editingTagData?.lyricist ?: "",
+                                            originalValue = originalTagData?.lyricist ?: ""
+                                        ) { copy(lyricist = it) }
                                     }
                                 )
                             }
@@ -691,9 +754,11 @@ fun EditMetadataScreen(
                                         originalTagData?.copyright
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(copyright = originalTagData?.copyright)
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_copyright),
+                                            currentValue = editingTagData?.copyright,
+                                            originalValue = originalTagData?.copyright
+                                        ) { copy(copyright = it) }
                                     }
                                 )
                             }
@@ -706,9 +771,11 @@ fun EditMetadataScreen(
                                         originalTagData?.comment
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(comment = originalTagData?.comment ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_comment),
+                                            currentValue = editingTagData?.comment ?: "",
+                                            originalValue = originalTagData?.comment ?: ""
+                                        ) { copy(comment = it) }
                                     }
                                 )
                             }
@@ -793,12 +860,11 @@ fun EditMetadataScreen(
                                         originalTagData?.replayGainTrackGain
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(
-                                                replayGainTrackGain = originalTagData?.replayGainTrackGain
-                                                    ?: ""
-                                            )
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_replaygain_track_gain),
+                                            currentValue = editingTagData?.replayGainTrackGain ?: "",
+                                            originalValue = originalTagData?.replayGainTrackGain ?: ""
+                                        ) { copy(replayGainTrackGain = it) }
                                     }
                                 )
                             }
@@ -811,12 +877,11 @@ fun EditMetadataScreen(
                                         originalTagData?.replayGainTrackPeak
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(
-                                                replayGainTrackPeak = originalTagData?.replayGainTrackPeak
-                                                    ?: ""
-                                            )
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_replaygain_track_peak),
+                                            currentValue = editingTagData?.replayGainTrackPeak ?: "",
+                                            originalValue = originalTagData?.replayGainTrackPeak ?: ""
+                                        ) { copy(replayGainTrackPeak = it) }
                                     }
                                 )
                             }
@@ -829,12 +894,11 @@ fun EditMetadataScreen(
                                         originalTagData?.replayGainAlbumGain
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(
-                                                replayGainAlbumGain = originalTagData?.replayGainAlbumGain
-                                                    ?: ""
-                                            )
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_replaygain_album_gain),
+                                            currentValue = editingTagData?.replayGainAlbumGain ?: "",
+                                            originalValue = originalTagData?.replayGainAlbumGain ?: ""
+                                        ) { copy(replayGainAlbumGain = it) }
                                     }
                                 )
                             }
@@ -847,12 +911,11 @@ fun EditMetadataScreen(
                                         originalTagData?.replayGainAlbumPeak
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(
-                                                replayGainAlbumPeak = originalTagData?.replayGainAlbumPeak
-                                                    ?: ""
-                                            )
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_replaygain_album_peak),
+                                            currentValue = editingTagData?.replayGainAlbumPeak ?: "",
+                                            originalValue = originalTagData?.replayGainAlbumPeak ?: ""
+                                        ) { copy(replayGainAlbumPeak = it) }
                                     }
                                 )
                             }
@@ -865,12 +928,11 @@ fun EditMetadataScreen(
                                         originalTagData?.replayGainReferenceLoudness
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(
-                                                replayGainReferenceLoudness = originalTagData?.replayGainReferenceLoudness
-                                                    ?: ""
-                                            )
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_replaygain_reference_loudness),
+                                            currentValue = editingTagData?.replayGainReferenceLoudness ?: "",
+                                            originalValue = originalTagData?.replayGainReferenceLoudness ?: ""
+                                        ) { copy(replayGainReferenceLoudness = it) }
                                     }
                                 )
                             }
@@ -909,7 +971,21 @@ fun EditMetadataScreen(
                                         viewModel.removeCustomFieldValue(key)
                                     },
                                     onRevert = {
+                                        val previousField = editingTagData?.customFields
+                                            .orEmpty()
+                                            .firstOrNull { it.key.equals(key, ignoreCase = true) }
+                                            ?.copy(key = key)
                                         viewModel.revertCustomField(key)
+                                        showCancelUndoSnackbar(key) {
+                                            if (previousField != null) {
+                                                viewModel.updateCustomFieldValue(
+                                                    key = key,
+                                                    value = previousField.value
+                                                )
+                                            } else {
+                                                viewModel.removeCustomFieldValue(key)
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -930,9 +1006,11 @@ fun EditMetadataScreen(
                                         originalTagData?.lyrics
                                     ),
                                     onRevert = {
-                                        viewModel.updateTag {
-                                            copy(lyrics = originalTagData?.lyrics ?: "")
-                                        }
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_lyrics),
+                                            currentValue = editingTagData?.lyrics ?: "",
+                                            originalValue = originalTagData?.lyrics ?: ""
+                                        ) { copy(lyrics = it) }
                                     },
                                     actionButtons = {
                                         Row(
@@ -990,6 +1068,8 @@ fun EditMetadataScreen(
             count
         }
         ExpandableFabMenu(
+            modifier = Modifier
+                .padding(bottom = 48.dp),
             visible = isFloatingToolbarVisible,
             expanded = isFabMenuExpanded,
             enabled = true,

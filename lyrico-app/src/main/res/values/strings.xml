@@ -318,6 +318,8 @@
     <string name="msg_export_lyrics_failed">Failed to export lyrics</string>
     <string name="msg_import_lyrics_success">Lyrics imported successfully</string>
     <string name="msg_import_lyrics_failed">Failed to import lyrics</string>
+    <string name="msg_field_reverted">Reverted changes to %1$s</string>
+    <string name="action_cancel_undo">Cancel undo</string>
 
     <!-- Metadata Labels -->
     <string name="edit_metadata_default_title">Edit Metadata</string>

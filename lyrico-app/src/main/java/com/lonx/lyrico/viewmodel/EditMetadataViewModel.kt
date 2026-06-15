@@ -595,6 +595,26 @@ class EditMetadataViewModel(
         }
     }
 
+    fun restoreCoverSnapshot(
+        coverUri: Any?,
+        picture: AudioPicture?,
+        pictures: List<AudioPicture>,
+        picUrl: String?
+    ) {
+        _uiState.update { state ->
+            val current = state.editingTagData ?: return@update state
+            state.copy(
+                coverUri = coverUri,
+                picture = picture,
+                isEditing = true,
+                editingTagData = current.copy(
+                    pictures = pictures,
+                    picUrl = picUrl
+                )
+            )
+        }
+    }
+
     /**
      * 保存元数据
      */
