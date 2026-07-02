@@ -74,6 +74,8 @@ class SongSearchRepositoryImpl(
                     s.titleSortKey AS titleSortKey,
                     s.artistGroupKey AS artistGroupKey,
                     s.artistSortKey AS artistSortKey,
+                    s.albumGroupKey AS albumGroupKey,
+                    s.albumSortKey AS albumSortKey,
                     s.uri AS uri
                 FROM (
                     SELECT

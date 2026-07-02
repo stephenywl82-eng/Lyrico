@@ -38,7 +38,7 @@ import com.lonx.lyrico.data.model.entity.SourcePluginEntity
         SourcePluginEntity::class,
         SongCustomTagKeyEntity::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
@@ -341,6 +341,36 @@ abstract class LyricoDatabase : RoomDatabase() {
         val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 createLyricFtsTable(db)
+            }
+        }
+        val MIGRATION_19_20 = object : Migration(19, 20) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE songs ADD COLUMN albumGroupKey TEXT NOT NULL DEFAULT '#'")
+                db.execSQL("ALTER TABLE songs ADD COLUMN albumSortKey TEXT NOT NULL DEFAULT '2_'")
+                db.execSQL(
+                    """
+                    UPDATE songs
+                    SET
+                        albumGroupKey = CASE
+                            WHEN album IS NULL OR TRIM(album) = '' THEN '#'
+                            WHEN SUBSTR(TRIM(album), 1, 1) GLOB '[0-9]' THEN '0'
+                            WHEN UPPER(SUBSTR(TRIM(album), 1, 1)) GLOB '[A-Z]' THEN UPPER(SUBSTR(TRIM(album), 1, 1))
+                            ELSE '#'
+                        END,
+                        albumSortKey = CASE
+                            WHEN album IS NULL OR TRIM(album) = '' THEN '2_'
+                            WHEN SUBSTR(TRIM(album), 1, 1) GLOB '[0-9]' THEN '0_' || TRIM(album)
+                            WHEN UPPER(SUBSTR(TRIM(album), 1, 1)) GLOB '[A-Z]' THEN '1_' || UPPER(TRIM(album))
+                            ELSE '2_' || TRIM(album)
+                        END
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_songs_albumGroupKey_albumSortKey
+                    ON songs(albumGroupKey, albumSortKey)
+                    """.trimIndent()
+                )
             }
         }
 

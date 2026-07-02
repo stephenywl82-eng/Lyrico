@@ -32,6 +32,7 @@ Songs, artists, and albums all support sorting. Tap the sort button at the top o
 **Song sort options:**
 - Title
 - Artist
+- Album
 - Date modified
 - Date added
 - File size

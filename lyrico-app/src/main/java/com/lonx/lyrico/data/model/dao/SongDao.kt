@@ -83,6 +83,8 @@ data class LocalLyricSearchRow(
     val titleSortKey: String,
     val artistGroupKey: String,
     val artistSortKey: String,
+    val albumGroupKey: String,
+    val albumSortKey: String,
     val uri: String
 ) {
     fun toSongEntity(): SongEntity {
@@ -127,6 +129,8 @@ data class LocalLyricSearchRow(
             titleSortKey = titleSortKey,
             artistGroupKey = artistGroupKey,
             artistSortKey = artistSortKey,
+            albumGroupKey = albumGroupKey,
+            albumSortKey = albumSortKey,
             uri = uri
         )
     }

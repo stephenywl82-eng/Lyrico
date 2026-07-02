@@ -151,8 +151,7 @@ fun SongsPage(
         val map = mutableMapOf<String, Int>()
         if (sortInfo.sortBy.supportsIndex) {
             songs.forEachIndexed { index, song ->
-                val key =
-                    if (sortInfo.sortBy == SortBy.ARTISTS) song.artistGroupKey else song.titleGroupKey
+                val key = song.sectionKey(sortInfo.sortBy)
                 if (!map.containsKey(key)) {
                     map[key] = index
                 }
@@ -449,5 +448,13 @@ fun SongsPage(
                 }
             )
         }
+    }
+}
+
+private fun SongEntity.sectionKey(sortBy: SortBy): String {
+    return when (sortBy) {
+        SortBy.ARTISTS -> artistGroupKey
+        SortBy.ALBUM -> albumGroupKey
+        else -> titleGroupKey
     }
 }

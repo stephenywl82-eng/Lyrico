@@ -197,7 +197,8 @@ val appModule = module {
                 LyricoDatabase.MIGRATION_15_16,
                 LyricoDatabase.MIGRATION_16_17,
                 LyricoDatabase.MIGRATION_17_18,
-                LyricoDatabase.MIGRATION_18_19
+                LyricoDatabase.MIGRATION_18_19,
+                LyricoDatabase.MIGRATION_19_20
             )
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onCreate(db: SupportSQLiteDatabase) {

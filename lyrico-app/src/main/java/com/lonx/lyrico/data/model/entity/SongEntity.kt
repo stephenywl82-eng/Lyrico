@@ -65,6 +65,8 @@ import androidx.room.PrimaryKey
  * @property titleSortKey 标题排序键（拼音或英文首字母）
  * @property artistGroupKey 艺术家分组键（A–Z 或 #）
  * @property artistSortKey 艺术家排序键（拼音或英文首字母）
+ * @property albumGroupKey 专辑分组键（A–Z 或 #）
+ * @property albumSortKey 专辑排序键（拼音或英文首字母）
  */
 @Entity(
     tableName = "songs",
@@ -74,6 +76,7 @@ import androidx.room.PrimaryKey
         Index(value = ["folderId"]),
         Index(value = ["titleGroupKey", "titleSortKey"]),
         Index(value = ["artistGroupKey", "artistSortKey"]),
+        Index(value = ["albumGroupKey", "albumSortKey"]),
         Index(value = ["fileLastModified"]),
         Index(value = ["fileAdded"])
     ],
@@ -149,6 +152,10 @@ data class SongEntity(
     val titleSortKey: String = "#",
     val artistGroupKey: String = "#",
     val artistSortKey: String = "#",
+    @ColumnInfo(defaultValue = "'#'")
+    val albumGroupKey: String = "#",
+    @ColumnInfo(defaultValue = "'2_'")
+    val albumSortKey: String = "2_",
 
     @ColumnInfo(defaultValue = "0")
     val uri: String = "",
