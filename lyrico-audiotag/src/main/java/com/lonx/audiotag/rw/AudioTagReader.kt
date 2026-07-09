@@ -215,7 +215,8 @@ object AudioTagReader {
                     channels = audioProps?.channels ?: 0,
                     rawProperties = props,
                     customFields = customFields,
-                    pictures = picList
+                    pictures = picList,
+                    supportsTypedPictures = metadata.supportsTypedPictures
                 )
 
             } catch (e: Exception) {

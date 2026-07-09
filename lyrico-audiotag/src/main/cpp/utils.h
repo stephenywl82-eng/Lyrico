@@ -100,9 +100,12 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
         !initMethod(env, hashMapClass, "put",
                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;", &hashMapPut) ||
         !initGlobalClass(env, "com/lonx/audiotag/model/Metadata", &metadataClass) ||
-        !initMethod(env, metadataClass, "<init>",
-                    "(Ljava/util/HashMap;[Lcom/lonx/audiotag/model/Picture;)V",
-                    &metadataConstructor) ||
+        !initMethod(
+                    env,
+                    metadataClass,
+                    "<init>",
+                    "(Ljava/util/HashMap;[Lcom/lonx/audiotag/model/Picture;Z)V",
+                    &metadataConstructor)||
         !initGlobalClass(env, "com/lonx/audiotag/model/AudioProperties",
                          &audioPropertiesClass) ||
         !initMethod(env, audioPropertiesClass, "<init>", "(IIII)V",

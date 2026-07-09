@@ -114,7 +114,24 @@ Java_com_lonx_audiotag_TagLib_getMetadata(
             pictures = emptyPictureArray(env);
         }
 
-        return env->NewObject(metadataClass, metadataConstructor, propertiesMap, pictures);
+        bool supportsPictureTypes = true;
+
+        if (dynamic_cast<TagLib::MP4::File *>(file.get()) != nullptr) {
+            supportsPictureTypes = false;
+        }
+
+        jboolean supports = supportsPictureTypes
+                            ? JNI_TRUE
+                            : JNI_FALSE;
+
+        return env->NewObject(
+                metadataClass,
+                metadataConstructor,
+                propertiesMap,
+                pictures,
+                supports
+        );
+
     } catch (const std::exception &e) {
         LOGE("Error reading metadata: %s", e.what());
         return nullptr;

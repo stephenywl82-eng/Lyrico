@@ -529,6 +529,7 @@ fun EditMetadataScreen(
                                 artist = editingTagData?.artist ?: "",
                                 rating = editingTagData?.rating ?: 0,
                                 showCover = visibleFieldCodes.contains("cover.picture"),
+                                supportsTypedPictures = originalTagData?.supportsTypedPictures ?: false,
                                 showRating = visibleFieldCodes.contains("cover.rating"),
                                 isCoverModified = uiState.coverUri != uiState.originalCover,
                                 isArtistImageModified = uiState.artistImageUri != uiState.originalArtistImage,
@@ -1784,6 +1785,7 @@ private fun CoverSection(
     title: String,
     artist: String,
     rating: Int?,
+    supportsTypedPictures: Boolean,
     showCover: Boolean,
     showRating: Boolean,
     isCoverModified: Boolean,
@@ -1798,24 +1800,31 @@ private fun CoverSection(
     val onSurface = MiuixTheme.colorScheme.onSurface
     val onSurfaceDim = MiuixTheme.colorScheme.onSurfaceVariantSummary
     val context = LocalContext.current
-    val picturePages = listOf(
-        PicturePagerItem(
-            label = stringResource(R.string.label_cover),
-            editLabel = stringResource(R.string.edit_cover),
-            source = coverUri,
-            isModified = isCoverModified,
-            onClick = onCoverClick,
-            onRevertClick = onRevertCoverClick
-        ),
-        PicturePagerItem(
-            label = stringResource(R.string.label_artist_image),
-            editLabel = stringResource(R.string.edit_artist_image),
-            source = artistImageUri,
-            isModified = isArtistImageModified,
-            onClick = onArtistImageClick,
-            onRevertClick = onRevertArtistImageClick
+    val picturePages = buildList {
+        add(
+            PicturePagerItem(
+                label = stringResource(R.string.label_cover),
+                editLabel = stringResource(R.string.edit_cover),
+                source = coverUri,
+                isModified = isCoverModified,
+                onClick = onCoverClick,
+                onRevertClick = onRevertCoverClick
+            )
         )
-    )
+
+        if (supportsTypedPictures) {
+            add(
+                PicturePagerItem(
+                    label = stringResource(R.string.label_artist_image),
+                    editLabel = stringResource(R.string.edit_artist_image),
+                    source = artistImageUri,
+                    isModified = isArtistImageModified,
+                    onClick = onArtistImageClick,
+                    onRevertClick = onRevertArtistImageClick
+                )
+            )
+        }
+    }
     val pagerState = rememberPagerState(pageCount = { picturePages.size })
     val currentPage = pagerState.currentPage.coerceIn(0, picturePages.lastIndex)
     val currentImageSource = picturePages[currentPage].source
