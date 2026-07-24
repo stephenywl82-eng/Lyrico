@@ -42,6 +42,7 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 | [Halcyon](https://github.com/Kifranei/Halcyon) | 1.1.0+ |
 | [棱镜音乐](https://github.com/Ryderwe/PrismMusic-Release) | 0.1.3+ |
 | [mica-music](https://github.com/lecoix/mica-music) | 0.1.9.1+ |
+| [Raws-Music](https://github.com/QFDY-GZC/RawS-Music) | 0.9.39-beta+ |
 ## 构建
 
 推荐使用 Android Studio 打开项目，也可以直接通过 Gradle 构建。
