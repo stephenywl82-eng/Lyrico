@@ -16,6 +16,7 @@ import com.lonx.lyrico.utils.lyrics.document.LyricsDocumentPipeline
 object LyricEncoder {
     // 匹配 TTML 格式: begin="00:01:23.456" 或 end="00:01:23.456"
     private val TTML_TIME_PATTERN = Regex("(begin=\"|end=\")(\\d{2,}):(\\d{2}):(\\d{2})\\.(\\d{2,3})(\")")
+
     
     /**
      * 计算应用偏移量，保证结果大于等于 0
@@ -238,17 +239,14 @@ object LyricEncoder {
             }
         }
 
+        if (config.format == TTML) {
+            LyricsDocumentPipeline.processStructuredResult(result, config, offset)?.let { return it }
+        }
+
         val convertedResult = convertLyricsResult(result, config.conversionMode)
-        
+
         val builder = StringBuilder()
         val isWordLevel = convertedResult.isWordByWord
-        val isTtml = config.format == TTML
-        // 如果是 TTML，先追加 XML 头部和根节点
-        if (isTtml) {
-            builder.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
-            builder.append("<tt xmlns=\"http://www.w3.org/ns/ttml\" xmlns:ttm=\"http://www.w3.org/ns/ttml#metadata\" xmlns:itunes=\"http://music.apple.com/itunes/ttml\">\n")
-            builder.append("  <body>\n    <div>\n")
-        }
 
         val romanMap = if (config.showRomanization) {
             alignSubLines(convertedResult.original, convertedResult.romanization)
@@ -277,14 +275,6 @@ object LyricEncoder {
                 if (config.removeEmptyLines && match != null && isBlankOrPlaceholder(match)) null else match
             } else null
 
-            if (isTtml) {
-                appendTtmlCombinedLine(
-                    builder, line, matchedRoman, matchedTranslation, offset, config, isWordLevel
-                )
-                builder.append("\n")
-                return@forEach // TTML 处理完毕直接返回下一行
-            }
-
             val skipOriginal = config.onlyTranslationIfAvailable && matchedTranslation != null
 
             config.normalizedLineOrder.forEach { track ->
@@ -294,29 +284,33 @@ object LyricEncoder {
                     LyricLineTrack.TRANSLATION -> matchedTranslation
                 } ?: return@forEach
 
-                if (track == LyricLineTrack.ORIGINAL) {
-                    when (config.format) {
-                        PLAIN_LRC -> appendLineByLine(builder, trackLine, offset)
-                        ENHANCED_LRC -> {
-                            if (isWordLevel) appendEnhancedLine(builder, trackLine, offset)
-                            else appendLineByLine(builder, trackLine, offset) //  LRC 降级
-                        }
-                        VERBATIM_LRC -> {
-                            if (isWordLevel) appendWordByWord(builder, trackLine, offset)
-                            else appendLineByLine(builder, trackLine, offset) // LRC 降级
-                        }
-                        TTML -> Unit
+                // 该轨是否为词级（逐字）数据：
+                // - 原文：用全局 isWordByWord（插件声明的逐字标志）；
+                // - 音译：单独按本行词数判断——插件给逐字词数组（words.size > 1）时按逐字编码，
+                //   旧协议/旧插件音译只有整行（words.size == 1）时降级整行，行为与原先一致；
+                // - 翻译：无词级语义，恒整行。
+                val trackWordLevel = when (track) {
+                    LyricLineTrack.ORIGINAL -> isWordLevel
+                    LyricLineTrack.ROMANIZATION -> trackLine.words.size > 1
+                    else -> false
+                }
+                // 音译（拉丁音节等拼音文本）词间补空格分词，汉字原文无分隔符
+                val wordSeparator = if (track == LyricLineTrack.ROMANIZATION) " " else ""
+
+                when (config.format) {
+                    PLAIN_LRC -> appendLineByLine(builder, trackLine, offset)
+                    ENHANCED_LRC -> {
+                        if (trackWordLevel) appendEnhancedLine(builder, trackLine, offset, wordSeparator)
+                        else appendLineByLine(builder, trackLine, offset) // 无词级数据 → LRC 整行降级
                     }
-                } else {
-                    appendLineByLine(builder, trackLine, offset)
+                    VERBATIM_LRC -> {
+                        if (trackWordLevel) appendWordByWord(builder, trackLine, offset, wordSeparator)
+                        else appendLineByLine(builder, trackLine, offset) // 无词级数据 → LRC 整行降级
+                    }
+                    TTML -> Unit
                 }
                 builder.append("\n")
             }
-        }
-
-        // 如果是 TTML，追加闭合标签
-        if (isTtml) {
-            builder.append("    </div>\n  </body>\n</tt>")
         }
 
         return builder.toString().trim()
@@ -440,78 +434,20 @@ object LyricEncoder {
     }
 
 
-    private fun appendTtmlCombinedLine(
+    private fun appendEnhancedLine(
         builder: StringBuilder,
         line: LyricsLine,
-        romanLine: LyricsLine?,
-        transLine: LyricsLine?,
         offset: Long,
-        config: LyricRenderConfig,
-        isWordLevel: Boolean // 歌词数据是否是逐字
+        wordSeparator: String = "" // 词间分隔符：音译传空格（拉丁音节分词），原文为空（汉字无需分隔）
     ) {
-        if (line.words.isEmpty()) return
-
-        val start = applyOffset(line.start, offset)
-        // 确定该行的结束时间：以原文最后一个词的结束时间为准
-        val lastWord = line.words.last()
-        val end = when {
-            lastWord.end > 0 -> lastWord.end
-            lastWord.start > 0 -> lastWord.start + 300
-            else -> line.start + 2000
-        }
-
-        val startStr = LyricFormatter.formatTtmlTimestamp(start)
-        val endStr = LyricFormatter.formatTtmlTimestamp(LyricFormatter.applyOffset(end, offset))
-
-        builder.append("      <p begin=\"").append(startStr).append("\" end=\"").append(endStr).append("\">")
-
-        val showOriginal = !(config.onlyTranslationIfAvailable && transLine != null)
-        if (showOriginal) {
-            if (isWordLevel) {
-                // 如果支持逐字，输出详细的 <span>
-                line.words.forEach { word ->
-                    val wordStart = LyricFormatter.formatTtmlTimestamp(LyricFormatter.applyOffset(word.start, offset))
-                    val wordEnd = if (word.end > 0) word.end else word.start + 300
-                    val wordEndStr = LyricFormatter.formatTtmlTimestamp(LyricFormatter.applyOffset(wordEnd, offset))
-
-                    builder.append("<span begin=\"").append(wordStart).append("\" end=\"").append(wordEndStr).append("\">")
-                    builder.append(LyricFormatter.escapeXml(word.text))
-                    builder.append("</span>")
-                }
-            } else {
-                val fullText = line.words.joinToString("") { it.text }
-                builder.append(LyricFormatter.escapeXml(fullText))
-            }
-        }
-
-        if (romanLine != null && showOriginal) {
-            val romanText = romanLine.words.joinToString("") { it.text }
-            if (romanText.isNotEmpty()) {
-                builder.append("<span ttm:role=\"x-romanization\">")
-                builder.append(LyricFormatter.escapeXml(romanText))
-                builder.append("</span>")
-            }
-        }
-
-        if (transLine != null) {
-            val transText = transLine.words.joinToString("") { it.text }
-            if (transText.isNotEmpty()) {
-                builder.append("<span ttm:role=\"x-translation\">")
-                builder.append(LyricFormatter.escapeXml(transText))
-                builder.append("</span>")
-            }
-        }
-
-        builder.append("</p>")
-    }
-
-    private fun appendEnhancedLine(builder: StringBuilder, line: LyricsLine, offset: Long) {
         if (line.words.isEmpty()) return
 
         val start = LyricFormatter.applyOffset(line.start, offset)
         builder.append("[${LyricFormatter.formatTimestamp(start)}] ")
 
-        line.words.forEach { word ->
+        line.words.forEachIndexed { index, word ->
+            // 词间分隔符（非首词前补）：音译剥标签后为 "nung mou ce"，避免拉丁音节挤在一起
+            if (index > 0 && wordSeparator.isNotEmpty()) builder.append(wordSeparator)
             val wordStart = LyricFormatter.applyOffset(word.start, offset)
             builder.append("<${LyricFormatter.formatTimestamp(wordStart)}>")
             builder.append(word.text)
@@ -538,7 +474,12 @@ object LyricEncoder {
         builder.append("[$startTimeFormatted]$lineText")
     }
 
-    private fun appendWordByWord(builder: StringBuilder, line: LyricsLine, offset: Long) {
+    private fun appendWordByWord(
+        builder: StringBuilder,
+        line: LyricsLine,
+        offset: Long,
+        wordSeparator: String = "" // 词间分隔符：音译传空格（拉丁音节分词），原文为空（汉字无需分隔）
+    ) {
         line.words.forEachIndexed { index, word ->
 
             val startFormatted = LyricFormatter.formatTimestamp(LyricFormatter.applyOffset(word.start, offset))
@@ -552,6 +493,8 @@ object LyricEncoder {
 
             } else {
                 builder.append("[$startFormatted]${word.text}")
+                // 词间分隔符（非末词后补）：音译剥标签后为 "nung mou ce"，避免拉丁音节挤在一起
+                if (wordSeparator.isNotEmpty()) builder.append(wordSeparator)
             }
         }
     }

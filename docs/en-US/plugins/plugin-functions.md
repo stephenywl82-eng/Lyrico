@@ -250,17 +250,70 @@ function getLyrics(request) {
 }
 ```
 
-**`original` line format, word-level:**
+### Structured line formats
+
+`original` and `romanization` both accept word-level lines:
 
 ```
-[lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...]]
+[lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...], extensions?]
 ```
 
-**`translated` / `romanization` line format, whole-line text:**
+They also accept whole-line text. `translated` uses only this form:
 
 ```
 [lineStartMs, lineEndMs, "text"]
 ```
+
+When exported as TTML, word-level romanization keeps its timing. Lyrico inserts spaces between adjacent syllables when needed.
+
+### TTML extensions
+
+The fields in this section affect TTML output only. TTML-specific structure is not retained when exporting to LRC.
+
+This section describes the TTML subset available through the structured plugin payload; it is not a replacement for the AMLL TTML DB submission specification. Ruby, `body dur`, and unknown XML nodes cannot currently be represented by a structured payload. Return `type: "rawTtml"` when the complete source document must be retained. If the user later applies script conversion, track filtering, or another transformation, Lyrico will parse and rewrite that document, and unmodeled structures may be lost.
+
+An `original` line may include extension attributes as its fourth item:
+
+```javascript
+[0, 6000, [[0, 500, "First"], [500, 1000, "line"]], {
+  "ttm:agent": "v1",
+  "itunes:song-part": "Verse",
+  "divBegin": "0",
+  "divEnd": "6000"
+}]
+```
+
+- `ttm:agent` refers to an entry in `agents`.
+- `itunes:song-part` creates a `<div itunes:song-part="...">`. The legacy `itunes:songPart` spelling is accepted on input, but output always uses `song-part`.
+- `divBegin` and `divEnd` are Lyrico transport fields for a section's time range, in milliseconds. Put them on the section's first line; they become the containing `<div>`'s `begin` and `end` attributes.
+
+Lyrico generates continuous `itunes:key` values (`L1`, `L2`, …) for every output `<p>`, so plugins do not need to provide them. Extension attributes may be unprefixed or use the `ttm:` and `itunes:` prefixes; other prefixes are ignored.
+
+`agents` generates `<ttm:agent>` elements. `id` is required; `type` and `name` are optional:
+
+```javascript
+agents: [
+  { "id": "v1", "type": "person", "name": "Artist A" },
+  { "id": "v1000", "type": "group" }
+]
+```
+
+`metadata` adds elements to `<head>`. Each node has the form `{ name, namespace?, attributes?, text?, children? }`. `songwriters` is written inside Apple-style `<iTunesMetadata>`; other nodes are written inside regular `<metadata>`. Current constraints are:
+
+- `songwriters` must contain one or more `songwriter` children with text;
+- `translations`, `transliterations`, and `ttm:agent` have dedicated fields and should not also appear in `metadata`;
+- a custom prefix requires `namespace`, for example `{ "name": "amll:meta", "namespace": "http://www.example.com/ns/amll", ... }`.
+
+The following fields set root attributes and auxiliary-track languages:
+
+| Field | TTML location |
+|------|---------------|
+| `timing` | `<tt itunes:timing>`; commonly `Word` or `Line` |
+| `language` | `<tt xml:lang>` |
+| `translatedLang` | `xml:lang` on the inline translation |
+| `romanizationLang` | `xml:lang` on `<transliteration>` |
+
+Use BCP 47 language tags such as `zh-Hans` and `ja-Latn`.
 
 **Format 2: full raw lyrics text**
 
@@ -310,7 +363,13 @@ function getLyrics(request) {
 | `tags` | `object` | Song metadata tags |
 | `original` | `Line[]` | Used only by `type: "structured"`, original lyrics, word-level or whole-line |
 | `translated` | `Line[] \| null` | Used only by `type: "structured"`, translated lyrics |
-| `romanization` | `Line[] \| null` | Used only by `type: "structured"`, romanized lyrics |
+| `romanization` | `Line[] \| null` | Used only by `type: "structured"`, romanized lyrics; lines may be word-level (syllable reading) or whole-line text |
+| `agents` | `Agent[]` | Used only by `type: "structured"`, performer list (optional; written to TTML head `<ttm:agent>`, see the extension fields section above) |
+| `metadata` | `MetadataElement[]` | Used only by `type: "structured"`, elements added to the TTML head (optional; see constraints above) |
+| `timing` | `string` | Used only by `type: "structured"`, timing granularity flag (optional; pass `"Word"` for word-level, written to root `<tt itunes:timing>`) |
+| `language` | `string` | Used only by `type: "structured"`, original-language code BCP47 (optional; written to root `<tt xml:lang>`) |
+| `translatedLang` | `string` | Used only by `type: "structured"`, translation-track language code BCP47 (optional; written to the inline translation's `xml:lang`) |
+| `romanizationLang` | `string` | Used only by `type: "structured"`, romanization-track language code BCP47 (optional; written to the head romanization's `xml:lang`) |
 | `rawPlainLrc` | `string` | Used only by `type: "rawPlainLrc"` |
 | `rawVerbatimLrc` | `string` | Used only by `type: "rawVerbatimLrc"` |
 | `rawEnhancedLrc` | `string` | Used only by `type: "rawEnhancedLrc"` |

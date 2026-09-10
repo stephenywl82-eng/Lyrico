@@ -246,17 +246,70 @@ function getLyrics(request) {
 }
 ```
 
-**`original` 行格式**（逐词）：
+### 结构化歌词的行格式
+
+`original` 和 `romanization` 都可使用逐词格式：
 
 ```
-[lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...]]
+[lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...], extensions?]
 ```
 
-**`translated` / `romanization` 行格式**（整行文本）：
+两者也都兼容整行文本；`translated` 只使用这种格式：
 
 ```
 [lineStartMs, lineEndMs, "text"]
 ```
+
+导出 TTML 时，逐词音译保留每个词的时间，并在相邻音节之间补充必要的空格。
+
+### TTML 扩展
+
+以下字段只影响 TTML 导出。导出为 LRC 时，TTML 专属结构不会保留。
+
+这里描述的是 structured 协议能够表达的 TTML 子集，不是 AMLL TTML DB 的投稿规范。Ruby、`body dur` 和未知 XML 节点目前无法通过 structured 载荷表示；需要保留完整源文档时应返回 `type: "rawTtml"`。如果用户随后执行繁简转换、轨道筛选等操作，宿主仍会解析并重写该文档，未建模结构可能丢失。
+
+`original` 行可在第 4 个元素中提供扩展属性：
+
+```javascript
+[0, 6000, [[0, 500, "第一"], [500, 1000, "句"]], {
+  "ttm:agent": "v1",
+  "itunes:song-part": "Verse",
+  "divBegin": "0",
+  "divEnd": "6000"
+}]
+```
+
+- `ttm:agent` 引用 `agents` 中同名的演唱者。
+- `itunes:song-part` 用于生成 `<div itunes:song-part="...">`。旧写法 `itunes:songPart` 仍可读取，但导出统一使用 `song-part`。
+- `divBegin` 和 `divEnd` 是 Lyrico 的段落时间传递字段，单位为毫秒。只需放在该段第一行；导出时会成为 `<div>` 的 `begin` 和 `end`。
+
+宿主会为所有输出的 `<p>` 重新生成连续的 `itunes:key`（`L1`、`L2`……），插件无需提供。扩展属性只接受无前缀名称以及 `ttm:`、`itunes:` 前缀；其他前缀会被忽略。
+
+`agents` 用来生成 `<ttm:agent>`。`id` 必填，`type` 和 `name` 可选：
+
+```javascript
+agents: [
+  { "id": "v1", "type": "person", "name": "艺人 A" },
+  { "id": "v1000", "type": "group" }
+]
+```
+
+`metadata` 用来补充 `<head>` 中的元素，节点格式为 `{ name, namespace?, attributes?, text?, children? }`。`songwriters` 会写入 Apple 风格的 `<iTunesMetadata>`，其他节点写入普通 `<metadata>`。目前有以下约束：
+
+- `songwriters` 必须包含一个或多个带文本的 `songwriter` 子节点；
+- `translations`、`transliterations` 和 `ttm:agent` 已有专门字段，不应再放入 `metadata`；
+- 自定义前缀需要同时提供 `namespace`，例如 `{ "name": "amll:meta", "namespace": "http://www.example.com/ns/amll", ... }`。
+
+根属性和辅助轨语言可用下列字段设置：
+
+| 字段 | TTML 位置 |
+|------|-----------|
+| `timing` | `<tt itunes:timing>`；常用值为 `Word` 或 `Line` |
+| `language` | `<tt xml:lang>` |
+| `translatedLang` | 内联翻译的 `xml:lang` |
+| `romanizationLang` | `<transliteration>` 的 `xml:lang` |
+
+语言字段使用 BCP 47 标签，例如 `zh-Hans`、`ja-Latn`。
 
 **格式 2：完整原始歌词文本**
 
@@ -306,7 +359,13 @@ function getLyrics(request) {
 | `tags` | `object` | 歌曲元信息标签 |
 | `original` | `Line[]` | 仅 `type: "structured"` 使用，原文歌词（逐词或整行） |
 | `translated` | `Line[] \| null` | 仅 `type: "structured"` 使用，翻译歌词 |
-| `romanization` | `Line[] \| null` | 仅 `type: "structured"` 使用，音译歌词（罗马音等） |
+| `romanization` | `Line[] \| null` | 仅 `type: "structured"` 使用，音译歌词（罗马音等）；行支持逐词（逐字注音）或整行文本 |
+| `agents` | `Agent[]` | 仅 `type: "structured"` 使用，演唱者列表（可选；写回 TTML head `<ttm:agent>`，详见上文扩展字段） |
+| `metadata` | `MetadataElement[]` | 仅 `type: "structured"` 使用，补充 TTML head 的元素树（可选，约束见上文） |
+| `timing` | `string` | 仅 `type: "structured"` 使用，时间粒度标志（可选；词级传 `"Word"`，写回根 `<tt itunes:timing>`） |
+| `language` | `string` | 仅 `type: "structured"` 使用，原文语言码 BCP47（可选；写回根 `<tt xml:lang>`） |
+| `translatedLang` | `string` | 仅 `type: "structured"` 使用，翻译轨语言码 BCP47（可选；写回内联翻译的 `xml:lang`） |
+| `romanizationLang` | `string` | 仅 `type: "structured"` 使用，音译轨语言码 BCP47（可选；写回 head 音译的 `xml:lang`） |
 | `rawPlainLrc` | `string` | 仅 `type: "rawPlainLrc"` 使用 |
 | `rawVerbatimLrc` | `string` | 仅 `type: "rawVerbatimLrc"` 使用 |
 | `rawEnhancedLrc` | `string` | 仅 `type: "rawEnhancedLrc"` 使用 |
