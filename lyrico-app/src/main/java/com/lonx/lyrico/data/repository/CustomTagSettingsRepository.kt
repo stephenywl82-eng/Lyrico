@@ -1,6 +1,7 @@
 package com.lonx.lyrico.data.repository
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
@@ -11,9 +12,16 @@ import java.util.Locale
 
 @Serializable
 data class CustomTagSettings(
+    /** 在单曲编辑页和批量编辑页显示的自定义标签键，顺序即字段显示顺序。 */
     val visibleKeys: List<String> = emptyList(),
 )
 
+/**
+ * 自定义标签的显示配置。
+ *
+ * 这里只保存"哪些键要显示"；音乐库里实际存在哪些键由 [CustomTagKeyRepository] 提供，
+ * 两者取并集才是管理页展示的完整列表。
+ */
 class CustomTagSettingsRepository(
     private val context: Context,
     private val json: Json = Json {
@@ -23,61 +31,29 @@ class CustomTagSettingsRepository(
 ) {
 
     val settingsFlow: Flow<CustomTagSettings> =
-        context.settingsDataStore.data.map { preferences ->
-            val raw = preferences[CUSTOM_TAG_SETTINGS]
-            raw
-                ?.let { decodeSettings(it) }
-                ?.sanitize()
-                ?: CustomTagSettings()
-        }
+        context.settingsDataStore.data.map { it.readSettings() }
 
-    suspend fun addVisibleKey(input: String) {
-        val key = normalizeCustomTagKey(input)
-            ?: throw IllegalArgumentException("Invalid custom tag key: $input")
+    /** 追加若干标签键，已存在的会被忽略；顺序即编辑页的字段顺序。 */
+    suspend fun addVisibleKeys(keys: Collection<String>) {
+        val normalized = keys.mapNotNull(::normalizeKey).distinct()
+        if (normalized.isEmpty()) return
 
         context.settingsDataStore.edit { preferences ->
-            val current = preferences[CUSTOM_TAG_SETTINGS]
-                ?.let { decodeSettings(it) }
-                ?.sanitize()
-                ?: CustomTagSettings()
-
-            val nextKeys = if (key in current.visibleKeys) {
-                current.visibleKeys
-            } else {
-                current.visibleKeys + key
-            }
-
+            val current = preferences.readSettings()
             preferences[CUSTOM_TAG_SETTINGS] =
-                encodeSettings(current.copy(visibleKeys = nextKeys))
+                encodeSettings(
+                    current.copy(visibleKeys = (current.visibleKeys + normalized).distinct())
+                )
         }
     }
 
     suspend fun removeVisibleKey(key: String) {
-        val normalizedKey = normalizeCustomTagKey(key) ?: return
+        val normalizedKey = normalizeKey(key) ?: return
 
         context.settingsDataStore.edit { preferences ->
-            val current = preferences[CUSTOM_TAG_SETTINGS]
-                ?.let { decodeSettings(it) }
-                ?.sanitize()
-                ?: CustomTagSettings()
-
+            val current = preferences.readSettings()
             preferences[CUSTOM_TAG_SETTINGS] =
-                encodeSettings(
-                    current.copy(
-                        visibleKeys = current.visibleKeys - normalizedKey
-                    )
-                )
-        }
-    }
-
-    suspend fun setVisibleKeys(keys: List<String>) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[CUSTOM_TAG_SETTINGS] =
-                encodeSettings(
-                    CustomTagSettings(
-                        visibleKeys = keys.sanitizeCustomTagKeys()
-                    )
-                )
+                encodeSettings(current.copy(visibleKeys = current.visibleKeys - normalizedKey))
         }
     }
 
@@ -87,39 +63,33 @@ class CustomTagSettingsRepository(
         }
     }
 
-    private fun decodeSettings(raw: String): CustomTagSettings {
-        return runCatching {
-            json.decodeFromString<CustomTagSettings>(raw)
-        }.getOrDefault(CustomTagSettings())
-    }
+    private fun Preferences.readSettings(): CustomTagSettings =
+        this[CUSTOM_TAG_SETTINGS]
+            ?.let { raw -> runCatching { json.decodeFromString<CustomTagSettings>(raw) }.getOrNull() }
+            ?.sanitize()
+            ?: CustomTagSettings()
 
-    private fun encodeSettings(settings: CustomTagSettings): String {
-        return json.encodeToString(settings.sanitize())
-    }
+    private fun encodeSettings(settings: CustomTagSettings): String =
+        json.encodeToString(settings.sanitize())
 
-    private fun CustomTagSettings.sanitize(): CustomTagSettings {
-        return copy(
-            visibleKeys = visibleKeys.sanitizeCustomTagKeys()
-        )
-    }
-
-    private fun List<String>.sanitizeCustomTagKeys(): List<String> {
-        return mapNotNull { normalizeCustomTagKey(it) }
-            .distinct()
-    }
-
-    private fun normalizeCustomTagKey(input: String): String? {
-        val key = input.trim()
-
-        return when {
-            key.isBlank() -> null
-            key.length > 64 -> null
-            key.any { it == '\n' || it == '\r' } -> null
-            else -> key.uppercase(Locale.ROOT)
-        }
-    }
+    private fun CustomTagSettings.sanitize(): CustomTagSettings =
+        copy(visibleKeys = visibleKeys.mapNotNull(::normalizeKey).distinct())
 
     companion object {
+        const val MAX_KEY_LENGTH = 64
+
+        /** 归一化标签键：去空白、转大写；不合法时返回 null。 */
+        fun normalizeKey(input: String): String? {
+            val key = input.trim()
+
+            return when {
+                key.isBlank() -> null
+                key.length > MAX_KEY_LENGTH -> null
+                key.any { it == '\n' || it == '\r' } -> null
+                else -> key.uppercase(Locale.ROOT)
+            }
+        }
+
         private val CUSTOM_TAG_SETTINGS =
             stringPreferencesKey("custom_tag_settings")
     }

@@ -525,6 +525,15 @@ fun SettingsScreen(
                             settingsViewModel.setSearchPageSize(tempSearchPageSize.intValue)
                         }
                     )
+                    WindowDropdownPreference(
+                        title = stringResource(R.string.artist_separator),
+                        summary = stringResource(R.string.artist_separator_hint),
+                        items = artistSeparatorItems,
+                        selectedIndex = selectedArtistSeparatorIndex,
+                        onSelectedIndexChange = { index ->
+                            settingsViewModel.setSeparator(artistSeparators[index])
+                        }
+                    )
                     SwitchPreference(
                         title = stringResource(R.string.show_all_search_result_fields),
                         summary = stringResource(R.string.show_all_search_result_fields_summary),
@@ -596,15 +605,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.non_lyrics_cleanup_rules_title),
                         summary = stringResource(R.string.non_lyrics_cleanup_rules_summary),
                         onClick = { navigator.navigate(LyricsCleanupRulesDestination()) }
-                    )
-                    WindowDropdownPreference(
-                        title = stringResource(R.string.artist_separator),
-                        summary = stringResource(R.string.artist_separator_hint),
-                        items = artistSeparatorItems,
-                        selectedIndex = selectedArtistSeparatorIndex,
-                        onSelectedIndexChange = { index ->
-                            settingsViewModel.setSeparator(artistSeparators[index])
-                        }
                     )
                     ArrowPreference(
                         title = stringResource(R.string.artist_split_settings_title),

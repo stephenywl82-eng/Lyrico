@@ -7,28 +7,33 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
+import com.lonx.lyrico.ui.components.ChipGrid
+import com.lonx.lyrico.ui.components.ManagedChip
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
+import com.lonx.lyrico.viewmodel.CustomTagKeyError
 import com.lonx.lyrico.viewmodel.CustomTagManagementViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
@@ -36,41 +41,33 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.icon.extended.Search
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowDialog
 
+/**
+ * 自定义标签管理。
+ *
+ * 列表里的胶囊就是会显示在单曲编辑页和批量编辑页的标签，只有两个动作：
+ * 添加、删除。没有"开关"概念——标签要么在列表里，要么被删掉。
+ */
 @Composable
 @Destination<RootGraph>(route = "custom_tag_management")
 fun CustomTagManagementScreen(
     navigator: DestinationsNavigator,
 ) {
     val viewModel: CustomTagManagementViewModel = koinViewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
     val scrollBehavior = MiuixScrollBehavior()
-
-    val visibleItems = uiState.visibleKeys.map { key -> key to uiState.keyCounts[key] }
-    val discoveredItems = uiState.keyCounts
-        .filterKeys { key ->
-            uiState.searchQuery.isBlank() ||
-                key.contains(uiState.searchQuery, ignoreCase = true)
-        }
-        .toList()
-        .sortedWith(
-            compareByDescending<Pair<String, Int>> { it.second }
-                .thenBy { it.first.lowercase() }
-        )
 
     Scaffold(
         topBar = {
@@ -100,84 +97,50 @@ fun CustomTagManagementScreen(
             ),
             overscrollEffect = null,
         ) {
-            item(key = "visible") {
-                SmallTitle(text = stringResource(R.string.custom_tag_visible_section))
+            item(key = "tags") {
                 Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-                    Text(
-                        text = stringResource(R.string.custom_tag_visible_summary),
-                        style = MiuixTheme.textStyles.footnote1,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-                    )
-                    if (visibleItems.isEmpty()) {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                            Text(
-                                text = stringResource(R.string.custom_tag_empty_visible_title),
-                                fontWeight = FontWeight.Medium,
-                                color = MiuixTheme.colorScheme.onSurface,
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.custom_tag_empty_visible_summary),
-                                style = MiuixTheme.textStyles.footnote1,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            )
-                        }
+                    if (uiState.visibleKeys.isEmpty()) {
+                        FootnoteText(stringResource(R.string.custom_tag_empty))
                     } else {
-                        visibleItems.forEach { (key, count) ->
-                            CustomTagRow(
-                                keyName = key,
-                                songCount = count,
-                                actionText = stringResource(R.string.custom_tag_remove_visible),
-                                onAction = { viewModel.removeVisibleKey(key) },
-                            )
+                        ChipGrid(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
+                        ) {
+                            uiState.visibleKeys.forEach { key ->
+                                ManagedChip(
+                                    text = key,
+                                    onDelete = { viewModel.removeKey(key) },
+                                )
+                            }
                         }
                     }
-                    ArrowPreference(
-                        title = stringResource(R.string.custom_tag_add_key),
-                        summary = stringResource(R.string.custom_tag_remove_notice),
-                        onClick = { showAddDialog = true },
-                    )
-                }
-            }
 
-            item(key = "discovered") {
-                SmallTitle(text = stringResource(R.string.custom_tag_discovered_section))
-                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
                     Text(
-                        text = stringResource(R.string.custom_tag_discovered_summary),
-                        style = MiuixTheme.textStyles.footnote1,
+                        text = stringResource(R.string.custom_tag_hint),
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                        fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                     )
-                    TextField(
-                        value = uiState.searchQuery,
-                        onValueChange = viewModel::updateSearchQuery,
-                        label = stringResource(R.string.custom_tag_search_hint),
-                        leadingIcon = {
-                            Icon(
-                                MiuixIcons.Search,
-                                contentDescription = stringResource(R.string.custom_tag_search_hint)
-                            )
-                        },
+
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                    )
-                    discoveredItems.forEach { (key, count) ->
-                        val isVisible = key in uiState.visibleKeys
-                        CustomTagRow(
-                            keyName = key,
-                            songCount = count,
-                            actionText = stringResource(
-                                if (isVisible) {
-                                    R.string.custom_tag_already_visible
-                                } else {
-                                    R.string.custom_tag_add_to_visible
-                                }
-                            ),
-                            actionEnabled = !isVisible,
-                            onAction = { viewModel.addVisibleKey(key) },
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        TextButton(
+                            text = stringResource(R.string.custom_tag_add_key),
+                            onClick = {
+                                viewModel.clearInputError()
+                                showAddDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.textButtonColorsPrimary(),
+                        )
+                        TextButton(
+                            text = stringResource(R.string.reset_to_default),
+                            onClick = viewModel::resetVisibleKeys,
+                            enabled = uiState.visibleKeys.isNotEmpty(),
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
@@ -185,99 +148,103 @@ fun CustomTagManagementScreen(
         }
     }
 
-    AddCustomTagKeyDialog(
+    AddCustomTagDialog(
         show = showAddDialog,
-        errorText = uiState.inputError,
+        availableKeys = uiState.availableKeys,
+        error = uiState.inputError,
+        onAddAvailable = viewModel::addAvailableKey,
         onDismiss = {
             showAddDialog = false
             viewModel.clearInputError()
         },
-        onConfirm = { key ->
-            viewModel.addVisibleKey(key)
-            showAddDialog = false
+        onConfirm = { typed ->
+            scope.launch {
+                if (viewModel.addKey(typed)) showAddDialog = false
+            }
         },
     )
 }
 
 @Composable
-private fun CustomTagRow(
-    keyName: String,
-    songCount: Int?,
-    actionText: String,
-    actionEnabled: Boolean = true,
-    onAction: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = keyName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MiuixTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Medium,
-            )
-            Text(
-                text = if (songCount != null) {
-                    stringResource(R.string.custom_tag_song_count, songCount)
-                } else {
-                    stringResource(R.string.custom_tag_song_count, 0)
-                },
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            )
-        }
-        TextButton(
-            text = actionText,
-            enabled = actionEnabled,
-            onClick = onAction,
-        )
-    }
+private fun FootnoteText(text: String) {
+    Text(
+        text = text,
+        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+    )
 }
 
 @Composable
-private fun AddCustomTagKeyDialog(
+private fun AddCustomTagDialog(
     show: Boolean,
-    errorText: String?,
+    availableKeys: List<String>,
+    error: CustomTagKeyError?,
+    onAddAvailable: (String) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
-    if (!show) return
+    var typed by remember(show) { mutableStateOf("") }
 
     WindowDialog(
         show = show,
         title = stringResource(R.string.custom_tag_add_key),
         onDismissRequest = onDismiss,
     ) {
-        var key by remember { mutableStateOf("") }
-
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = stringResource(R.string.custom_tag_key_hint),
-                style = MiuixTheme.textStyles.footnote1,
+                text = stringResource(
+                    if (availableKeys.isEmpty()) {
+                        R.string.custom_tag_library_empty
+                    } else {
+                        R.string.custom_tag_library_section
+                    }
+                ),
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                fontSize = MiuixTheme.textStyles.footnote1.fontSize,
             )
-            Spacer(modifier = Modifier.height(12.dp))
+
+            if (availableKeys.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 200.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    ChipGrid {
+                        availableKeys.forEach { key ->
+                            ManagedChip(
+                                text = key,
+                                onClick = { onAddAvailable(key) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             TextField(
-                value = key,
-                onValueChange = { key = it },
+                value = typed,
+                onValueChange = { typed = it },
                 label = stringResource(R.string.custom_tag_key),
                 modifier = Modifier.fillMaxWidth(),
             )
-            if (errorText != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = errorText,
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.error,
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = when (error) {
+                    null -> stringResource(R.string.custom_tag_key_hint)
+                    CustomTagKeyError.EMPTY -> stringResource(R.string.invalid_empty_input)
+                    CustomTagKeyError.INVALID -> stringResource(R.string.custom_tag_key_invalid)
+                    CustomTagKeyError.DUPLICATE -> stringResource(R.string.duplicate_item)
+                },
+                color = if (error == null) {
+                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                } else {
+                    MiuixTheme.colorScheme.error
+                },
+                fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
                     text = stringResource(R.string.cancel),
@@ -287,7 +254,7 @@ private fun AddCustomTagKeyDialog(
                 Spacer(Modifier.width(20.dp))
                 TextButton(
                     text = stringResource(R.string.confirm),
-                    onClick = { onConfirm(key) },
+                    onClick = { onConfirm(typed) },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.textButtonColorsPrimary(),
                 )

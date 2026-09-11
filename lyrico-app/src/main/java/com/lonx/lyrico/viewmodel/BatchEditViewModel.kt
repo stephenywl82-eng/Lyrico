@@ -350,7 +350,7 @@ class BatchEditViewModel(
         val normalizedKey = normalizeCustomTagKey(key) ?: return
 
         viewModelScope.launch {
-            customTagSettingsRepository.addVisibleKey(normalizedKey)
+            customTagSettingsRepository.addVisibleKeys(listOf(normalizedKey))
         }
 
         setCustomFieldValue(normalizedKey, value)
