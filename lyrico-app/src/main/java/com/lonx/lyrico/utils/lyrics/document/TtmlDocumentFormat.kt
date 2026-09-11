@@ -8,6 +8,7 @@ import com.lonx.lyrico.data.model.lyrics.document.LyricsAgent
 import com.lonx.lyrico.data.model.lyrics.document.LyricsAgentType
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocument
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentLine
+import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentRubySyllable
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentWord
 import com.lonx.lyrico.data.model.lyrics.document.LyricsMetadata
 import com.lonx.lyrico.data.model.lyrics.document.LyricsTrack
@@ -337,7 +338,7 @@ object TtmlParser : LyricsFormatParser {
                     val element = child as Element
                     val role = element.attr("role", NS_TTM)
                     val text = StringBuilder().also { appendVisibleText(element, it) }.toString()
-                    val rubyWord = element.parseRubyWord(fallbackEnd)
+                    val rubyWord = element.parseRubyWord(fallbackStart, fallbackEnd)
                     when {
                         rubyWord != null -> words.add(rubyWord)
                         role == "x-translation" -> translation.append(normalizeTtmlText(text, trimEdges = true))
@@ -347,14 +348,14 @@ object TtmlParser : LyricsFormatParser {
                                 startMs = fallbackStart,
                                 endMs = fallbackEnd,
                                 text = normalizeTtmlText(text, trimEdges = false),
-                                words = parseContentWords(element, fallbackEnd),
+                                words = parseContentWords(element, fallbackStart, fallbackEnd),
                                 extensions = element.attributesAsExtensions()
                             )
                         )
                         else -> {
                             val start = element.attr("begin")?.let(::parseTtmlTimeMs)
                             val end = element.attr("end")?.let(::parseTtmlTimeMs)
-                            val parsedWords = parseContentWords(element, fallbackEnd)
+                            val parsedWords = parseContentWords(element, start ?: fallbackStart, fallbackEnd)
                             if (start != null) {
                                 val normalized = normalizeTtmlText(text, trimEdges = false)
                                 val isFormattingWhitespace =
@@ -407,7 +408,11 @@ object TtmlParser : LyricsFormatParser {
         )
     }
 
-    private fun parseContentWords(element: Element, fallbackEnd: Long): List<LyricsDocumentWord> {
+    private fun parseContentWords(
+        element: Element,
+        fallbackStart: Long,
+        fallbackEnd: Long
+    ): List<LyricsDocumentWord> {
         val words = mutableListOf<LyricsDocumentWord>()
 
         fun visit(node: Node) {
@@ -423,7 +428,7 @@ object TtmlParser : LyricsFormatParser {
 
                 Node.ELEMENT_NODE -> {
                     val child = node as Element
-                    val rubyWord = child.parseRubyWord(fallbackEnd)
+                    val rubyWord = child.parseRubyWord(fallbackStart, fallbackEnd)
                     if (rubyWord != null) {
                         words.add(rubyWord)
                         return
@@ -455,26 +460,53 @@ object TtmlParser : LyricsFormatParser {
         return words
     }
 
-    private fun Element.parseRubyWord(fallbackEnd: Long): LyricsDocumentWord? {
+    private fun Element.parseRubyWord(
+        fallbackStart: Long,
+        fallbackEnd: Long
+    ): LyricsDocumentWord? {
         if (attr("ruby", NS_TTS) != "container") return null
-        val spans = elementsByLocalName("span")
-        val base = spans.firstOrNull { it.attr("ruby", NS_TTS) == "base" } ?: return null
-        val annotation = spans.firstOrNull { it.attr("ruby", NS_TTS) == "text" } ?: return null
+
+        val directSpans = childNodesList().filterIsInstance<Element>()
+            .filter { it.localName == "span" }
+        val descendantSpans = elementsByLocalName("span")
+        val base = directSpans.firstOrNull { it.attr("ruby", NS_TTS) == "base" }
+            ?: descendantSpans.firstOrNull { it.attr("ruby", NS_TTS) == "base" }
+            ?: return null
         val baseText = normalizeTtmlText(base.textContent.orEmpty(), trimEdges = false)
-        val rubyText = normalizeTtmlText(annotation.textContent.orEmpty(), trimEdges = false)
-        if (baseText.isEmpty() || rubyText.isEmpty()) return null
-        val start = attr("begin")?.let(::parseTtmlTimeMs)
+        if (baseText.isEmpty()) return null
+
+        val textContainer = directSpans.firstOrNull { it.attr("ruby", NS_TTS) == "textContainer" }
+        val directAnnotationElements = textContainer?.let {
+            textContainer.childNodesList().filterIsInstance<Element>()
+                .filter { it.localName == "span" && it.attr("ruby", NS_TTS) == "text" }
+        }
+        val annotationElements = directAnnotationElements?.takeIf { it.isNotEmpty() }
+            ?: descendantSpans.filter { it.attr("ruby", NS_TTS) == "text" }
+        val ruby = annotationElements.mapNotNull { annotation ->
+            val text = normalizeTtmlText(annotation.textContent.orEmpty(), trimEdges = false)
+            text.takeIf { it.isNotEmpty() }?.let {
+                LyricsDocumentRubySyllable(
+                    startMs = annotation.attr("begin")?.let(::parseTtmlTimeMs),
+                    endMs = annotation.attr("end")?.let(::parseTtmlTimeMs),
+                    text = it
+                )
+            }
+        }
+        if (ruby.isEmpty()) return null
+
+        val start = ruby.mapNotNull { it.startMs }.minOrNull()
+            ?: attr("begin")?.let(::parseTtmlTimeMs)
             ?: base.attr("begin")?.let(::parseTtmlTimeMs)
-            ?: annotation.attr("begin")?.let(::parseTtmlTimeMs)
-        val end = attr("end")?.let(::parseTtmlTimeMs)
+            ?: fallbackStart
+        val end = ruby.mapNotNull { it.endMs }.maxOrNull()
+            ?: attr("end")?.let(::parseTtmlTimeMs)
             ?: base.attr("end")?.let(::parseTtmlTimeMs)
-            ?: annotation.attr("end")?.let(::parseTtmlTimeMs)
-            ?: start?.let { fallbackEnd }
+            ?: fallbackEnd
         return LyricsDocumentWord(
             startMs = start,
             endMs = end,
             text = baseText,
-            rubyText = rubyText,
+            ruby = ruby,
             extensions = attributesAsExtensions()
         )
     }
@@ -509,7 +541,7 @@ object TtmlWriter : LyricsFormatWriter {
 
         appendHead(builder, document, originalLines, originalLineKeys)
         builder.append("  <body")
-        appendUnmanagedAttributes(builder, document.bodyExtensions, emptySet())
+        appendUnmanagedAttributes(builder, document.bodyExtensions.withValidBodyDuration(), emptySet())
         builder.append(">\n")
         // 按行扩展中的 itunes:songPart 分组重建 <div>（AMLL 规范 7.1 段落标注）：
         // 连续相同 songPart 的行归入同一 <div itunes:songPart="...">，无 songPart 的行进默认 <div>；
@@ -713,7 +745,7 @@ object TtmlWriter : LyricsFormatWriter {
         }
         builder.append(">")
 
-        if (line.words.size > 1 || line.words.any { it.rubyText != null }) {
+        if (line.words.size > 1 || line.words.any { it.ruby.isNotEmpty() }) {
             line.words.forEach { word ->
                 appendWord(builder, word)
             }
@@ -742,21 +774,19 @@ object TtmlWriter : LyricsFormatWriter {
     }
 
     private fun appendWord(builder: StringBuilder, word: LyricsDocumentWord) {
-        if (!word.rubyText.isNullOrEmpty()) {
+        if (word.ruby.isNotEmpty()) {
             builder.append("<span tts:ruby=\"container\"")
             appendUnmanagedAttributes(builder, word.extensions, setOf("ruby", "begin", "end"))
             builder.append(">")
                 .append("<span tts:ruby=\"base\">").append(escapeXml(word.text)).append("</span>")
                 .append("<span tts:ruby=\"textContainer\">")
-                .append("<span tts:ruby=\"text\"")
-            word.startMs?.let {
-                builder.append(" begin=\"").append(LyricFormatter.formatTtmlTimestamp(it)).append("\"")
+            resolveRubyTimings(word).forEach { syllable ->
+                builder.append("<span tts:ruby=\"text\"")
+                builder.append(" begin=\"").append(LyricFormatter.formatTtmlTimestamp(syllable.startMs)).append("\"")
+                builder.append(" end=\"").append(LyricFormatter.formatTtmlTimestamp(syllable.endMs)).append("\"")
+                builder.append(">").append(escapeXml(syllable.text)).append("</span>")
             }
-            word.endMs?.let {
-                builder.append(" end=\"").append(LyricFormatter.formatTtmlTimestamp(it)).append("\"")
-            }
-            builder.append(">").append(escapeXml(word.rubyText)).append("</span>")
-                .append("</span></span>")
+            builder.append("</span></span>")
             return
         }
         val wordStart = word.startMs
@@ -774,6 +804,86 @@ object TtmlWriter : LyricsFormatWriter {
         } else {
             builder.append(escapeXml(word.text))
         }
+    }
+
+    private data class ResolvedRubySyllable(
+        val startMs: Long,
+        val endMs: Long,
+        val text: String
+    )
+
+    /**
+     * AMLL only accepts Ruby annotations that contain both begin and end. Keep the document model
+     * lenient, but materialize missing boundaries here. Adjacent known boundaries are propagated
+     * first; any remaining fully unknown chain is divided evenly across its available word range.
+     * Explicit source timestamps are never rewritten by this normalization.
+     */
+    private fun resolveRubyTimings(word: LyricsDocumentWord): List<ResolvedRubySyllable> {
+        if (word.ruby.isEmpty()) return emptyList()
+
+        val starts = word.ruby.map { it.startMs }.toMutableList()
+        val ends = word.ruby.map { it.endMs }.toMutableList()
+        val fallbackStart = word.startMs
+            ?: starts.firstNotNullOfOrNull { it }
+            ?: ends.firstNotNullOfOrNull { it }
+            ?: 0L
+        val fallbackEnd = word.endMs
+            ?: ends.asReversed().firstNotNullOfOrNull { it }
+            ?: starts.asReversed().firstNotNullOfOrNull { it }
+            ?: fallbackStart
+
+        if (starts.first() == null) starts[0] = fallbackStart
+        if (ends.last() == null) ends[ends.lastIndex] = fallbackEnd
+
+        repeat(word.ruby.size) {
+            for (index in 0 until word.ruby.lastIndex) {
+                if (ends[index] != null && starts[index + 1] == null) {
+                    starts[index + 1] = ends[index]
+                }
+                if (ends[index] == null && starts[index + 1] != null) {
+                    ends[index] = starts[index + 1]
+                }
+            }
+        }
+
+        var index = 0
+        while (index < word.ruby.size) {
+            val rangeStart = starts[index]
+            if (rangeStart == null || ends[index] != null) {
+                index++
+                continue
+            }
+
+            var rangeEndIndex = index
+            while (rangeEndIndex < word.ruby.lastIndex && ends[rangeEndIndex] == null) {
+                rangeEndIndex++
+            }
+            val rangeEnd = (ends[rangeEndIndex] ?: fallbackEnd).coerceAtLeast(rangeStart)
+            val syllableCount = rangeEndIndex - index + 1
+            for (syllableIndex in index..rangeEndIndex) {
+                val position = syllableIndex - index
+                if (starts[syllableIndex] == null) {
+                    starts[syllableIndex] = interpolateTime(rangeStart, rangeEnd, position, syllableCount)
+                }
+                if (ends[syllableIndex] == null) {
+                    ends[syllableIndex] = interpolateTime(rangeStart, rangeEnd, position + 1, syllableCount)
+                }
+            }
+            index = rangeEndIndex + 1
+        }
+
+        var previousEnd = fallbackStart
+        return word.ruby.mapIndexed { syllableIndex, syllable ->
+            val start = starts[syllableIndex] ?: previousEnd
+            val end = ends[syllableIndex] ?: fallbackEnd.coerceAtLeast(start)
+            previousEnd = end
+            ResolvedRubySyllable(startMs = start, endMs = end, text = syllable.text)
+        }
+    }
+
+    private fun interpolateTime(start: Long, end: Long, position: Int, segmentCount: Int): Long {
+        if (start == end) return start
+        return start + ((end - start).toDouble() * position / segmentCount).toLong()
     }
 
     private fun originalKeyForLinkedLine(
@@ -1024,6 +1134,14 @@ private fun appendUnmanagedAttributes(
     }
 }
 
+private fun ExtensionMap.withValidBodyDuration(): ExtensionMap {
+    return copy(
+        attributes = attributes.filterNot { (name, value) ->
+            name.namespaceUri == null && name.localName == "dur" && !TtmlTime.isValid(value)
+        }
+    )
+}
+
 private fun QualifiedName.outputName(): String {
     return when (namespaceUri) {
         NS_TTM -> "ttm:$localName"
@@ -1055,7 +1173,7 @@ private fun collectDocumentNamespaces(document: LyricsDocument): Map<String, Str
     collectMap(document.bodyExtensions)
     document.headMetadataElements.forEach(::collectElement)
     document.itunesMetadataElements.forEach(::collectElement)
-    if (document.tracks.any { track -> track.lines.any { line -> line.words.any { it.rubyText != null } } }) {
+    if (document.tracks.any { track -> track.lines.any { line -> line.words.any { it.ruby.isNotEmpty() } } }) {
         namespaces["tts"] = NS_TTS
     }
     return namespaces
@@ -1101,29 +1219,7 @@ private fun normalizeTtmlText(text: String, trimEdges: Boolean = false): String 
     return if (trimEdges) collapsed.trim() else collapsed
 }
 
-private fun parseTtmlTimeMs(timeStr: String): Long {
-    val text = timeStr.trim()
-    Regex("""^(\d+(?:\.\d+)?)ms$""").matchEntire(text)?.let {
-        return it.groupValues[1].toDouble().toLong()
-    }
-    Regex("""^(\d+(?:\.\d+)?)s$""").matchEntire(text)?.let {
-        return (it.groupValues[1].toDouble() * 1000).toLong()
-    }
-    Regex("""^(\d+(?:\.\d+)?)$""").matchEntire(text)?.let {
-        return (it.groupValues[1].toDouble() * 1000).toLong()
-    }
-    Regex("""^(\d+):(\d{2}):(\d{2})(?:\.(\d+))?$""").matchEntire(text)?.let { match ->
-        val fraction = match.groupValues[4]
-        val ms = if (fraction.isBlank()) 0L else fraction.padEnd(3, '0').take(3).toLong()
-        return (match.groupValues[1].toLong() * 3600 + match.groupValues[2].toLong() * 60 + match.groupValues[3].toLong()) * 1000 + ms
-    }
-    Regex("""^(\d+):(\d{2})(?:\.(\d+))?$""").matchEntire(text)?.let { match ->
-        val fraction = match.groupValues[3]
-        val ms = if (fraction.isBlank()) 0L else fraction.padEnd(3, '0').take(3).toLong()
-        return (match.groupValues[1].toLong() * 60 + match.groupValues[2].toLong()) * 1000 + ms
-    }
-    return 0L
-}
+private fun parseTtmlTimeMs(timeStr: String): Long = TtmlTime.parseMsOrNull(timeStr) ?: 0L
 
 private fun escapeXml(value: String): String {
     return value

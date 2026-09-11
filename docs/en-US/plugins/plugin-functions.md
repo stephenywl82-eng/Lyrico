@@ -258,6 +258,18 @@ function getLyrics(request) {
 [lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...], extensions?]
 ```
 
+A word in `original` may use a fourth item for Ruby annotation syllables:
+
+```
+[wordStartMs, wordEndMs, "base text", [[syllableStartMs, syllableEndMs, "ruby"], ...]]
+```
+
+One base run may map to multiple annotation syllables; a single annotation still uses a one-element array. Syllable times are absolute milliseconds. Use `null` placeholders when either boundary is unavailable. TTML export materializes complete timings: it first joins adjacent syllable boundaries, evenly distributes consecutive fully untimed syllables over the available word range, then falls back to the word boundaries. Words without Ruby keep the original three-item form.
+
+```javascript
+[27820, 27950, "詮", [[27820, 27880, "せ"], [27880, 27950, "ん"]]]
+```
+
 They also accept whole-line text. `translated` uses only this form:
 
 ```
@@ -270,7 +282,7 @@ When exported as TTML, word-level romanization keeps its timing. Lyrico inserts 
 
 The fields in this section affect TTML output only. TTML-specific structure is not retained when exporting to LRC.
 
-This section describes the TTML subset available through the structured plugin payload; it is not a replacement for the AMLL TTML DB submission specification. Ruby, `body dur`, and unknown XML nodes cannot currently be represented by a structured payload. Return `type: "rawTtml"` when the complete source document must be retained. If the user later applies script conversion, track filtering, or another transformation, Lyrico will parse and rewrite that document, and unmodeled structures may be lost.
+This section describes the TTML subset available through the structured plugin payload; it is not a replacement for the AMLL TTML DB submission specification. Unmodeled XML nodes may still be unavailable through a structured payload. Return `type: "rawTtml"` when the complete source document must be retained. If the user later applies script conversion, track filtering, or another transformation, Lyrico will parse and rewrite that document, and unmodeled structures may be lost.
 
 An `original` line may include extension attributes as its fourth item:
 
@@ -304,16 +316,19 @@ agents: [
 - `translations`, `transliterations`, and `ttm:agent` have dedicated fields and should not also appear in `metadata`;
 - a custom prefix requires `namespace`, for example `{ "name": "amll:meta", "namespace": "http://www.example.com/ns/amll", ... }`.
 
-The following fields set root attributes and auxiliary-track languages:
+The following fields set root/body attributes and auxiliary-track languages:
 
 | Field | TTML location |
 |------|---------------|
 | `timing` | `<tt itunes:timing>`; commonly `Word` or `Line` |
 | `language` | `<tt xml:lang>` |
+| `bodyDur` | `<body dur>`; a valid TTML time expression (`body_dur` is also accepted), unchanged by lyric offsets; invalid values are discarded |
 | `translatedLang` | `xml:lang` on the inline translation |
 | `romanizationLang` | `xml:lang` on `<transliteration>` |
 
 Use BCP 47 language tags such as `zh-Hans` and `ja-Latn`.
+
+The structured model covers only the `dur` attribute on `<body>`. Other body attributes and extra attributes on Ruby annotation spans are not preserved through a structured round trip.
 
 **Format 2: full raw lyrics text**
 
@@ -368,6 +383,7 @@ function getLyrics(request) {
 | `metadata` | `MetadataElement[]` | Used only by `type: "structured"`, elements added to the TTML head (optional; see constraints above) |
 | `timing` | `string` | Used only by `type: "structured"`, timing granularity flag (optional; pass `"Word"` for word-level, written to root `<tt itunes:timing>`) |
 | `language` | `string` | Used only by `type: "structured"`, original-language code BCP47 (optional; written to root `<tt xml:lang>`) |
+| `bodyDur` | `string` | Used only by `type: "structured"`, the original TTML time expression for `<body dur>` (optional; `body_dur` is also accepted) |
 | `translatedLang` | `string` | Used only by `type: "structured"`, translation-track language code BCP47 (optional; written to the inline translation's `xml:lang`) |
 | `romanizationLang` | `string` | Used only by `type: "structured"`, romanization-track language code BCP47 (optional; written to the head romanization's `xml:lang`) |
 | `rawPlainLrc` | `string` | Used only by `type: "rawPlainLrc"` |

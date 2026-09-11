@@ -59,7 +59,12 @@ object LyricEncoder {
         return lines.map { line ->
             line.copy(
                 words = line.words.map { word ->
-                    word.copy(text = convertText(word.text, conversionMode))
+                    word.copy(
+                        text = convertText(word.text, conversionMode),
+                        ruby = word.ruby.map { syllable ->
+                            syllable.copy(text = convertText(syllable.text, conversionMode))
+                        }
+                    )
                 }
             )
         }

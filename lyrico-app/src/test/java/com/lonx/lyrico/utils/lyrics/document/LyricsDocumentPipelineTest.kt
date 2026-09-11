@@ -3,8 +3,11 @@ package com.lonx.lyrico.utils.lyrics.document
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
+import com.lonx.lyrico.data.model.lyrics.LyricsLine
 import com.lonx.lyrico.data.model.lyrics.LyricsPayloadType
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
+import com.lonx.lyrico.data.model.lyrics.LyricsRubySyllable
+import com.lonx.lyrico.data.model.lyrics.LyricsWord
 import com.lonx.lyrico.data.model.lyrics.document.LyricsTrackType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -223,7 +226,10 @@ class LyricsDocumentPipelineTest {
         val document = TtmlParser.parse(raw)
         val word = document.tracks.first { it.type == LyricsTrackType.Original }.lines.single().words.single()
         assertEquals("所", word.text)
-        assertEquals("しょ", word.rubyText)
+        assertEquals(listOf("しょ"), word.ruby.map { it.text })
+
+        val structured = with(LyricsDocumentPipeline) { document.toLyricsResult() }
+        assertEquals("00:10.000", structured.bodyDur)
 
         val output = TtmlWriter.write(document, emptyList())
         assertTrue(output.contains("""<body dur="00:10.000">"""))
@@ -232,6 +238,206 @@ class LyricsDocumentPipelineTest {
         assertTrue(output.contains("""<songwriter>作者</songwriter>"""))
         assertTrue(output.contains("""tts:ruby="base">所</span>"""))
         assertTrue(output.contains("""tts:ruby="text" begin="00:00:01.000" end="00:00:02.000">しょ</span>"""))
+    }
+
+    @Test
+    fun multiSyllableRubySurvivesDocumentAndStructuredRoundTrips() {
+        val raw = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <tt xmlns="http://www.w3.org/ns/ttml"
+                xmlns:itunes="http://music.apple.com/lyric-ttml-internal"
+                xmlns:tts="http://www.w3.org/ns/ttml#styling"
+                itunes:timing="Word">
+              <body dur="00:30.000">
+                <div>
+                  <p begin="27.000" end="28.000" itunes:key="L1"><span tts:ruby="container"><span tts:ruby="base">詮</span><span tts:ruby="textContainer"><span tts:ruby="text" begin="27.820" end="27.880">せ</span><span tts:ruby="text" begin="27.880" end="27.950">ん</span></span></span></p>
+                </div>
+              </body>
+            </tt>
+        """.trimIndent()
+
+        val document = TtmlParser.parse(raw)
+        val word = document.tracks.first { it.type == LyricsTrackType.Original }.lines.single().words.single()
+        assertEquals(27820L, word.startMs)
+        assertEquals(27950L, word.endMs)
+        assertEquals(listOf("せ", "ん"), word.ruby.map { it.text })
+
+        val directOutput = TtmlWriter.write(document, emptyList())
+        val reparsedWord = TtmlParser.parse(directOutput)
+            .tracks.first { it.type == LyricsTrackType.Original }.lines.single().words.single()
+        assertEquals(word.ruby, reparsedWord.ruby)
+
+        val structured = with(LyricsDocumentPipeline) { document.toLyricsResult() }
+        assertEquals("00:30.000", structured.bodyDur)
+        assertEquals(listOf("せ", "ん"), structured.original.single().words.single().ruby.map { it.text })
+
+        val structuredOutput = LyricsDocumentPipeline.processStructuredResult(
+            result = structured,
+            config = LyricRenderConfig(format = LyricFormat.TTML, showRomanization = false)
+        ).orEmpty()
+        assertTrue(structuredOutput.contains("""<body dur="00:30.000">"""))
+        assertTrue(structuredOutput.contains("""begin="00:00:27.820" end="00:00:27.880">せ</span>"""))
+        assertTrue(structuredOutput.contains("""begin="00:00:27.880" end="00:00:27.950">ん</span>"""))
+
+        val offsetOutput = LyricsDocumentPipeline.processStructuredResult(
+            result = structured,
+            config = LyricRenderConfig(format = LyricFormat.TTML, showRomanization = false),
+            offset = 1000L
+        ).orEmpty()
+        assertTrue(offsetOutput.contains("""<body dur="00:30.000">"""))
+        assertTrue(offsetOutput.contains("""begin="00:00:28.820" end="00:00:28.880">せ</span>"""))
+        assertTrue(offsetOutput.contains("""begin="00:00:28.880" end="00:00:28.950">ん</span>"""))
+    }
+
+    @Test
+    fun missingRubyEndUsesNextSyllableStartWhenWritten() {
+        val raw = """
+            <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+              <body><div><p begin="27.000" end="28.000">
+                <span tts:ruby="container"><span tts:ruby="base">詮</span><span tts:ruby="textContainer"><span tts:ruby="text" begin="27.820">せ</span><span tts:ruby="text" begin="27.880" end="27.950">ん</span></span></span>
+              </p></div></body>
+            </tt>
+        """.trimIndent()
+
+        val output = TtmlWriter.write(TtmlParser.parse(raw), emptyList())
+        val reparsedRuby = TtmlParser.parse(output)
+            .tracks.first { it.type == LyricsTrackType.Original }.lines.single().words.single().ruby
+
+        assertTrue(output.contains("""begin="00:00:27.820" end="00:00:27.880">せ</span>"""))
+        assertEquals(27880L, reparsedRuby[0].endMs)
+        assertEquals(27880L, reparsedRuby[1].startMs)
+    }
+
+    @Test
+    fun structuredRubyUsesWordTimingWhenSyllableTimingIsMissing() {
+        val result = LyricsResult(
+            tags = emptyMap(),
+            original = listOf(
+                LyricsLine(
+                    start = 1000L,
+                    end = 2000L,
+                    words = listOf(
+                        LyricsWord(
+                            start = 1100L,
+                            end = 1900L,
+                            text = "漢",
+                            ruby = listOf(LyricsRubySyllable(null, null, "かん"))
+                        )
+                    )
+                )
+            ),
+            translated = null,
+            romanization = null,
+            bodyDur = "00:02.000"
+        )
+
+        val output = LyricsDocumentPipeline.processStructuredResult(
+            result = result,
+            config = LyricRenderConfig(format = LyricFormat.TTML, showRomanization = false)
+        ).orEmpty()
+
+        assertTrue(output.contains("""<body dur="00:02.000">"""))
+        assertTrue(output.contains("""begin="00:00:01.100" end="00:00:01.900">かん</span>"""))
+    }
+
+    @Test
+    fun structuredRubyNormalizesMissingAdjacentBoundaries() {
+        val result = LyricsResult(
+            tags = emptyMap(),
+            original = listOf(
+                LyricsLine(
+                    start = 1000L,
+                    end = 2000L,
+                    words = listOf(
+                        LyricsWord(
+                            start = 1100L,
+                            end = 1900L,
+                            text = "ABC",
+                            ruby = listOf(
+                                LyricsRubySyllable(1100L, null, "A"),
+                                LyricsRubySyllable(1500L, 1700L, "B"),
+                                LyricsRubySyllable(null, 1900L, "C")
+                            )
+                        )
+                    )
+                )
+            ),
+            translated = null,
+            romanization = null
+        )
+
+        val output = LyricsDocumentPipeline.processStructuredResult(
+            result,
+            LyricRenderConfig(format = LyricFormat.TTML, showRomanization = false)
+        ).orEmpty()
+
+        assertTrue(output.contains("""begin="00:00:01.100" end="00:00:01.500">A</span>"""))
+        assertTrue(output.contains("""begin="00:00:01.500" end="00:00:01.700">B</span>"""))
+        assertTrue(output.contains("""begin="00:00:01.700" end="00:00:01.900">C</span>"""))
+    }
+
+    @Test
+    fun structuredRubyDistributesFullyUnknownSyllableChain() {
+        val result = LyricsResult(
+            tags = emptyMap(),
+            original = listOf(
+                LyricsLine(
+                    start = 1000L,
+                    end = 2000L,
+                    words = listOf(
+                        LyricsWord(
+                            start = 1100L,
+                            end = 1900L,
+                            text = "AB",
+                            ruby = listOf(
+                                LyricsRubySyllable(null, null, "A"),
+                                LyricsRubySyllable(null, null, "B")
+                            )
+                        )
+                    )
+                )
+            ),
+            translated = null,
+            romanization = null
+        )
+
+        val output = LyricsDocumentPipeline.processStructuredResult(
+            result,
+            LyricRenderConfig(format = LyricFormat.TTML, showRomanization = false)
+        ).orEmpty()
+
+        assertTrue(output.contains("""begin="00:00:01.100" end="00:00:01.500">A</span>"""))
+        assertTrue(output.contains("""begin="00:00:01.500" end="00:00:01.900">B</span>"""))
+    }
+
+    @Test
+    fun nestedRubyTextFallsBackToDescendantParsing() {
+        val raw = """
+            <tt xmlns="http://www.w3.org/ns/ttml" xmlns:tts="http://www.w3.org/ns/ttml#styling">
+              <body><div><p begin="1.000" end="2.000">
+                <span tts:ruby="container"><span tts:ruby="base">詮</span><span tts:ruby="textContainer"><span><span tts:ruby="text" begin="1.100" end="1.900">せん</span></span></span></span>
+              </p></div></body>
+            </tt>
+        """.trimIndent()
+
+        val word = TtmlParser.parse(raw)
+            .tracks.first { it.type == LyricsTrackType.Original }.lines.single().words.single()
+
+        assertEquals("詮", word.text)
+        assertEquals(listOf("せん"), word.ruby.map { it.text })
+    }
+
+    @Test
+    fun writerOmitsInvalidBodyDuration() {
+        val document = TtmlParser.parse(
+            """
+                <tt xmlns="http://www.w3.org/ns/ttml"><body dur="hello"><div><p begin="1" end="2">line</p></div></body></tt>
+            """.trimIndent()
+        )
+
+        val output = TtmlWriter.write(document, emptyList())
+
+        assertFalse(output.contains("""dur="hello"""))
     }
 
     @Test

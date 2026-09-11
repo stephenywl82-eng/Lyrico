@@ -16,6 +16,14 @@ data class LyricsData(
 data class LyricsWord(
     val start: Long,
     val end: Long,
+    val text: String,
+    val ruby: List<LyricsRubySyllable> = emptyList()
+) : Parcelable
+
+@Parcelize
+data class LyricsRubySyllable(
+    val start: Long?,
+    val end: Long?,
     val text: String
 ) : Parcelable
 
@@ -93,7 +101,9 @@ data class LyricsResult(
     val timing: String = "",
     val language: String = "",
     val translatedLang: String = "",
-    val romanizationLang: String = ""
+    val romanizationLang: String = "",
+    // structured 协议中的 <body dur> 原始时间表达式；空串表示未提供。
+    val bodyDur: String = ""
 ) : Parcelable
 
 data class LyricsCandidateResult(

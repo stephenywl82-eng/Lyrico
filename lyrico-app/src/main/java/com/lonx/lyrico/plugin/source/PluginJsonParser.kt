@@ -7,11 +7,13 @@ import com.lonx.lyrico.data.model.lyrics.LyricsCandidateResult
 import com.lonx.lyrico.data.model.lyrics.LyricsMetadataElement
 import com.lonx.lyrico.data.model.lyrics.LyricsPayloadType
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
+import com.lonx.lyrico.data.model.lyrics.LyricsRubySyllable
 import com.lonx.lyrico.data.model.lyrics.LyricsWord
 import com.lonx.lyrico.data.model.lyrics.SongSearchResult
 import com.lonx.lyrico.data.model.lyrics.isWordByWord
 import com.lonx.lyrico.data.model.lyrics.sanitizePluginInternal
 import com.lonx.lyrico.data.model.lyrics.sanitizeStandardFields
+import com.lonx.lyrico.utils.lyrics.document.TtmlTime
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -246,6 +248,11 @@ class PluginJsonParser(
         val language = obj.string("language").orEmpty()
         val translatedLang = obj.string("translatedLang", "translated_lang").orEmpty()
         val romanizationLang = obj.string("romanizationLang", "romanization_lang").orEmpty()
+        val rawBodyDur = obj.string("bodyDur", "body_dur").orEmpty()
+        val bodyDur = rawBodyDur.takeIf(TtmlTime::isValid).orEmpty()
+        if (rawBodyDur.isNotBlank() && bodyDur.isEmpty()) {
+            Log.w(METADATA_TAG, "bodyDur 不是有效的 TTML 时间表达式，已丢弃")
+        }
 
         if (originalLines.isEmpty()) {
             return null
@@ -265,7 +272,8 @@ class PluginJsonParser(
             timing = timing,
             language = language,
             translatedLang = translatedLang,
-            romanizationLang = romanizationLang
+            romanizationLang = romanizationLang,
+            bodyDur = bodyDur
         )
     }
 
@@ -340,7 +348,7 @@ private fun String.toLyricsPayloadType(): LyricsPayloadType? {
  * original / romanization 紧凑格式（词级；romanization 词级用于逐字注音）：
  *
  * [
- *   [lineStart, lineEnd, [[wordStart, wordEnd, text], ...]]
+ *   [lineStart, lineEnd, [[wordStart, wordEnd, text, ruby?], ...]]
  * ]
  *
  * 也兼容整行：
@@ -387,7 +395,8 @@ private fun JsonArray?.parseCompactWordLines(): List<LyricsLine> {
                     LyricsWord(
                         start = wordStart,
                         end = wordEnd,
-                        text = wordText
+                        text = wordText,
+                        ruby = word.arrayAt(3).parseRubySyllables()
                     )
                 }
             }
@@ -412,6 +421,22 @@ private fun JsonArray?.parseCompactWordLines(): List<LyricsLine> {
             end = end,
             words = words,
             extensions = extensions
+        )
+    }.orEmpty()
+}
+
+/**
+ * Ruby 采用与词相同的定长元组：[[startMs?, endMs?, text], ...]。
+ * 时间缺失用 JSON null 表示；无有效音节时按“无 Ruby”处理。
+ */
+private fun JsonArray?.parseRubySyllables(): List<LyricsRubySyllable> {
+    return this?.mapNotNull { element ->
+        val syllable = element as? JsonArray ?: return@mapNotNull null
+        val text = syllable.stringAt(2)?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+        LyricsRubySyllable(
+            start = syllable.longAt(0),
+            end = syllable.longAt(1),
+            text = text
         )
     }.orEmpty()
 }

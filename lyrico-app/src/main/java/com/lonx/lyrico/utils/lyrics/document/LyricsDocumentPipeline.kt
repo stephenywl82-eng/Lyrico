@@ -10,11 +10,13 @@ import com.lonx.lyrico.data.model.lyrics.LyricsLine
 import com.lonx.lyrico.data.model.lyrics.LyricsMetadataElement
 import com.lonx.lyrico.data.model.lyrics.LyricsPayloadType
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
+import com.lonx.lyrico.data.model.lyrics.LyricsRubySyllable
 import com.lonx.lyrico.data.model.lyrics.LyricsWord
 import com.lonx.lyrico.data.model.lyrics.isWordByWord
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocument
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentLine
 import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentWord
+import com.lonx.lyrico.data.model.lyrics.document.LyricsDocumentRubySyllable
 import com.lonx.lyrico.data.model.lyrics.document.LyricsMetadata
 import com.lonx.lyrico.data.model.lyrics.document.LyricsTrack
 import com.lonx.lyrico.data.model.lyrics.document.LyricsTrackType
@@ -213,6 +215,9 @@ object LyricsDocumentPipeline {
             ),
             agents = agents.map { LyricsAgent(id = it.id, name = it.name, rawType = it.type) },
             tracks = tracks,
+            bodyExtensions = bodyDur.takeIf { it.isNotBlank() }?.let { duration ->
+                ExtensionMap(attributes = mapOf(QualifiedName(localName = "dur") to duration))
+            } ?: ExtensionMap(),
             headMetadataElements = metadata.filterNot { it.name == "songwriters" }.map { it.toExtensionElement() },
             itunesMetadataElements = metadata.filter { it.name == "songwriters" }.map { it.toExtensionElement() },
             sourceFormat = null
@@ -264,7 +269,10 @@ object LyricsDocumentPipeline {
             translatedLang = tracks.firstOrNull { it.type == LyricsTrackType.Translation }
                 ?.language.orEmpty(),
             romanizationLang = tracks.firstOrNull { it.type == LyricsTrackType.Romanization }
-                ?.language.orEmpty()
+                ?.language.orEmpty(),
+            bodyDur = bodyExtensions.attributes.entries
+                .firstOrNull { (name, _) -> name.namespaceUri == null && name.localName == "dur" }
+                ?.value.orEmpty()
         )
     }
 
@@ -305,7 +313,14 @@ object LyricsDocumentPipeline {
                 LyricsDocumentWord(
                     startMs = word.start,
                     endMs = word.end,
-                    text = word.text
+                    text = word.text,
+                    ruby = word.ruby.map { syllable ->
+                        LyricsDocumentRubySyllable(
+                            startMs = syllable.start,
+                            endMs = syllable.end,
+                            text = syllable.text
+                        )
+                    }
                 )
             },
             agentId = extensions["ttm:agent"],
@@ -377,7 +392,14 @@ object LyricsDocumentPipeline {
                 LyricsWord(
                     start = wordStart,
                     end = wordEnd,
-                    text = pendingUntimedText + word.text
+                    text = pendingUntimedText + word.text,
+                    ruby = word.ruby.map { syllable ->
+                        LyricsRubySyllable(
+                            start = syllable.startMs,
+                            end = syllable.endMs,
+                            text = syllable.text
+                        )
+                    }
                 )
             )
             pendingUntimedText = ""
@@ -511,7 +533,9 @@ class TextTransformPostProcessor(
                             words = line.words.map { word ->
                                 word.copy(
                                     text = transformer(word.text),
-                                    rubyText = word.rubyText?.let(transformer)
+                                    ruby = word.ruby.map { syllable ->
+                                        syllable.copy(text = transformer(syllable.text))
+                                    }
                                 )
                             }
                         )
@@ -662,7 +686,13 @@ class OffsetPostProcessor(
                             words = line.words.map { word ->
                                 word.copy(
                                     startMs = word.startMs?.let { (it + offsetMs).coerceAtLeast(0L) },
-                                    endMs = word.endMs?.let { (it + offsetMs).coerceAtLeast(0L) }
+                                    endMs = word.endMs?.let { (it + offsetMs).coerceAtLeast(0L) },
+                                    ruby = word.ruby.map { syllable ->
+                                        syllable.copy(
+                                            startMs = syllable.startMs?.let { (it + offsetMs).coerceAtLeast(0L) },
+                                            endMs = syllable.endMs?.let { (it + offsetMs).coerceAtLeast(0L) }
+                                        )
+                                    }
                                 )
                             }
                         )

@@ -28,6 +28,61 @@ class PluginJsonParserTest {
     // ---------- Line 第 4 元素：行级扩展属性 ----------
 
     @Test
+    fun wordRubySyllablesAndBodyDurationParsed() {
+        val json = """{
+            "type": "structured",
+            "bodyDur": "04:24.660",
+            "original": [[27000, 28000, [[27820, 27950, "詮", [
+                [27820, 27880, "せ"],
+                [27880, 27950, "ん"],
+                [null, null, "補"]
+            ]]]]]
+        }""".trimIndent()
+
+        val result = parser.parseLyrics(json)!!
+        val ruby = result.original.single().words.single().ruby
+
+        assertEquals("04:24.660", result.bodyDur)
+        assertEquals(listOf("せ", "ん", "補"), ruby.map { it.text })
+        assertEquals(27820L, ruby[0].start)
+        assertNull(ruby[2].start)
+        assertNull(ruby[2].end)
+    }
+
+    @Test
+    fun invalidRubyEntriesAreIgnoredWithoutDroppingWord() {
+        val json = structuredJson(
+            original = """[[1000, 2000, [
+                [1000, 1400, "A", []],
+                [1400, 1800, "B", "not-an-array"],
+                [1800, 2000, "C", [[1800, 2000, ""], {"text": "x"}]]
+            ]]]"""
+        )
+
+        val words = parser.parseLyrics(json)!!.original.single().words
+        assertEquals(listOf("A", "B", "C"), words.map { it.text })
+        assertTrue(words.all { it.ruby.isEmpty() })
+    }
+
+    @Test
+    fun snakeCaseBodyDurationAliasIsAccepted() {
+        val result = parser.parseLyrics(
+            """{"type":"structured","body_dur":"00:10.000","original":[[0,1000,"line"]]}"""
+        )!!
+
+        assertEquals("00:10.000", result.bodyDur)
+    }
+
+    @Test
+    fun invalidBodyDurationIsDiscarded() {
+        val result = parser.parseLyrics(
+            """{"type":"structured","bodyDur":"hello","original":[[0,1000,"line"]]}"""
+        )!!
+
+        assertEquals("", result.bodyDur)
+    }
+
+    @Test
     fun lineFourthElementExtensionsParsed() {
         val json = structuredJson(
             original = """[[1000, 2000, [[1000, 1500, "眼"], [1500, 2000, "前"]], {"ttm:agent": "v1", "itunes:songPart": "Verse"}]]"""

@@ -7,6 +7,7 @@ import com.lonx.lyrico.data.model.lyrics.LyricsAgentEntry
 import com.lonx.lyrico.data.model.lyrics.LyricsLine
 import com.lonx.lyrico.data.model.lyrics.LyricsMetadataElement
 import com.lonx.lyrico.data.model.lyrics.LyricsResult
+import com.lonx.lyrico.data.model.lyrics.LyricsRubySyllable
 import com.lonx.lyrico.data.model.lyrics.LyricsWord
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,6 +15,37 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LyricEncoderTest {
+    @Test
+    fun structuredTextConversionIncludesRubySyllables() {
+        val result = LyricsResult(
+            tags = emptyMap(),
+            original = listOf(
+                LyricsLine(
+                    1000L,
+                    2000L,
+                    listOf(
+                        LyricsWord(
+                            1000L,
+                            2000L,
+                            "漢字",
+                            ruby = listOf(LyricsRubySyllable(1000L, 2000L, "漢字注音"))
+                        )
+                    )
+                )
+            ),
+            translated = null,
+            romanization = null
+        )
+
+        val converted = LyricEncoder.convertLyricsResult(
+            result,
+            ConversionMode.TRADITIONAL_TO_SIMPLIFIED
+        )
+
+        assertEquals("汉字", converted.original.single().words.single().text)
+        assertEquals("汉字注音", converted.original.single().words.single().ruby.single().text)
+    }
+
     @Test
     fun structuredTtmlDelegationKeepsRenderConfigBehavior() {
         val result = LyricsResult(

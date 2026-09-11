@@ -254,6 +254,18 @@ function getLyrics(request) {
 [lineStartMs, lineEndMs, [[wordStartMs, wordEndMs, "text"], ...], extensions?]
 ```
 
+`original` 中的词可以用第 4 个元素携带 Ruby 注音音节：
+
+```
+[wordStartMs, wordEndMs, "基文本", [[syllableStartMs, syllableEndMs, "注音"], ...]]
+```
+
+一个基文本可以对应多个注音音节；单音节仍使用单元素数组。音节时间是绝对毫秒值；缺失时必须在对应位置传 `null`。导出 TTML 时会把缺失边界规范化为完整时间：优先衔接相邻音节，连续的全空音节在可用词时间内均分，首尾再回退到词时间。无注音的词保持原来的 3 元素格式。
+
+```javascript
+[27820, 27950, "詮", [[27820, 27880, "せ"], [27880, 27950, "ん"]]]
+```
+
 两者也都兼容整行文本；`translated` 只使用这种格式：
 
 ```
@@ -266,7 +278,7 @@ function getLyrics(request) {
 
 以下字段只影响 TTML 导出。导出为 LRC 时，TTML 专属结构不会保留。
 
-这里描述的是 structured 协议能够表达的 TTML 子集，不是 AMLL TTML DB 的投稿规范。Ruby、`body dur` 和未知 XML 节点目前无法通过 structured 载荷表示；需要保留完整源文档时应返回 `type: "rawTtml"`。如果用户随后执行繁简转换、轨道筛选等操作，宿主仍会解析并重写该文档，未建模结构可能丢失。
+这里描述的是 structured 协议能够表达的 TTML 子集，不是 AMLL TTML DB 的投稿规范。未知 XML 节点仍可能无法通过 structured 载荷表示；需要保留完整源文档时应返回 `type: "rawTtml"`。如果用户随后执行繁简转换、轨道筛选等操作，宿主仍会解析并重写该文档，未建模结构可能丢失。
 
 `original` 行可在第 4 个元素中提供扩展属性：
 
@@ -300,16 +312,19 @@ agents: [
 - `translations`、`transliterations` 和 `ttm:agent` 已有专门字段，不应再放入 `metadata`；
 - 自定义前缀需要同时提供 `namespace`，例如 `{ "name": "amll:meta", "namespace": "http://www.example.com/ns/amll", ... }`。
 
-根属性和辅助轨语言可用下列字段设置：
+根、body 属性和辅助轨语言可用下列字段设置：
 
 | 字段 | TTML 位置 |
 |------|-----------|
 | `timing` | `<tt itunes:timing>`；常用值为 `Word` 或 `Line` |
 | `language` | `<tt xml:lang>` |
+| `bodyDur` | `<body dur>`；有效的 TTML 时间表达式（也接受 `body_dur`），不随歌词偏移量改变；非法值会被丢弃 |
 | `translatedLang` | 内联翻译的 `xml:lang` |
 | `romanizationLang` | `<transliteration>` 的 `xml:lang` |
 
 语言字段使用 BCP 47 标签，例如 `zh-Hans`、`ja-Latn`。
+
+结构化模型只建模 `<body>` 的 `dur` 属性；其它 body 属性以及 Ruby 注音 span 上的额外属性不会通过 structured 往返保留。
 
 **格式 2：完整原始歌词文本**
 
@@ -364,6 +379,7 @@ function getLyrics(request) {
 | `metadata` | `MetadataElement[]` | 仅 `type: "structured"` 使用，补充 TTML head 的元素树（可选，约束见上文） |
 | `timing` | `string` | 仅 `type: "structured"` 使用，时间粒度标志（可选；词级传 `"Word"`，写回根 `<tt itunes:timing>`） |
 | `language` | `string` | 仅 `type: "structured"` 使用，原文语言码 BCP47（可选；写回根 `<tt xml:lang>`） |
+| `bodyDur` | `string` | 仅 `type: "structured"` 使用，`<body dur>` 的原始 TTML 时间表达式（可选；也接受 `body_dur`） |
 | `translatedLang` | `string` | 仅 `type: "structured"` 使用，翻译轨语言码 BCP47（可选；写回内联翻译的 `xml:lang`） |
 | `romanizationLang` | `string` | 仅 `type: "structured"` 使用，音译轨语言码 BCP47（可选；写回 head 音译的 `xml:lang`） |
 | `rawPlainLrc` | `string` | 仅 `type: "rawPlainLrc"` 使用 |

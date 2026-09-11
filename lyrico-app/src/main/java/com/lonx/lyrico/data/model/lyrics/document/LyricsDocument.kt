@@ -72,8 +72,14 @@ data class LyricsDocumentWord(
     val startMs: Long? = null,
     val endMs: Long? = null,
     val text: String,
-    val rubyText: String? = null,
+    val ruby: List<LyricsDocumentRubySyllable> = emptyList(),
     val extensions: ExtensionMap = ExtensionMap()
+)
+
+data class LyricsDocumentRubySyllable(
+    val startMs: Long? = null,
+    val endMs: Long? = null,
+    val text: String
 )
 
 data class ExtensionMap(
