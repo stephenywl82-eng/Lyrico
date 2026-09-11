@@ -11,7 +11,7 @@
     <string name="other_playback_methods">Other methods</string>
     <string name="open_with_system_picker">Open with system picker</string>
     <string name="learn_more">Learn more</string>
-    <string name="player_open_failed">Unable to open this player. Using the system picker instead.</string>
-    <string name="player_install_source_unavailable">No download source is available</string>
-    <string name="no_player_found">No available player found</string>
+    <string name="player_open_failed">Unable to open this player, using the system picker instead</string>
+    <string name="player_install_source_unavailable">No download source available</string>
+    <string name="no_player_found">No player available</string>
 </resources>
