@@ -11,6 +11,7 @@ import com.lonx.lyrico.data.model.log.AppLogType
 import com.lonx.lyrico.data.model.ArtistSeparator
 import com.lonx.lyrico.data.model.cache.CacheCategory
 import com.lonx.lyrico.data.model.ConversionMode
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricLineTrack
 import com.lonx.lyrico.data.model.lyrics.LyricsProcessingOptions
@@ -53,8 +54,7 @@ data class SettingsUiState(
     val monetEnable: Boolean = false,
     val floatingBottomBarEnabled: Boolean = true,
     val barBlurEnabled: Boolean = false,
-    val floatingBarBlurEnabled: Boolean = false,
-    val liquidGlassEnabled: Boolean = false,
+    val floatingBarEffect: FloatingBarEffect = FloatingBarEffect.NONE,
     val keyColor: KeyColor = KeyColors[1],
     val onlyTranslationIfAvailable: Boolean = false,
     val removeEmptyLines: Boolean = true,
@@ -92,15 +92,13 @@ class SettingsViewModel(
         val replayGainTargetLoudness: Double,
         val floatingBottomBarEnabled: Boolean,
         val barBlurEnabled: Boolean,
-        val floatingBarBlurEnabled: Boolean,
-        val liquidGlassEnabled: Boolean
+        val floatingBarEffect: FloatingBarEffect
     )
 
     private data class VisualSettingsState(
         val floatingBottomBarEnabled: Boolean,
         val barBlurEnabled: Boolean,
-        val floatingBarBlurEnabled: Boolean,
-        val liquidGlassEnabled: Boolean,
+        val floatingBarEffect: FloatingBarEffect,
     )
 
     private data class SettingsTailState(
@@ -114,10 +112,9 @@ class SettingsViewModel(
     private val visualSettingsState = combine(
         settingsRepository.floatingBottomBarEnabled,
         settingsRepository.barBlurEnabled,
-        settingsRepository.floatingBarBlurEnabled,
-        settingsRepository.liquidGlassEnabled,
-    ) { floatingBar, barBlur, floatingBarBlur, liquidGlass ->
-        VisualSettingsState(floatingBar, barBlur, floatingBarBlur, liquidGlass)
+        settingsRepository.floatingBarEffect,
+    ) { floatingBar, barBlur, floatingBarEffect ->
+        VisualSettingsState(floatingBar, barBlur, floatingBarEffect)
     }
 
     private val settingsTailState = combine(
@@ -146,8 +143,7 @@ class SettingsViewModel(
             tail.replayGainTargetLoudness,
             tail.visual.floatingBottomBarEnabled,
             tail.visual.barBlurEnabled,
-            tail.visual.floatingBarBlurEnabled,
-            tail.visual.liquidGlassEnabled,
+            tail.visual.floatingBarEffect,
         )
     }
 
@@ -172,8 +168,7 @@ class SettingsViewModel(
             monetEnable = base.theme.monetEnable,
             floatingBottomBarEnabled = base.floatingBottomBarEnabled,
             barBlurEnabled = base.barBlurEnabled,
-            floatingBarBlurEnabled = base.floatingBarBlurEnabled,
-            liquidGlassEnabled = base.liquidGlassEnabled,
+            floatingBarEffect = base.floatingBarEffect,
             keyColor = base.theme.keyColor,
             categorizedCacheSize = cacheMap,
             onlyTranslationIfAvailable = base.lyric.onlyTranslationIfAvailable,
@@ -255,15 +250,9 @@ class SettingsViewModel(
         }
     }
 
-    fun setFloatingBarBlurEnabled(enabled: Boolean) {
+    fun setFloatingBarEffect(effect: FloatingBarEffect) {
         viewModelScope.launch {
-            settingsRepository.saveFloatingBarBlurEnabled(enabled)
-        }
-    }
-
-    fun setLiquidGlassEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsRepository.saveLiquidGlassEnabled(enabled)
+            settingsRepository.saveFloatingBarEffect(effect)
         }
     }
 

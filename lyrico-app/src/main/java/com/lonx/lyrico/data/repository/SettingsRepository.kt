@@ -3,6 +3,7 @@ package com.lonx.lyrico.data.repository
 import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.CharacterMappingConfig
 import com.lonx.lyrico.data.model.ConversionMode
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricLineTrack
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
@@ -54,8 +55,7 @@ interface SettingsRepository {
     val monetEnable: Flow<Boolean>
     val floatingBottomBarEnabled: Flow<Boolean>
     val barBlurEnabled: Flow<Boolean>
-    val floatingBarBlurEnabled: Flow<Boolean>
-    val liquidGlassEnabled: Flow<Boolean>
+    val floatingBarEffect: Flow<FloatingBarEffect>
     val onlyTranslationIfAvailable: Flow<Boolean>
     val removeEmptyLines: Flow<Boolean>
     val lyricsTagLineKeywords: Flow<List<String>>
@@ -96,8 +96,7 @@ interface SettingsRepository {
     suspend fun saveMonetEnable(enabled: Boolean)
     suspend fun saveFloatingBottomBarEnabled(enabled: Boolean)
     suspend fun saveBarBlurEnabled(enabled: Boolean)
-    suspend fun saveFloatingBarBlurEnabled(enabled: Boolean)
-    suspend fun saveLiquidGlassEnabled(enabled: Boolean)
+    suspend fun saveFloatingBarEffect(effect: FloatingBarEffect)
     suspend fun saveOnlyTranslationIfAvailable(enabled: Boolean)
     suspend fun saveRemoveEmptyLines(enabled: Boolean)
     suspend fun saveLyricsTagLineKeywords(keywords: List<String>)

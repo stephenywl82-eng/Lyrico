@@ -10,6 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.screens.library.LibraryTab
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
@@ -81,14 +82,13 @@ fun LibraryNavigationRail(
 }
 
 /**
- * 手机端悬浮毛玻璃底栏。底部毛玻璃需要 Android 13+ 的 blur 库支持，
+ * 手机端悬浮底栏。模糊和液态玻璃都需要 Android 13+ 的 RenderEffect，
  * 不支持时自动降级为描边样式。
  */
 @Composable
 fun LibraryBlurBottomBar(
     backdrop: LayerBackdrop?,
-    blurEnabled: Boolean,
-    liquidGlassEnabled: Boolean,
+    effect: FloatingBarEffect,
     tabs: List<LibraryTab>,
     selectedTab: LibraryTab,
     onTabSelected: (LibraryTab) -> Unit,
@@ -99,8 +99,7 @@ fun LibraryBlurBottomBar(
         backdrop = backdrop,
         selectedIndex = tabs.indexOf(selectedTab).coerceAtLeast(0),
         itemCount = tabs.size,
-        isBlurEnabled = blurEnabled,
-        isLiquidGlassEnabled = liquidGlassEnabled,
+        effect = effect,
         onSelectionChanged = { index ->
             tabs.getOrNull(index)?.let(onTabSelected)
         },

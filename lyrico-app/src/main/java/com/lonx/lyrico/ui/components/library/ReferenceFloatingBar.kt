@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.ui.components.library.liquid.DampedDragAnimation
 import com.lonx.lyrico.ui.components.library.liquid.InnerShadow
 import com.lonx.lyrico.ui.components.library.liquid.InteractiveHighlight
@@ -98,8 +99,7 @@ internal fun BlurNavigationBarV2(
     backdrop: LayerBackdrop?,
     selectedIndex: Int,
     itemCount: Int,
-    isBlurEnabled: Boolean,
-    isLiquidGlassEnabled: Boolean,
+    effect: FloatingBarEffect,
     onSelectionChanged: (Int) -> Unit,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -108,7 +108,7 @@ internal fun BlurNavigationBarV2(
     // of weighted children can otherwise consume the full screen in the blur path.
     val barWidth = ReferenceBarTabMinWidth * itemCount + ReferenceBarPadding * 2
     when {
-        isLiquidGlassEnabled && backdrop != null -> ReferenceLiquidBar(
+        effect == FloatingBarEffect.LIQUID_GLASS && backdrop != null -> ReferenceLiquidBar(
             modifier,
             barWidth,
             backdrop,
@@ -118,7 +118,7 @@ internal fun BlurNavigationBarV2(
             content,
         )
 
-        isBlurEnabled -> ReferenceHachimiBar(
+        effect == FloatingBarEffect.FROSTED_GLASS -> ReferenceHachimiBar(
             modifier,
             barWidth,
             backdrop,

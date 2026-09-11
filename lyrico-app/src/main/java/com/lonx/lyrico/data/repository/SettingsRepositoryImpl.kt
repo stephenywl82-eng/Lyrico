@@ -3,6 +3,7 @@ package com.lonx.lyrico.data.repository
 import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -16,6 +17,7 @@ import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
 import com.lonx.lyrico.data.model.CharacterMappingConfig
 import com.lonx.lyrico.data.model.CharacterMappingDefaults
 import com.lonx.lyrico.data.model.ConversionMode
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.model.lyrics.DefaultLyricLineOrder
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricLineTrack
@@ -62,8 +64,7 @@ object SettingsDefaults {
     const val MONET_ENABLE: Boolean = false
     const val FLOATING_BOTTOM_BAR_ENABLED: Boolean = true
     const val BAR_BLUR_ENABLED: Boolean = false
-    const val FLOATING_BAR_BLUR_ENABLED: Boolean = false
-    const val LIQUID_GLASS_ENABLED: Boolean = false
+    val FLOATING_BAR_EFFECT = FloatingBarEffect.NONE
     val KEY_THEME_COLOR = null
     val CONVERSION_MODE = ConversionMode.NONE
     const val RENAME_FORMAT = "@1 - @2"
@@ -134,8 +135,11 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val MONET_ENABLE = booleanPreferencesKey("monet_enable")
         val FLOATING_BOTTOM_BAR_ENABLED = booleanPreferencesKey("floating_bottom_bar_enabled")
         val BAR_BLUR_ENABLED = booleanPreferencesKey("bar_blur_enabled")
-        val FLOATING_BAR_BLUR_ENABLED = booleanPreferencesKey("floating_bar_blur_enabled")
-        val LIQUID_GLASS_ENABLED = booleanPreferencesKey("liquid_glass_enabled")
+        val FLOATING_BAR_EFFECT = stringPreferencesKey("floating_bar_effect")
+
+        /** 旧版把“毛玻璃”和“液态玻璃”存成两个互斥开关，仅用于读取旧值。 */
+        val FLOATING_BAR_BLUR_ENABLED_LEGACY = booleanPreferencesKey("floating_bar_blur_enabled")
+        val LIQUID_GLASS_ENABLED_LEGACY = booleanPreferencesKey("liquid_glass_enabled")
         val KEY_THEME_COLOR = intPreferencesKey("theme_color_argb")
         val ONLY_TRANSLATION_IF_AVAILABLE = booleanPreferencesKey("only_translation_if_available")
         val CHARACTER_MAPPING_CONFIG = stringPreferencesKey("character_mapping_config")
@@ -333,18 +337,23 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             preferences[PreferencesKeys.BAR_BLUR_ENABLED]
                 ?: SettingsDefaults.BAR_BLUR_ENABLED
         }
-    override val floatingBarBlurEnabled: Flow<Boolean>
-        get() = context.settingsDataStore.data.map { preferences ->
-            val liquidGlassEnabled = preferences[PreferencesKeys.LIQUID_GLASS_ENABLED]
-                ?: SettingsDefaults.LIQUID_GLASS_ENABLED
-            preferences[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED]
-                ?: SettingsDefaults.FLOATING_BAR_BLUR_ENABLED && !liquidGlassEnabled
-        }
-    override val liquidGlassEnabled: Flow<Boolean>
-        get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.LIQUID_GLASS_ENABLED]
-                ?: SettingsDefaults.LIQUID_GLASS_ENABLED
-        }
+    override val floatingBarEffect: Flow<FloatingBarEffect>
+        get() = context.settingsDataStore.data.map { it.resolveFloatingBarEffect() }
+
+    /**
+     * 读取悬浮导航栏效果。新键缺失时回退到旧版的两个互斥开关，
+     * 让已经开过毛玻璃/液态玻璃的用户在升级后保留原来的选择。
+     */
+    private fun Preferences.resolveFloatingBarEffect(): FloatingBarEffect =
+        this[PreferencesKeys.FLOATING_BAR_EFFECT]
+            ?.let(FloatingBarEffect::fromName)
+            ?: when {
+                this[PreferencesKeys.LIQUID_GLASS_ENABLED_LEGACY] == true ->
+                    FloatingBarEffect.LIQUID_GLASS
+                this[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED_LEGACY] == true ->
+                    FloatingBarEffect.FROSTED_GLASS
+                else -> SettingsDefaults.FLOATING_BAR_EFFECT
+            }
     override val conversionMode: Flow<ConversionMode>
         get() = context.settingsDataStore.data.map { preferences ->
             val modeName = preferences[PreferencesKeys.CONVERSION_MODE]
@@ -624,17 +633,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
-    override suspend fun saveFloatingBarBlurEnabled(enabled: Boolean) {
+    override suspend fun saveFloatingBarEffect(effect: FloatingBarEffect) {
         context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED] = enabled
-            preferences[PreferencesKeys.LIQUID_GLASS_ENABLED] = false
-        }
-    }
-
-    override suspend fun saveLiquidGlassEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.LIQUID_GLASS_ENABLED] = enabled
-            preferences[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED] = false
+            preferences[PreferencesKeys.FLOATING_BAR_EFFECT] = effect.name
         }
     }
 
@@ -781,12 +782,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 ?: SettingsDefaults.FLOATING_BOTTOM_BAR_ENABLED,
             barBlurEnabled = prefs[PreferencesKeys.BAR_BLUR_ENABLED]
                 ?: SettingsDefaults.BAR_BLUR_ENABLED,
-            floatingBarBlurEnabled = prefs[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED]
-                ?: SettingsDefaults.FLOATING_BAR_BLUR_ENABLED &&
-                !(prefs[PreferencesKeys.LIQUID_GLASS_ENABLED]
-                    ?: SettingsDefaults.LIQUID_GLASS_ENABLED),
-            liquidGlassEnabled = prefs[PreferencesKeys.LIQUID_GLASS_ENABLED]
-                ?: SettingsDefaults.LIQUID_GLASS_ENABLED,
+            floatingBarEffect = prefs.resolveFloatingBarEffect().name,
             keyThemeColor = prefs[PreferencesKeys.KEY_THEME_COLOR] ?: SettingsDefaults.KEY_THEME_COLOR,
 
             onlyTranslationIfAvailable = prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE]
@@ -881,14 +877,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                     prefs[PreferencesKeys.FLOATING_BOTTOM_BAR_ENABLED] = it
                 }
                 backup.barBlurEnabled?.let { prefs[PreferencesKeys.BAR_BLUR_ENABLED] = it }
-                backup.floatingBarBlurEnabled?.let {
-                    prefs[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED] = it
-                }
-                backup.liquidGlassEnabled?.let { prefs[PreferencesKeys.LIQUID_GLASS_ENABLED] = it }
-                if (prefs[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED] == true &&
-                    prefs[PreferencesKeys.LIQUID_GLASS_ENABLED] == true
-                ) {
-                    prefs[PreferencesKeys.FLOATING_BAR_BLUR_ENABLED] = false
+                backup.floatingBarEffect?.let {
+                    prefs[PreferencesKeys.FLOATING_BAR_EFFECT] = FloatingBarEffect.fromName(it).name
                 }
                 backup.keyThemeColor?.let { prefs[PreferencesKeys.KEY_THEME_COLOR] = it }
                 backup.onlyTranslationIfAvailable?.let {

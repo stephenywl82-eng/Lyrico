@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlin.math.absoluteValue
+import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.screens.library.AlbumsPage
 import com.lonx.lyrico.screens.library.ArtistsPage
@@ -81,12 +82,10 @@ fun LibraryHomeScreen(
     val floatingBottomBarEnabled by settingsRepository.floatingBottomBarEnabled
         .collectAsState(initial = true)
     val barBlurEnabled by settingsRepository.barBlurEnabled.collectAsState(initial = false)
-    val floatingBarBlurEnabled by settingsRepository.floatingBarBlurEnabled
-        .collectAsState(initial = false)
-    val liquidGlassEnabled by settingsRepository.liquidGlassEnabled.collectAsState(initial = false)
+    val floatingBarEffect by settingsRepository.floatingBarEffect
+        .collectAsState(initial = FloatingBarEffect.NONE)
     val floatingBackdrop = rememberBlurBackdrop(
-        enableBlur = floatingBottomBarEnabled &&
-            (floatingBarBlurEnabled || liquidGlassEnabled),
+        enableBlur = floatingBottomBarEnabled && floatingBarEffect != FloatingBarEffect.NONE,
     )
     val standardBottomBackdrop = rememberBlurBackdrop(
         enableBlur = barBlurEnabled && !floatingBottomBarEnabled,
@@ -179,8 +178,7 @@ fun LibraryHomeScreen(
                 LibraryBlurBottomBar(
                     modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter),
                     backdrop = floatingBackdrop,
-                    blurEnabled = floatingBarBlurEnabled,
-                    liquidGlassEnabled = liquidGlassEnabled,
+                    effect = floatingBarEffect,
                     tabs = tabs,
                     selectedTab = selectedTab,
                     onTabSelected = ::selectTab,
