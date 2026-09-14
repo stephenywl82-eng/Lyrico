@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_language">應用程式語言</string>
+    <string name="language_system">跟隨系統</string>
     <string name="search_settings">搜尋設定</string>
     <string name="plugin_manager_title">外掛管理</string>
     <string name="search_source_priority_tip">每個類型分頁會獨立儲存啟用狀態和順序；元數據來源同時用於單曲主搜尋和批次元數據比對</string>

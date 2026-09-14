@@ -4,6 +4,8 @@ import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.Configuration
 import android.icu.util.ULocale
+import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -25,6 +27,14 @@ object PluginLocales {
     }
 
     fun update(configuration: Configuration) {
+        // Before Android 13 the Application configuration does not include AppCompat's override.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            val appLocales = AppCompatDelegate.getApplicationLocales()
+            if (!appLocales.isEmpty) {
+                current.value = appLocales.toLanguageTags().split(',')
+                return
+            }
+        }
         current.value = (0 until configuration.locales.size()).map { configuration.locales[it].toLanguageTag() }
     }
 }

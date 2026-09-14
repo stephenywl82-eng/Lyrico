@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_language">应用语言</string>
+    <string name="language_system">跟随系统</string>
     <string name="search_settings">搜索设置</string>
     <string name="plugin_manager_title">插件管理</string>
     <string name="search_source_priority_tip">每个类型 Tab 独立保存启用状态和顺序；元数据源同时用于单曲主搜索和批量元数据匹配</string>

@@ -3,6 +3,8 @@ package com.lonx.lyrico.screens
 import android.annotation.SuppressLint
 import android.text.format.Formatter
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
@@ -42,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.ArtistSeparator
+import com.lonx.lyrico.data.model.AppLanguage
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.model.SearchSourceTabStyle
@@ -380,6 +384,25 @@ fun SettingsScreen(
             item(key = "appearance"){
                 SmallTitle(text = stringResource(R.string.section_appearance))
                 Card(modifier = Modifier.padding(horizontal = 12.dp)) {
+                    val configuration = LocalConfiguration.current
+                    var selectedLanguageTag by remember(configuration) {
+                        mutableStateOf(
+                            AppCompatDelegate.getApplicationLocales()[0]?.toLanguageTag().orEmpty()
+                        )
+                    }
+                    WindowDropdownPreference(
+                        title = stringResource(R.string.app_language),
+                        items = AppLanguage.entries.map { stringResource(it.labelRes) },
+                        selectedIndex = AppLanguage.entries.indexOfFirst {
+                            it.languageTag == selectedLanguageTag
+                        }.coerceAtLeast(0),
+                        onSelectedIndexChange = { index ->
+                            selectedLanguageTag = AppLanguage.entries[index].languageTag
+                            AppCompatDelegate.setApplicationLocales(
+                                LocaleListCompat.forLanguageTags(selectedLanguageTag)
+                            )
+                        }
+                    )
                     WindowDropdownPreference(
                         title = stringResource(R.string.theme_mode),
                         items = themeModeItems,
