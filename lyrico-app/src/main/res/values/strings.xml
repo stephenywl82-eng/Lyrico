@@ -58,6 +58,8 @@
 
     <!-- Sections -->
     <string name="section_appearance">Appearance</string>
+    <string name="lyric_index_title">Lyrics indexing</string>
+    <string name="lyric_index_summary">Index lyrics during scans for local lyrics search. This increases scan time. Rescan existing songs after enabling</string>
     <string name="section_scan">Scan Settings</string>
     <string name="section_search">Search Settings</string>
     <string name="section_lyrics">Lyrics</string>

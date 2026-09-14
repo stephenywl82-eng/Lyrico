@@ -286,6 +286,14 @@ interface SongDao {
     """)
     suspend fun getSongsNeedingLyricSearchTextIndex(): List<SongEntity>
 
+    @Query("""
+        SELECT id, uri, lyrics, lyricSearchText FROM songs
+        WHERE uri IN (:uris)
+          AND lyrics IS NOT NULL AND TRIM(lyrics) != ''
+          AND lyricSearchText IS NULL
+    """)
+    suspend fun getSongLyricsMissingIndex(uris: List<String>): List<SongLyricsForFts>
+
     @Query("UPDATE songs SET lyricSearchText = :lyricSearchText WHERE uri = :uri")
     suspend fun updateLyricSearchText(
         uri: String,

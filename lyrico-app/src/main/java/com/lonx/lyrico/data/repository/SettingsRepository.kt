@@ -43,6 +43,7 @@ interface SettingsRepository {
 
     val translationEnabled: Flow<Boolean>
     val checkUpdateEnabled: Flow<Boolean>
+    val lyricIndexEnabled: Flow<Boolean>
     val ignoreShortAudio: Flow<Boolean>
     val replayGainTargetLoudness: Flow<Double>
     val searchSourceOrder: Flow<List<String>>
@@ -83,6 +84,7 @@ interface SettingsRepository {
     suspend fun saveConversionMode(mode: ConversionMode)
     suspend fun saveCheckUpdateEnabled(enabled: Boolean)
     suspend fun saveTranslationEnabled(enabled: Boolean)
+    suspend fun saveLyricIndexEnabled(enabled: Boolean)
     suspend fun saveIgnoreShortAudio(enabled: Boolean)
     suspend fun saveReplayGainTargetLoudness(loudness: Double)
     suspend fun saveLastScanTime(time: Long)

@@ -67,6 +67,8 @@ object LyricFtsIndexer {
     }
 
     private fun lyricLines(lyrics: String?, lyricSearchText: String?): List<String> {
+        // An empty index marks lyrics that contained no searchable lines after processing.
+        if (lyricSearchText == "") return emptyList()
         val searchTextLines = lyricSearchText
             .orEmpty()
             .lineSequence()

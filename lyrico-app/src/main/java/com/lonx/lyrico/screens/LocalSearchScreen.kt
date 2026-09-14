@@ -121,8 +121,13 @@ fun LocalSearchScreen(
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val searchTabs = LocalSearchTab.entries
+    val searchTabs = LocalSearchTab.entries.filter {
+        it != LocalSearchTab.Lyrics || uiState.lyricSearchEnabled
+    }
     val pagerState = rememberPagerState(pageCount = { searchTabs.size })
+    LaunchedEffect(searchTabs) {
+        if (pagerState.currentPage >= searchTabs.size) pagerState.scrollToPage(0)
+    }
     var isFabMenuExpanded by remember { mutableStateOf(false) }
     var selectedSong by remember { mutableStateOf<SongEntity?>(null) }
     var showMenuSheet by remember { mutableStateOf(false) }
@@ -134,7 +139,7 @@ fun LocalSearchScreen(
         uiState.artists.isNotEmpty() ||
         uiState.lyricMatches.isNotEmpty()
     val visibleSongs = visibleSongsForTab(
-        tab = searchTabs[pagerState.currentPage],
+        tab = searchTabs.getOrElse(pagerState.currentPage) { LocalSearchTab.All },
         uiState = uiState
     )
     val searchState = rememberTextFieldState(initialText = searchQuery)
@@ -274,7 +279,7 @@ fun LocalSearchScreen(
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 LocalSearchResultsPage(
-                    tab = searchTabs[page],
+                    tab = searchTabs.getOrElse(page) { LocalSearchTab.All },
                     uiState = uiState,
                     searchQuery = searchQuery,
                     hasAnyResults = hasResults,
@@ -454,7 +459,7 @@ private fun LocalSearchResultsPage(
             )
         }
 
-        if (tab == LocalSearchTab.All || tab == LocalSearchTab.Lyrics) {
+        if (uiState.lyricSearchEnabled && (tab == LocalSearchTab.All || tab == LocalSearchTab.Lyrics)) {
             LyricsSection(
                 matches = uiState.lyricMatches,
                 query = searchQuery,

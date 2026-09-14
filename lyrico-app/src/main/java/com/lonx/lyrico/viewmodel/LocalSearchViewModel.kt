@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.model.search.LocalSearchUiState
 import com.lonx.lyrico.data.repository.LibraryIndexRepository
+import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.song.search.SongSearchRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,39 +16,36 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 @OptIn(FlowPreview::class, kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class LocalSearchViewModel(
     private val songSearchRepository: SongSearchRepository,
-    private val libraryIndexRepository: LibraryIndexRepository
+    private val libraryIndexRepository: LibraryIndexRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
 
-    init {
-        viewModelScope.launch {
-            songSearchRepository.rebuildMissingLyricSearchTextIndex()
-        }
-    }
-
     val searchQuery: StateFlow<String> = query
 
-    val uiState: StateFlow<LocalSearchUiState> = query
-        .debounce(250)
-        .distinctUntilChanged()
-        .flatMapLatest { keyword ->
+    val uiState: StateFlow<LocalSearchUiState> = combine(
+        query.debounce(250).distinctUntilChanged(),
+        settingsRepository.lyricIndexEnabled.distinctUntilChanged()
+    ) { keyword, enabled -> keyword to enabled }
+        .flatMapLatest { (keyword, enabled) ->
             if (keyword.isBlank()) {
-                flowOf(LocalSearchUiState(query = keyword))
+                flowOf(LocalSearchUiState(query = keyword, lyricSearchEnabled = enabled))
             } else {
                 combine(
                     songSearchRepository.searchSongsForLocalSearch(keyword),
                     libraryIndexRepository.searchAlbums(keyword),
                     libraryIndexRepository.searchArtists(keyword),
-                    songSearchRepository.searchLyricsForLocalSearch(keyword)
+                    if (enabled) songSearchRepository.searchLyricsForLocalSearch(keyword)
+                    else flowOf(emptyList())
                 ) { songs, albums, artists, lyricMatches ->
                     LocalSearchUiState(
                         query = keyword,
+                        lyricSearchEnabled = enabled,
                         songs = songs,
                         albums = albums,
                         artists = artists,

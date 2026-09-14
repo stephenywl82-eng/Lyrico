@@ -287,7 +287,7 @@ val appModule = module {
     viewModel { AlbumActionsViewModel(get(), get(), get(), get(), get()) }
     viewModel { SongListViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SongSelectionViewModel(get(), get(), get(), get()) }
-    viewModel { LocalSearchViewModel(get(), get()) }
+    viewModel { LocalSearchViewModel(get(), get(), get()) }
     viewModel { (albumId: Long) ->
         AlbumDetailViewModel(
             libraryIndexRepository = get(),

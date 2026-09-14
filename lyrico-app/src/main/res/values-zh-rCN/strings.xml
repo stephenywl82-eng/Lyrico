@@ -53,6 +53,8 @@
     <!-- 外观 -->
     <string name="theme_mode">主题模式</string>
 
+    <string name="lyric_index_title">歌词索引</string>
+    <string name="lyric_index_summary">扫描时建立歌词索引，用于本地歌词搜索，会增加扫描耗时。开启后，已有歌曲需重新扫描</string>
     <!-- 扫描 -->
     <string name="folder_manager">文件夹管理</string>
     <string name="folder_manage_hint">管理 Lyrico 扫描的音乐文件夹</string>

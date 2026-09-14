@@ -476,6 +476,12 @@ fun SettingsScreen(
                         checked = ignoreShortAudio,
                         onCheckedChange = { settingsViewModel.setIgnoreShortAudio(it) }
                     )
+                    SwitchPreference(
+                        title = stringResource(R.string.lyric_index_title),
+                        summary = stringResource(R.string.lyric_index_summary),
+                        checked = settingsUiState.lyricIndexEnabled,
+                        onCheckedChange = { settingsViewModel.setLyricIndexEnabled(it) }
+                    )
                     ArrowPreference(
                         title = stringResource(R.string.settings_replay_gain_target_loudness),
                         summary = stringResource(R.string.settings_replay_gain_target_loudness_summary),

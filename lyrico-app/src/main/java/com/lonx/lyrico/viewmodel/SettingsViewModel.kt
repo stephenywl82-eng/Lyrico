@@ -44,6 +44,7 @@ data class SettingsUiState(
     val romaEnabled: Boolean = false,
     val lyricLineOrder: List<LyricLineTrack> = emptyList(),
     val translationEnabled: Boolean = false,
+    val lyricIndexEnabled: Boolean = false,
     val ignoreShortAudio: Boolean = false,
     val searchSourceOrder: List<String> = emptyList(),
     val enabledSearchSources: Set<String> = emptySet(),
@@ -149,8 +150,9 @@ class SettingsViewModel(
 
     private val baseUiState = combine(
         settingsBaseState,
-        _categorizedCacheSize
-    ) { base, cacheMap ->
+        _categorizedCacheSize,
+        settingsRepository.lyricIndexEnabled
+    ) { base, cacheMap, lyricIndexEnabled ->
         SettingsUiState(
             isInitialized = true,
             lyricFormat = base.lyric.format,
@@ -164,6 +166,7 @@ class SettingsViewModel(
             searchSourceTabStyle = base.search.searchSourceTabStyle,
             showAllSearchResultFields = base.search.showAllSearchResultFields,
             themeMode = base.theme.themeMode,
+            lyricIndexEnabled = lyricIndexEnabled,
             ignoreShortAudio = base.ignoreShortAudio,
             monetEnable = base.theme.monetEnable,
             floatingBottomBarEnabled = base.floatingBottomBarEnabled,
@@ -313,6 +316,12 @@ class SettingsViewModel(
             settingsRepository.saveConversionMode(mode)
         }
     }
+    fun setLyricIndexEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.saveLyricIndexEnabled(enabled)
+        }
+    }
+
     fun setIgnoreShortAudio(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.saveIgnoreShortAudio(enabled)

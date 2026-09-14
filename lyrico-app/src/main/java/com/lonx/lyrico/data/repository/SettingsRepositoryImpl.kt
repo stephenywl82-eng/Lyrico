@@ -125,6 +125,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val LYRIC_LINE_ORDER = stringPreferencesKey("lyric_line_order")
         val CHECK_UPDATE_ENABLED = booleanPreferencesKey("check_update_enabled")
         val TRANSLATION_ENABLED = booleanPreferencesKey("translation_enabled")
+        val LYRIC_INDEX_ENABLED = booleanPreferencesKey("lyric_index_enabled")
         val IGNORE_SHORT_AUDIO = booleanPreferencesKey("ignore_short_audio")
         val SEARCH_SOURCE_ORDER = stringPreferencesKey("search_source_order")
         val ENABLED_SEARCH_SOURCES = stringPreferencesKey("enabled_search_sources")
@@ -254,6 +255,11 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         get() = context.settingsDataStore.data.map { preferences ->
             preferences[PreferencesKeys.CHECK_UPDATE_ENABLED]
                 ?: SettingsDefaults.CHECK_UPDATE_ENABLED
+        }
+
+    override val lyricIndexEnabled: Flow<Boolean>
+        get() = context.settingsDataStore.data.map { preferences ->
+            preferences[PreferencesKeys.LYRIC_INDEX_ENABLED] ?: false
         }
 
     override val ignoreShortAudio: Flow<Boolean>
@@ -555,6 +561,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
+    override suspend fun saveLyricIndexEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.LYRIC_INDEX_ENABLED] = enabled
+        }
+    }
+
     override suspend fun saveIgnoreShortAudio(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.IGNORE_SHORT_AUDIO] = enabled
@@ -757,6 +769,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             translationEnabled = prefs[PreferencesKeys.TRANSLATION_ENABLED]
                 ?: SettingsDefaults.TRANSLATION_ENABLED,
 
+            lyricIndexEnabled = prefs[PreferencesKeys.LYRIC_INDEX_ENABLED] ?: false,
             ignoreShortAudio = prefs[PreferencesKeys.IGNORE_SHORT_AUDIO]
                 ?: SettingsDefaults.IGNORE_SHORT_AUDIO,
 
@@ -843,6 +856,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 }
                 backup.checkUpdateEnabled?.let { prefs[PreferencesKeys.CHECK_UPDATE_ENABLED] = it }
                 backup.translationEnabled?.let { prefs[PreferencesKeys.TRANSLATION_ENABLED] = it }
+                backup.lyricIndexEnabled?.let { prefs[PreferencesKeys.LYRIC_INDEX_ENABLED] = it }
                 backup.ignoreShortAudio?.let { prefs[PreferencesKeys.IGNORE_SHORT_AUDIO] = it }
                 backup.replayGainTargetLoudness?.let {
                     prefs[PreferencesKeys.REPLAY_GAIN_TARGET_LOUDNESS] = it

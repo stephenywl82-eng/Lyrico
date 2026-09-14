@@ -17,6 +17,7 @@ import com.lonx.lyrico.data.song.search.LyricFtsIndexer
 import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.utils.MediaScanner
+import com.lonx.lyrico.utils.LyricsSearchTextExtractor
 import com.lonx.lyrico.utils.UriUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -71,6 +72,8 @@ class LibraryScanRepositoryImpl(
             val failures = mutableListOf<LibraryScanFailure>()
             val songsToUpsert = mutableListOf<ScannedSongMetadata>()
             val minDuration = 60_000L
+            val indexLyrics = settingsRepository.lyricIndexEnabled.first()
+            val unchangedSongUris = mutableListOf<String>()
 
             val safFolders = if (request.folderIds == null) {
                 folderDao.getSafFolders()
@@ -126,7 +129,8 @@ class LibraryScanRepositoryImpl(
                             songFile = deviceSong,
                             folderId = folderId,
                             existingId = dbInfo?.id ?: 0L,
-                            source = "SAF"
+                            source = "SAF",
+                            indexLyrics = indexLyrics
                         )
 
                         if (
@@ -139,6 +143,8 @@ class LibraryScanRepositoryImpl(
                         }
 
                         metadata?.let(songsToUpsert::add)
+                    } else if (indexLyrics) {
+                        unchangedSongUris.add(deviceUriString)
                     }
 
                     deviceUris.add(deviceUriString)
@@ -194,7 +200,13 @@ class LibraryScanRepositoryImpl(
             }
             impactedFolderIds.addAll(missingSafFolderIds)
 
-            val databaseChanges = songsToUpsert.size + allDeletedUris.size + missingSafFolderIds.size
+            val lyricsToIndex = unchangedSongUris.chunked(BATCH_SIZE).flatMap { uris ->
+                songDao.getSongLyricsMissingIndex(uris).map { row ->
+                    row.copy(lyricSearchText = LyricsSearchTextExtractor.toSearchText(row.lyrics).orEmpty())
+                }
+            }
+            val databaseChanges = songsToUpsert.size + allDeletedUris.size +
+                missingSafFolderIds.size + lyricsToIndex.size
             onProgress(
                 LibraryScanProgress(
                     stage = LibraryScanStage.WRITING_DATABASE,
@@ -207,7 +219,11 @@ class LibraryScanRepositoryImpl(
                 songsToUpsert.chunked(BATCH_SIZE).forEach { chunk ->
                     val songs = chunk.map { it.entity }
                     songDao.upsertAll(songs)
-                    LyricFtsIndexer.replaceSongs(songDao, songs)
+                    if (indexLyrics) {
+                        LyricFtsIndexer.replaceSongs(songDao, songs)
+                    } else {
+                        songDao.deleteLyricFtsByUris(songs.map { it.uri })
+                    }
                     chunk.forEach { metadata ->
                         database.songCustomTagKeyDao().replaceForSong(
                             songUri = metadata.entity.uri,
@@ -216,6 +232,13 @@ class LibraryScanRepositoryImpl(
                             }
                         )
                     }
+                }
+
+                lyricsToIndex.chunked(BATCH_SIZE).forEach { rows ->
+                    rows.forEach { row ->
+                        songDao.updateLyricSearchText(row.uri, row.lyricSearchText)
+                    }
+                    LyricFtsIndexer.replaceSongLyrics(songDao, rows)
                 }
 
                 allDeletedUris.chunked(BATCH_SIZE).forEach { chunk ->
@@ -288,7 +311,8 @@ class LibraryScanRepositoryImpl(
         songFile: SongFile,
         folderId: Long,
         existingId: Long,
-        source: String
+        source: String,
+        indexLyrics: Boolean
     ): ScannedSongMetadata? {
         val audioData = audioTagRepository.read(
             uri = songFile.uri.toString(),
@@ -301,7 +325,8 @@ class LibraryScanRepositoryImpl(
             tag = audioData,
             folderId = folderId,
             existingId = existingId,
-            source = source
+            source = source,
+            indexLyrics = indexLyrics
         )
         return ScannedSongMetadata(
             entity = entity,

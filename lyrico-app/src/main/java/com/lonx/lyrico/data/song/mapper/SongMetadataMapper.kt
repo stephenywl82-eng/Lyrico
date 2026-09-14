@@ -50,7 +50,8 @@ class SongMetadataMapper(
         tag: AudioTagData,
         folderId: Long,
         existingId: Long = 0L,
-        source: String = "MEDIA_STORE"
+        source: String = "MEDIA_STORE",
+        indexLyrics: Boolean = false
     ): SongEntity {
         return SongEntity(
             id = existingId,
@@ -70,7 +71,11 @@ class SongMetadataMapper(
             date = tag.date,
             language = tag.language,
             lyrics = tag.lyrics,
-            lyricSearchText = LyricsSearchTextExtractor.toSearchText(tag.lyrics),
+            lyricSearchText = if (indexLyrics) {
+                LyricsSearchTextExtractor.toSearchText(tag.lyrics).orEmpty()
+            } else {
+                null
+            },
             composer = tag.composer,
             lyricist = tag.lyricist,
             comment = tag.comment,
