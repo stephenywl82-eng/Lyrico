@@ -78,11 +78,13 @@ fun PluginConfigScreen(
     val viewModel: SearchSourceConfigViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val topAppBarScrollBehavior = MiuixScrollBehavior()
 
     val requiredMessage = stringResource(R.string.source_config_required_error)
 
-    LaunchedEffect(pluginId) {
+    LaunchedEffect(pluginId, configuration) {
+        com.lonx.lyrico.plugin.i18n.PluginLocales.update(configuration)
         viewModel.load(pluginId)
     }
 
@@ -260,7 +262,7 @@ private fun PluginConfigFormItems(
             text = if (group == DEFAULT_CONFIG_GROUP) {
                 stringResource(R.string.source_config_basic)
             } else {
-                group
+                groupFields.first().groupTitle ?: group
             }
         )
 

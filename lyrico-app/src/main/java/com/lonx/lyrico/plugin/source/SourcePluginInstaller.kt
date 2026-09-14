@@ -350,6 +350,7 @@ class SourcePluginInstaller(
         val pluginRoot = manifestFile.parentFile
             ?: error("${manifestFile.absolutePath}: manifest has no parent directory")
         validateManifest(manifest)
+        com.lonx.lyrico.plugin.i18n.PluginStrings.load(pluginRoot, manifest)
         val entryFile = validateEntry(pluginRoot, manifest.entry)
         val includeDirs = validateIncludeDirs(pluginRoot, manifest.includeDirs)
         val icon = manifest.icon

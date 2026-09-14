@@ -10,17 +10,22 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.io.File
+import com.lonx.lyrico.plugin.i18n.PluginStrings
+import com.lonx.lyrico.plugin.i18n.PluginLocales
 
 class ScriptSearchSourceFactory(
     private val json: Json,
     private val appLogRepository: AppLogRepository? = null,
-    private val runtimeFactory: (SourcePluginEntity) -> PluginJsRuntime = { QuickJsRuntime() }
+    private val runtimeFactory: (SourcePluginEntity, PluginStrings) -> PluginJsRuntime = { _, strings ->
+        QuickJsRuntime(hostApi = com.lonx.lyrico.plugin.runtime.QuickJsHostApi(pluginStrings = strings))
+    }
 ) {
     suspend fun create(plugin: SourcePluginEntity): ScriptSearchSource =
         withContext(Dispatchers.IO) {
             val pluginDir = File(plugin.pluginDir)
             val manifestFile = File(pluginDir, MANIFEST_FILE)
             val manifest = json.decodeFromString<PluginManifest>(manifestFile.readText())
+            val strings = PluginStrings.load(pluginDir, manifest)
             val entryFile = File(pluginDir, plugin.entryFile.ifBlank { manifest.entry })
             val script = buildScript(pluginDir, entryFile, manifest)
 
@@ -28,6 +33,8 @@ class ScriptSearchSourceFactory(
                 manifest = manifest,
                 script = script,
                 displayName = plugin.displayName,
+                localizedManifest = { strings.snapshot(PluginLocales.preferences.value).localize(manifest) },
+                customName = plugin.customName,
                 iconPath = plugin.iconPath,
                 metadataEnabled = plugin.metadataEnabled,
                 lyricsEnabled = plugin.lyricsEnabled,
@@ -37,7 +44,7 @@ class ScriptSearchSourceFactory(
                 coverSortOrder = plugin.coverSortOrder,
                 appLogRepository = appLogRepository,
                 json = json,
-                runtimeFactory = { runtimeFactory(plugin) }
+                runtimeFactory = { runtimeFactory(plugin, strings) }
             )
         }
 

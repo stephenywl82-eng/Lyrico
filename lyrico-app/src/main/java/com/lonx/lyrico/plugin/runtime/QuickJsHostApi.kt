@@ -35,12 +35,18 @@ class QuickJsHostApi(
     private val okHttpClient: OkHttpClient = OkHttpClient(),
     private val pluginId: String = "default",
     private val cacheRootDir: File? = null,
+    private val pluginStrings: com.lonx.lyrico.plugin.i18n.PluginStrings? = null,
     private val json: Json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
         explicitNulls = false
     }
 ) {
+    private var stringsSnapshot: com.lonx.lyrico.plugin.i18n.PluginStrings.Snapshot? = null
+
+    fun beginInvocation() {
+        stringsSnapshot = pluginStrings?.snapshot(com.lonx.lyrico.plugin.i18n.PluginLocales.preferences.value)
+    }
     private companion object {
         const val CACHE_LOG_TAG = "PlatformPluginCache"
     }
@@ -51,6 +57,16 @@ class QuickJsHostApi(
         }.getOrDefault(JsonObject(emptyMap()))
 
         return when (name) {
+            "i18n.getLocale" -> text(stringsSnapshot?.locale ?: "und")
+
+            "i18n.t" -> text(requireNotNull(stringsSnapshot) { "Plugin has no string resources" }.format(
+                payload.string("key"),
+                (payload["args"] as? JsonArray).orEmpty().map { element ->
+                    val primitive = element as? JsonPrimitive
+                    if (primitive?.isString == true) primitive.content else primitive?.longOrNull
+                }
+            ))
+
             "app.info" -> value(appInfo.toJsonObject())
 
             "app.userAgent" -> text(buildDefaultUserAgent(appInfo))

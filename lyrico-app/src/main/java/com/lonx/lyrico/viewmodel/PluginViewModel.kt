@@ -30,6 +30,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import java.io.File
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import com.lonx.lyrico.plugin.i18n.PluginLocales
+import com.lonx.lyrico.plugin.i18n.PluginStrings
+import com.lonx.lyrico.data.model.plugin.PluginManifest
+import kotlinx.serialization.json.Json
 
 data class PluginUiState(
     val isBusy: Boolean = false,
@@ -47,8 +53,20 @@ class PluginViewModel(
     private val pluginManager: PluginSearchSourceManager,
     private val appLogRepository: AppLogRepository
 ) : ViewModel() {
+    private val manifestJson = Json { ignoreUnknownKeys = true }
     val plugins: StateFlow<List<SourcePluginEntity>> =
         repository.observePlugins()
+            .combine(PluginLocales.preferences) { plugins, locales ->
+                plugins.map { plugin ->
+                    runCatching {
+                        val root = File(plugin.pluginDir)
+                        val manifest = manifestJson.decodeFromString<PluginManifest>(File(root, "manifest.json").readText())
+                        val localized = PluginStrings.load(root, manifest).snapshot(locales).localize(manifest)
+                        plugin.copy(name = localized.name, description = localized.description)
+                    }.getOrElse { plugin }
+                }
+            }
+            .flowOn(Dispatchers.IO)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _uiState = MutableStateFlow(PluginUiState())

@@ -1,6 +1,6 @@
 # 插件协议版本、迁移与排障
 
-本页用于回答三个开发问题：插件应该声明哪个版本、每个版本具体改变了哪些函数，以及插件在 Devkit 或真机中失败时从哪里开始排查。
+本页用于回答三个开发问题：插件应该声明哪个版本、每个版本具体改了什么，以及插件在 Devkit 或真机中失败时从哪里开始排查。
 
 ## 先区分两个版本字段
 
@@ -9,7 +9,7 @@
 | Manifest 字段 | 当前宿主版本 | 控制内容 |
 |---|---:|---|
 | `apiVersion` | 4 | 插件回调 `searchSongs`、`getLyrics`、`searchCovers` 的返回协议 |
-| `minHostApiVersion` | 3 | 插件调用的 `Platform.*` 宿主函数集合 |
+| `minHostApiVersion` | 4 | 插件调用的 `Platform.*` 宿主函数集合 |
 
 例如，一个返回 API4 歌词候选、但只使用 `Platform.http` 的插件应声明：
 
@@ -20,7 +20,7 @@
 }
 ```
 
-宿主目前接受 `apiVersion: 1` 到 `4`，以及 `minHostApiVersion: 1` 到 `3`。声明更高版本时会在安装阶段被拒绝，避免插件进入运行阶段后才因未知协议或缺少宿主函数失败。
+宿主目前接受 `apiVersion: 1` 到 `4`，以及 `minHostApiVersion: 1` 到 `4`。声明更高版本时会在安装阶段被拒绝，避免插件进入运行阶段后才因未知协议或缺少宿主函数失败。
 
 插件可以在运行时检查实际能力：
 
@@ -98,16 +98,46 @@ function loadCookies() {
 
 这里的 `JSON.stringify` 用于把对象保存为缓存字符串，是正确用法；不要用它序列化插件回调的最终返回值。
 
-## API4：独立歌词源与封面源结果协议
+## API4：结果契约、TTML 元数据与文本本地化
 
-API4 没有新增 Platform 函数，当前 Platform Host API 仍为 3。它修改了 `getLyrics` 和 `searchCovers` 的结果契约，使不实现 `searchSongs` 的歌词源和封面源也能返回可供用户判断的候选。
+API4 相对 API3 的变化有三处：
+
+1. `getLyrics` 和 `searchCovers` 的结果契约调整，使不实现 `searchSongs` 的歌词源和封面源也能返回可供用户判断的候选。
+2. 宿主能解析返回歌词中更多的 TTML 元数据：`structured` 结果除原文、译文、音译外，还可以携带行级扩展属性、演唱者、`<head>` 元数据、时间粒度、语言码与段落时间窗，写回 TTML 时使用；旧插件不返回这些字段时行为不变。
+3. Platform Host API 提升到 4，精确新增两个文本本地化函数：
+
+| 新增函数 | 签名 | 返回值与行为 |
+|---|---|---|
+| 当前语言 | `Platform.i18n.getLocale()` | 返回选中语言的标签，例如 `"zh-Hans"`；插件没有 `i18n` 时返回 `"und"` |
+| 取文本 | `Platform.i18n.t(key, ...args)` | 返回该键在当前语言下的文本；传入参数时按位置占位符格式化 |
+
+Manifest 中使用 `@` 字符串引用，或脚本调用 `Platform.i18n` 的插件，需要把 `minHostApiVersion` 提高到 4。资源文件写法与占位符规则见[插件国际化](./i18n.md)。
+
+### 结构化歌词的 TTML 元数据
+
+`type: "structured"` 的歌词结果可以选择携带 TTML 专属信息。这类结构只影响 TTML 导出，导出为 LRC 时不会保留；旧插件只返回 `original`、`translated`、`romanization` 时，与 API3 的行为一致。
+
+| 载荷位置 | 内容 | 写回 TTML |
+|---|---|---|
+| `original` 行的第 4 个元素 | 行级扩展属性，例如 `ttm:agent`、`itunes:song-part`、`divBegin`/`divEnd` | `<p ttm:agent>`、`<div itunes:song-part>`、段落 `<div begin/end>` |
+| `original` 词的第 4 个元素 | Ruby 注音音节数组 `[[startMs, endMs, "注音"], ...]` | `<ruby>` / `<rt>`，缺失的音节边界由宿主规范化 |
+| `agents` | `{ id, type?, name? }[]` | `<head>` 中的 `<ttm:agent>` |
+| `metadata` | `{ name, namespace?, attributes?, text?, children? }[]` | `<head>` 中的元数据节点 |
+| `timing` | `"Word"` 或 `"Line"` | `<tt itunes:timing>` |
+| `language` | 原文语言码（BCP 47） | `<tt xml:lang>` |
+| `bodyDur` | TTML 时间表达式 | `<body dur>` |
+| `translatedLang` / `romanizationLang` | 翻译轨 / 音译轨语言码（BCP 47） | 对应轨的 `xml:lang` |
+
+`itunes:key` 由宿主重新生成，插件不需要提供。扩展属性只接受无前缀名称与 `ttm:`、`itunes:` 前缀，其他前缀会被忽略；非法的 `bodyDur` 会被丢弃。
+
+字段格式、`metadata` 的约束、逐词时间与缺失边界的处理，以及 `rawTtml` 的应用场景见[插件函数](./plugin-functions.md)的「结构化歌词的行格式」与「TTML 扩展」。
 
 ### 三个回调的 API3 与 API4 对比
 
 | 回调 | 请求是否变化 | API1–3 返回值 | API4 返回值 |
 |---|---|---|---|
 | `searchSongs` | 否 | `SongSearchResult[]` | 不变 |
-| `getLyrics` | 是；新增可选 `page`、`pageSize` | 单个 `LyricsResult`、LRC 字符串或 `null` | `LyricsResult[]`；每项以 `tags.ti/ar/al/date` 提供标题、艺术家、专辑、日期 |
+| `getLyrics` | 是；新增可选 `page`、`pageSize` | 单个 `LyricsResult`、LRC 字符串或 `null` | `LyricsResult[]`；每项以 `tags.ti/ar/al/date` 提供标题、艺术家、专辑、日期；`structured` 载荷可携带 TTML 扩展元数据 |
 | `searchCovers` | 是；新增可选 `page` | `SongSearchResult[]`，旧字段继续兼容 | `SongSearchResult[]`；每项必须有标题、艺术家、专辑、日期和封面 URL，平台歌曲 `id` 可省略 |
 
 当前宿主还会向 `getLyrics` 提供可选的 `page` 和 `pageSize`，供不实现 `searchSongs` 的 API4 歌词源分页返回候选。旧插件可以忽略这些新增字段；函数调用签名仍是单个 `request` 对象。
@@ -185,7 +215,8 @@ function searchCovers(request) {
 4. 把 `getLyrics` 的单个结果改为数组；无结果返回 `[]`，每项补齐 `tags.ti`、`tags.ar`、`tags.al`、`tags.date`。
 5. 为每个 `searchCovers` 结果补齐 `title`、`artist`、`album`、`date` 和封面 URL；`id` 可以省略。
 6. 所有回调直接返回对象、数组、字符串或 `null`，不要对最终返回值调用 `JSON.stringify`。
-7. 只有使用了 Base64URL 或缓存时，才分别把 `minHostApiVersion` 提高到 2 或 3。
+7. 需要在写回 TTML 时保留演唱者、段落、语言码等信息时，按[插件函数](./plugin-functions.md)的 TTML 扩展补充 `structured` 结果的扩展字段；不补充也能通过校验。
+8. 只有使用了 Base64URL、缓存或文本本地化时，才把 `minHostApiVersion` 分别提高到 2、3 或 4。
 
 ## 用 Devkit 定位问题
 
@@ -204,7 +235,7 @@ node tools/plugin-devkit/src/cli.js test ./my-plugin searchCovers --keyword "晴
 | 现象或错误 | 先检查什么 | 常见原因 |
 |---|---|---|
 | 安装时提示插件协议不支持 | `manifest.apiVersion` | 高于宿主支持的 4，或把 Platform 版本误填到了这里 |
-| 安装时提示宿主 API 不支持 | `manifest.minHostApiVersion` | 高于宿主支持的 3 |
+| 安装时提示宿主 API 不支持 | `manifest.minHostApiVersion` | 高于宿主支持的 4 |
 | `returned JSON.stringify(...) instead of a JavaScript value` | 回调中的最终 `return` | 插件提前序列化，Android 宿主又序列化一次 |
 | `getLyrics returned no usable lyrics candidates` | `raw`、歌词 `type` 与对应载荷字段 | 返回的数组为空，或歌词对象不能被解析 |
 | `lyrics candidate[n] is missing ...` | `tags.ti/ar/al/date` | API4 歌词候选缺少用户判断信息 |

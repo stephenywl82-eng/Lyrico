@@ -18,6 +18,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.combine
+import com.lonx.lyrico.plugin.i18n.PluginLocales
 
 data class SearchSourceWithState(
     val source: SearchSource,
@@ -36,7 +38,7 @@ class PluginSearchSourceManager(
 
     fun observeSources(): Flow<List<SearchSource>> {
         return repository.observePlugins()
-            .map { plugins ->
+            .combine(PluginLocales.preferences) { plugins, _ ->
                 buildSources(
                     plugins = plugins.filter(SourcePluginEntity::isEnabledAnywhere),
                     retainedIds = plugins.enabledPluginIds()
@@ -47,7 +49,7 @@ class PluginSearchSourceManager(
 
     fun observeSources(sourceType: PluginSourceType): Flow<List<SearchSource>> {
         return repository.observePlugins()
-            .map { plugins ->
+            .combine(PluginLocales.preferences) { plugins, _ ->
                 buildSources(
                     plugins = plugins.forSourceType(sourceType),
                     retainedIds = plugins.enabledPluginIds()

@@ -4,7 +4,7 @@ object HostApiRegistry {
     const val MIN_PLUGIN_PROTOCOL_VERSION = 1
     const val PLUGIN_PROTOCOL_VERSION = 4
     const val MIN_PLATFORM_API_VERSION = 1
-    const val PLATFORM_API_VERSION = 3
+    const val PLATFORM_API_VERSION = 4
 
     fun supportsPluginApiVersion(apiVersion: Int): Boolean =
         apiVersion in MIN_PLUGIN_PROTOCOL_VERSION..PLUGIN_PROTOCOL_VERSION
@@ -13,6 +13,8 @@ object HostApiRegistry {
         minHostApiVersion in MIN_PLATFORM_API_VERSION..PLATFORM_API_VERSION
 
     val SUPPORTED_HOST_APIS = setOf(
+        "i18n.getLocale",
+        "i18n.t",
         "app.info",
         "app.userAgent",
         "runtime.info",

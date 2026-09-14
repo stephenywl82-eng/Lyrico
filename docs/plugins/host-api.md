@@ -6,6 +6,8 @@
 
 ## 访问方式
 
+宿主 API 4 新增 `Platform.i18n.getLocale()` 和 `Platform.i18n.t(key, ...args)`，支持语言资源匹配和 Android 风格位置占位符。详见[插件国际化](./i18n)。
+
 ```javascript
 // 顶层简写（推荐就近访问时使用）
 globalThis.app.getInfo();
@@ -82,10 +84,11 @@ var ua = Platform.app.getUserAgent();  // "Lyrico/0.0.0"
 ```json
 {
   "pluginApiVersion": 4,
-  "hostApiVersion": 3,
+  "hostApiVersion": 4,
   "engine": "quickjs",
   "engineVersion": null,
   "supportedHostApis": [
+    "i18n.getLocale", "i18n.t",
     "app.info", "app.userAgent", "...",
     "base64.encodeUrlText", "base64.decodeUrlText", "...",
     "http.getText", "...",

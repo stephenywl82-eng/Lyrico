@@ -60,7 +60,7 @@ class SearchSourceConfigViewModel(
                     minHostApiVersion = sourceImpl.minHostApiVersion,
                     sourceTypes = sourceImpl.capabilities.displaySourceTypes(),
                     configFields = fields,
-                    values = defaults + saved,
+                    values = if (it.pluginId == sourceImpl.id && !it.isLoading) it.values else defaults + saved,
                     pluginEnabled = sourceWithState.enabled,
                     validationErrors = emptyMap(),
                     isLoading = false,

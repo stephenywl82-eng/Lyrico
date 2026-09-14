@@ -129,6 +129,10 @@ fun PluginManagerScreen(
 ) {
     val viewModel: PluginViewModel = koinViewModel()
     val plugins by viewModel.plugins.collectAsState()
+    val localeConfiguration = androidx.compose.ui.platform.LocalConfiguration.current
+    LaunchedEffect(localeConfiguration) {
+        com.lonx.lyrico.plugin.i18n.PluginLocales.update(localeConfiguration)
+    }
     val uiState by viewModel.uiState.collectAsState()
     val pendingImport = uiState.pendingImport
     val context: Context = LocalContext.current
@@ -525,7 +529,15 @@ private fun PluginImportCandidateItem(
     selected: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    val manifest = candidate.manifest
+    val localeTags = androidx.compose.ui.platform.LocalConfiguration.current.locales.toLanguageTags()
+    val manifest by androidx.compose.runtime.produceState(candidate.manifest, candidate, localeTags) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                com.lonx.lyrico.plugin.i18n.PluginStrings.load(candidate.pluginRoot, candidate.manifest)
+                    .snapshot(localeTags.split(',')).localize(candidate.manifest)
+            }.getOrDefault(candidate.manifest)
+        }
+    }
     val conflictText = candidate.versionConflict.toImportConflictText()
     val conflictColor = candidate.versionConflict.toImportConflictColor()
     val iconPath = manifest.icon?.let { File(candidate.pluginRoot, it).absolutePath }

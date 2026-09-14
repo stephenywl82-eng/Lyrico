@@ -88,6 +88,7 @@ const zhSidebar = {
       items: [
         { text: 'API 版本沿革', link: '/plugins/api-versions' },
         { text: 'Manifest 参考', link: '/plugins/manifest' },
+        { text: '插件国际化', link: '/plugins/i18n' },
         { text: '宿主 API 参考', link: '/plugins/host-api' },
       ],
     },
@@ -156,6 +157,7 @@ const enSidebar = {
       items: [
         { text: 'API Version History', link: '/en-US/plugins/api-versions' },
         { text: 'Manifest Reference', link: '/en-US/plugins/manifest' },
+        { text: 'Plugin Internationalization', link: '/en-US/plugins/i18n' },
         { text: 'Host API Reference', link: '/en-US/plugins/host-api' },
       ],
     },

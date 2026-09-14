@@ -6,6 +6,8 @@ Plugins access native host capabilities through `globalThis.Platform`. The objec
 
 ## Access
 
+Host API 4 adds `Platform.i18n.getLocale()` and `Platform.i18n.t(key, ...args)` for language resource matching and Android-style positional placeholders. See [Plugin Internationalization](./i18n) for details.
+
 ```javascript
 // Top-level shorthand, recommended for nearby access
 globalThis.app.getInfo();
@@ -82,10 +84,11 @@ Returns JS runtime environment information.
 ```json
 {
   "pluginApiVersion": 4,
-  "hostApiVersion": 3,
+  "hostApiVersion": 4,
   "engine": "quickjs",
   "engineVersion": null,
   "supportedHostApis": [
+    "i18n.getLocale", "i18n.t",
     "app.info", "app.userAgent", "...",
     "base64.encodeUrlText", "base64.decodeUrlText", "...",
     "http.getText", "...",

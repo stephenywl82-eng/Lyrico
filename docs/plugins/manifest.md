@@ -21,6 +21,9 @@
 | `icon` | `string \| null` | 否 | `null` | 图标文件相对路径 |
 | `capabilities` | `string[]` | 否 | `[]` | 插件能力 |
 | `configFields` | `ConfigField[]` | 否 | `[]` | 用户可配置项 |
+| `i18n` | `object \| null` | 否 | `null` | 默认语言与资源路径映射，见[插件国际化](./i18n) |
+
+名称、描述和配置界面中的文本都是普通字符串：以 `@` 开头表示引用语言资源里的键，其他内容按字面量显示。规则见[插件国际化](./i18n)。
 
 旧版本中用于声明宿主 API、返回字段或写入策略的字段已经不再需要；新插件不要继续写这些声明。
 
@@ -72,7 +75,7 @@
 
 `id` 必须是反向域名格式，例如 `com.example.music_source`。
 
-`apiVersion` 用于插件协议兼容检查。当前插件协议版本为 4，可以加载 `apiVersion` 为 1、2、3 或 4 的插件，但会拒绝声明更高版本的插件。`apiVersion` 与 `Platform` 宿主 API 版本相互独立；当前宿主 API 版本为 3。各版本的具体变化见 [API 版本沿革](./api-versions.md)。
+`apiVersion` 用于插件协议兼容检查。当前插件协议版本为 4，可以加载 `apiVersion` 为 1、2、3 或 4 的插件，但会拒绝声明更高版本的插件。`apiVersion` 与 `Platform` 宿主 API 版本相互独立；当前宿主 API 版本为 4。各版本的具体变化见 [API 版本沿革](./api-versions.md)。
 
 `minHostApiVersion` 表示插件实际需要的最低宿主 API 版本。它必须大于等于 1 且不高于当前宿主版本；需要具体宿主能力时，插件仍可通过 `Platform.runtime.getInfo().supportedHostApis` 检查，缺失能力会在运行时返回标准化错误。
 

@@ -149,10 +149,11 @@ val appModule = module {
     single {
         val context = androidContext()
         val okHttpClient = get<OkHttpClient>()
+        com.lonx.lyrico.plugin.i18n.PluginLocales.initialize(context)
         ScriptSearchSourceFactory(
             json = get(),
             appLogRepository = get(),
-            runtimeFactory = { plugin ->
+            runtimeFactory = { plugin, strings ->
                 QuickJsRuntime(
                     hostApi = QuickJsHostApi(
                         appInfo = HostAppInfo(
@@ -165,6 +166,7 @@ val appModule = module {
                         ),
                         okHttpClient = okHttpClient,
                         pluginId = plugin.id,
+                        pluginStrings = strings,
                         cacheRootDir = File(context.cacheDir, "plugin_cache")
                     )
                 )

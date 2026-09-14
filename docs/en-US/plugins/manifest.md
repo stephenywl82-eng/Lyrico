@@ -21,6 +21,9 @@ Field application policy belongs to Lyrico. Plugins return data at runtime.
 | `icon` | `string \| null` | No | `null` | Relative icon path |
 | `capabilities` | `string[]` | No | `[]` | Plugin capabilities |
 | `configFields` | `ConfigField[]` | No | `[]` | User-configurable fields |
+| `i18n` | `object \| null` | No | `null` | Default locale and resource path mapping, see [Plugin Internationalization](./i18n) |
+
+Text in names, descriptions, and settings is always a plain string: a value starting with `@` references a key in the language resources, anything else is shown literally. See [Plugin Internationalization](./i18n).
 
 Fields used by older protocols to declare host APIs, returned fields, or write policies are no longer needed. New plugins should not include them.
 
@@ -60,7 +63,7 @@ Fields used by older protocols to declare host APIs, returned fields, or write p
 
 `id` must use reverse-domain format, such as `com.example.music_source`.
 
-`apiVersion` is used for plugin protocol compatibility. The current plugin protocol is version 4 and accepts plugins whose `apiVersion` is 1, 2, 3, or 4. Newer versions are rejected. This is independent of the `Platform` host API version, which is currently 3. See [API Version History](./api-versions.md) for the exact differences.
+`apiVersion` is used for plugin protocol compatibility. The current plugin protocol is version 4 and accepts plugins whose `apiVersion` is 1, 2, 3, or 4. Newer versions are rejected. This is independent of the `Platform` host API version, which is currently 4. See [API Version History](./api-versions.md) for the exact differences.
 
 `minHostApiVersion` declares the minimum host API version actually required by the plugin. It must be at least 1 and cannot exceed the current host version. Plugins can still inspect `Platform.runtime.getInfo().supportedHostApis` for individual capabilities; missing capabilities are returned as runtime errors.
 

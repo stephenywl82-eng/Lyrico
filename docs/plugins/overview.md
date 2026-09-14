@@ -60,7 +60,7 @@ Lyrico 插件系统是一个基于 **QuickJS 嵌入式 JavaScript 引擎** 的�
 | 验证项 | 规则 |
 |--------|------|
 | ID 格式 | 必须匹配 `^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$`（反向域名） |
-| API 版本 | 插件协议 `apiVersion` 必须在支持范围 **1..4** 内；`minHostApiVersion` 不得高于当前宿主 API **3** |
+| API 版本 | 插件协议 `apiVersion` 必须在支持范围 **1..4** 内；`minHostApiVersion` 不得高于当前宿主 API **4** |
 | 能力声明 | 仅允许已知能力；三项能力可独立声明；缺省或空数组按旧插件的 `searchSongs` 处理 |
 | 入口文件 | 必须存在、`.js` 扩展名、路径不能逃逸插件根目录、≤ 1 MB |
 | 包含目录 | `includeDirs` 中的目录必须存在且在插件根目录内 |

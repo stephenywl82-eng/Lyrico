@@ -7,7 +7,7 @@ class QuickJsRuntime(
     memoryLimitBytes: Long = DEFAULT_MEMORY_LIMIT_BYTES,
     stackSizeBytes: Long = DEFAULT_STACK_SIZE_BYTES,
     timeoutMs: Long = DEFAULT_TIMEOUT_MS,
-    hostApi: QuickJsHostApi? = QuickJsHostApi()
+    private val hostApi: QuickJsHostApi? = QuickJsHostApi()
 ) : PluginJsRuntime {
     private var runtimePtr: Long = QuickJsNative.createRuntime(
         memoryLimitBytes = memoryLimitBytes,
@@ -23,12 +23,14 @@ class QuickJsRuntime(
     fun eval(script: String): String = eval(script, "<eval>")
 
     override fun eval(script: String, filename: String): String {
+        hostApi?.beginInvocation()
         val ptr = runtimePtr
         check(ptr != 0L) { "QuickJS runtime is closed" }
         return QuickJsNative.eval(ptr, script, filename)
     }
 
     override fun call(functionName: String, requestJson: String): String {
+        hostApi?.beginInvocation()
         val ptr = runtimePtr
         check(ptr != 0L) { "QuickJS runtime is closed" }
         return QuickJsNative.call(ptr, functionName, requestJson)
@@ -95,6 +97,12 @@ class QuickJsRuntime(
               };
 
               globalThis.Platform = {
+                i18n: {
+                  getLocale: function() { return hostCall("i18n.getLocale", {}); },
+                  t: function(key) {
+                    return hostCall("i18n.t", { key: String(key), args: Array.prototype.slice.call(arguments, 1) });
+                  }
+                },
                 app: globalThis.app,
                 runtime: globalThis.runtime,
 

@@ -36,15 +36,19 @@ class ScriptSearchSource(
     override val coverSortOrder: Int = 0,
     private val appLogRepository: AppLogRepository? = null,
     private val json: Json = defaultJson,
-    private val runtimeFactory: () -> PluginJsRuntime = { QuickJsRuntime() }
+    private val runtimeFactory: () -> PluginJsRuntime = { QuickJsRuntime() },
+    private val localizedManifest: (() -> PluginManifest)? = null,
+    private val customName: String? = null
 ) : SearchSource, AutoCloseable {
     override val id: String = manifest.id
-    override val name: String = displayName
+    override val name: String
+        get() = customName?.trim()?.takeIf { it.isNotEmpty() } ?: localizedManifest?.invoke()?.name ?: displayName
     override val apiVersion: Int = manifest.apiVersion
     override val minHostApiVersion: Int = manifest.minHostApiVersion
     override val capabilities: Set<PluginCapability> =
         manifest.capabilities.normalizedPluginCapabilities()
-    override val configFields: List<PluginConfigField> = manifest.configFields
+    override val configFields: List<PluginConfigField>
+        get() = localizedManifest?.invoke()?.configFields ?: manifest.configFields
     private val executionContextDelegate = lazy {
         val executor = Executors.newSingleThreadExecutor { runnable ->
             Thread(
