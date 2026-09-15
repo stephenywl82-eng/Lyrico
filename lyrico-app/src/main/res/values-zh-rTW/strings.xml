@@ -465,7 +465,7 @@
     <string name="group_custom_tags">自訂標籤</string>
     <string name="action_add_custom_tag">新增自訂標籤</string>
     <string name="custom_tag_management_title">自訂標籤管理</string>
-    <string name="custom_tag_hint">清單中的標籤會顯示在單曲編輯頁和批次編輯頁。刪除標籤不會刪除歌曲裡已有的資料</string>
+    <string name="custom_tag_hint">清單中的標籤會顯示在單曲編輯頁和批次編輯頁，點擊標籤可以查看使用它的歌曲。刪除標籤不會刪除歌曲裡已有的資料</string>
     <string name="custom_tag_add_key">新增標籤</string>
     <string name="custom_tag_key">標籤鍵名</string>
     <string name="custom_tag_key_hint">自訂音訊標籤的鍵名，例如 SOURCE、MOOD</string>
@@ -473,6 +473,10 @@
     <string name="custom_tag_empty">還沒有新增標籤</string>
     <string name="custom_tag_library_section">音樂庫中發現的標籤</string>
     <string name="custom_tag_library_empty">音樂庫中沒有其他標籤</string>
+    <string name="custom_tag_delete_title">刪除標籤？</string>
+    <string name="custom_tag_delete_message">刪除“%1$s”？不會刪除歌曲裡已有的資料</string>
+    <string name="custom_tag_songs_title">含“%1$s”的歌曲</string>
+    <string name="custom_tag_songs_empty">沒有歌曲使用這個標籤</string>
 
     <!-- 批次編輯 -->
     <string name="batch_edit_title">編輯標籤</string>

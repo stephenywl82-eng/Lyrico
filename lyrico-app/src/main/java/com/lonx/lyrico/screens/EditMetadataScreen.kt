@@ -103,6 +103,10 @@ import com.lonx.lyrico.ui.components.fab.FabMenuItem
 import com.lonx.lyrico.ui.components.player.PlayerPickerBottomSheet
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
+import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
+import com.lonx.lyrico.ui.components.library.LibraryBlurredBar
+import com.lonx.lyrico.ui.components.library.rememberBarBlurEnabled
+import com.lonx.lyrico.ui.components.library.rememberBlurBackdrop
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.utils.CoverSourceType
 import com.lonx.lyrico.utils.LyricDecoder
@@ -159,6 +163,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
+import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -489,6 +494,7 @@ fun EditMetadataScreen(
     )
 
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topBarBackdrop = rememberBlurBackdrop(enableBlur = rememberBarBlurEnabled())
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -499,53 +505,68 @@ fun EditMetadataScreen(
                     ?: uiState.songInfo?.tagData?.fileName
                     ?: stringResource(R.string.edit_metadata_default_title)
 
-                SmallTopAppBar(
-                    title = titleText,
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                if (!navigator.popBackStack()) {
-                                    activity.finish()
+                LibraryBlurredBar(
+                    backdrop = topBarBackdrop,
+                    modifier = Modifier.scaffoldTopAppBarInsetsPadding()
+                ) {
+                    SmallTopAppBar(
+                        title = titleText,
+                        color = if (topBarBackdrop != null) Color.Transparent else MiuixTheme.colorScheme.surface,
+                        defaultWindowInsetsPadding = false,
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    if (!navigator.popBackStack()) {
+                                        activity.finish()
+                                    }
+                                }
+                            ) { Icon(imageVector = MiuixIcons.Back, contentDescription = null) }
+                        },
+                        actions = {
+                            if (
+                                mainSearchSources.isNotEmpty() ||
+                                lyricsSearchSources.isNotEmpty() ||
+                                coverSearchSources.isNotEmpty()
+                            ) {
+                                IconButton(onClick = { showSearchOptionsSheet = true }) {
+                                    Icon(imageVector = MiuixIcons.Search, contentDescription = null)
                                 }
                             }
-                        ) { Icon(imageVector = MiuixIcons.Back, contentDescription = null) }
-                    },
-                    actions = {
-                        if (
-                            mainSearchSources.isNotEmpty() ||
-                            lyricsSearchSources.isNotEmpty() ||
-                            coverSearchSources.isNotEmpty()
-                        ) {
-                            IconButton(onClick = { showSearchOptionsSheet = true }) {
-                                Icon(imageVector = MiuixIcons.Search, contentDescription = null)
-                            }
-                        }
 
-                        // 保存按钮
-                        IconButton(
-                            onClick = { viewModel.saveMetadata() },
-                            enabled = !uiState.isSaving
-                        ) {
-                            if (uiState.isSaving) CircularProgressIndicator(
-                                modifier = Modifier.size(
-                                    24.dp
+                            // 保存按钮
+                            IconButton(
+                                onClick = { viewModel.saveMetadata() },
+                                enabled = !uiState.isSaving
+                            ) {
+                                if (uiState.isSaving) CircularProgressIndicator(
+                                    modifier = Modifier.size(
+                                        24.dp
+                                    )
                                 )
-                            )
-                            else Icon(imageVector = MiuixIcons.Ok, contentDescription = null)
-                        }
-                    },
-                    scrollBehavior = topAppBarScrollBehavior
-                )
+                                else Icon(imageVector = MiuixIcons.Ok, contentDescription = null)
+                            }
+                        },
+                        scrollBehavior = topAppBarScrollBehavior
+                    )
+                }
             },
             snackbarHost = { SnackbarHost(snackbarHostState) }
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
-                    .padding(scaffoldTopHorizontalPadding(paddingValues))
+                    .then(
+                        if (topBarBackdrop != null) {
+                            Modifier.layerBackdrop(topBarBackdrop)
+                        } else {
+                            Modifier
+                        }
+                    )
                     .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
                     .overScrollVertical()
                     .imePadding()
                     .scrollEndHaptic(),
+                // 用 contentPadding 而不是 padding，表单才会从毛玻璃顶栏下面滚过
+                contentPadding = scaffoldTopHorizontalPadding(paddingValues),
             ) {
                 val visibleFieldCodes = visibleFieldGroups
                     .flatMap { it.fields }
@@ -783,23 +804,6 @@ fun EditMetadataScreen(
                         Column {
                             SmallTitle(text = stringResource(R.string.group_credits_other))
 
-                            if (visibleFieldCodes.contains("credits_other.composer")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_composer),
-                                    state = composerState,
-                                    isModified = !editingTagData?.composer.isEqualIgnoringBlank(
-                                        originalTagData?.composer
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_composer),
-                                            currentValue = editingTagData?.composer ?: "",
-                                            originalValue = originalTagData?.composer ?: ""
-                                        ) { copy(composer = it) }
-                                    }
-                                )
-                            }
-
                             if (visibleFieldCodes.contains("credits_other.lyricist")) {
                                 MetadataInputField(
                                     label = stringResource(R.string.label_lyricist),
@@ -813,6 +817,23 @@ fun EditMetadataScreen(
                                             currentValue = editingTagData?.lyricist ?: "",
                                             originalValue = originalTagData?.lyricist ?: ""
                                         ) { copy(lyricist = it) }
+                                    }
+                                )
+                            }
+
+                            if (visibleFieldCodes.contains("credits_other.composer")) {
+                                MetadataInputField(
+                                    label = stringResource(R.string.label_composer),
+                                    state = composerState,
+                                    isModified = !editingTagData?.composer.isEqualIgnoringBlank(
+                                        originalTagData?.composer
+                                    ),
+                                    onRevert = {
+                                        revertField(
+                                            fieldLabel = context.getString(R.string.label_composer),
+                                            currentValue = editingTagData?.composer ?: "",
+                                            originalValue = originalTagData?.composer ?: ""
+                                        ) { copy(composer = it) }
                                     }
                                 )
                             }

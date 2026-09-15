@@ -1,7 +1,9 @@
 package com.lonx.lyrico.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -19,24 +22,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.ui.components.ChipGrid
 import com.lonx.lyrico.ui.components.ManagedChip
+import com.lonx.lyrico.ui.components.base.YesNoDialog
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
+import com.lonx.lyrico.ui.components.song.SongListItem
 import com.lonx.lyrico.viewmodel.CustomTagKeyError
 import com.lonx.lyrico.viewmodel.CustomTagManagementViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
+import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -50,6 +59,7 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.window.WindowDialog
 
 /**
@@ -67,6 +77,10 @@ fun CustomTagManagementScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var pendingDeleteKey by remember { mutableStateOf<String?>(null) }
+    var showTagSongsSheet by remember { mutableStateOf(false) }
+    var pendingOpenSongUri by remember { mutableStateOf<String?>(null) }
     val scrollBehavior = MiuixScrollBehavior()
 
     Scaffold(
@@ -108,7 +122,16 @@ fun CustomTagManagementScreen(
                             uiState.visibleKeys.forEach { key ->
                                 ManagedChip(
                                     text = key,
-                                    onDelete = { viewModel.removeKey(key) },
+                                    onClick = {
+                                        // 上一次关闭动画没走完就再打开时，丢弃待跳转的歌曲
+                                        pendingOpenSongUri = null
+                                        viewModel.showTagSongs(key)
+                                        showTagSongsSheet = true
+                                    },
+                                    onDelete = {
+                                        pendingDeleteKey = key
+                                        showDeleteDialog = true
+                                    },
                                 )
                             }
                         }
@@ -153,16 +176,107 @@ fun CustomTagManagementScreen(
         availableKeys = uiState.availableKeys,
         error = uiState.inputError,
         onAddAvailable = viewModel::addAvailableKey,
-        onDismiss = {
-            showAddDialog = false
-            viewModel.clearInputError()
-        },
+        onDismiss = { showAddDialog = false },
+        onDismissFinished = viewModel::clearInputError,
         onConfirm = { typed ->
             scope.launch {
                 if (viewModel.addKey(typed)) showAddDialog = false
             }
         },
     )
+
+    YesNoDialog(
+        show = showDeleteDialog,
+        title = stringResource(R.string.custom_tag_delete_title),
+        summary = stringResource(R.string.custom_tag_delete_message, pendingDeleteKey.orEmpty()),
+        confirmText = stringResource(R.string.common_delete),
+        onDismissRequest = { showDeleteDialog = false },
+        // 关闭动画结束前保留待删除的标签，否则对话框会在收起过程中空掉。
+        onDismissFinished = { pendingDeleteKey = null },
+        onConfirm = { pendingDeleteKey?.let(viewModel::removeKey) },
+    )
+
+    TagSongsBottomSheet(
+        show = showTagSongsSheet,
+        tagKey = uiState.selectedTagKey,
+        songs = uiState.selectedTagSongs,
+        isLoading = uiState.isLoadingSelectedTagSongs,
+        onDismissRequest = { showTagSongsSheet = false },
+        onDismissFinished = {
+            // 关闭动画没走完又重新打开了列表时不清理、不跳转
+            if (!showTagSongsSheet) {
+                viewModel.clearTagSongs()
+                // 打开歌曲要等 sheet 收完，否则动画会被页面跳转打断
+                pendingOpenSongUri?.let {
+                    navigator.navigate(EditMetadataDestination(songFileUri = it))
+                }
+                pendingOpenSongUri = null
+            }
+        },
+        onSongClick = { song ->
+            pendingOpenSongUri = song.uri
+            showTagSongsSheet = false
+        },
+    )
+}
+
+/**
+ * 某个标签用在了哪些歌曲上。一个标签可能命中上千首歌，所以用 [LazyColumn] 懒加载，并限制
+ * 最大高度，避免 sheet 铺满整屏。
+ */
+@Composable
+private fun TagSongsBottomSheet(
+    show: Boolean,
+    tagKey: String?,
+    songs: List<SongEntity>,
+    isLoading: Boolean,
+    onDismissRequest: () -> Unit,
+    onDismissFinished: () -> Unit,
+    onSongClick: (SongEntity) -> Unit,
+) {
+    WindowBottomSheet(
+        show = show,
+        title = stringResource(R.string.custom_tag_songs_title, tagKey.orEmpty()),
+        // 列表在卡片内部滚动，多余的滚动量不能让 sheet 跟着拖动，否则 over scroll 时卡片会跟着走
+        enableNestedScroll = false,
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+    ) {
+        when {
+            isLoading -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(size = 32.dp)
+            }
+
+            songs.isEmpty() -> Text(
+                text = stringResource(R.string.custom_tag_songs_empty),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
+            )
+
+            else -> Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                insideMargin = PaddingValues(0.dp),
+            ) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp),
+                ) {
+                    items(songs, key = { it.uri }) { song ->
+                        SongListItem(song = song, onClick = { onSongClick(song) })
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -182,6 +296,7 @@ private fun AddCustomTagDialog(
     error: CustomTagKeyError?,
     onAddAvailable: (String) -> Unit,
     onDismiss: () -> Unit,
+    onDismissFinished: () -> Unit,
     onConfirm: (String) -> Unit,
 ) {
     var typed by remember(show) { mutableStateOf("") }
@@ -190,6 +305,7 @@ private fun AddCustomTagDialog(
         show = show,
         title = stringResource(R.string.custom_tag_add_key),
         onDismissRequest = onDismiss,
+        onDismissFinished = onDismissFinished,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(

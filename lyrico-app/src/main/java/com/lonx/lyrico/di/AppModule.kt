@@ -313,7 +313,7 @@ val appModule = module {
     viewModel { SearchSourceConfigViewModel(get(), get()) }
     viewModel { EditMetadataViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { EditFieldVisibilitySettingsViewModel(get()) }
-    viewModel { CustomTagManagementViewModel(get(), get()) }
+    viewModel { CustomTagManagementViewModel(get(), get(), get()) }
     viewModel { BatchMatchViewModel(get(), get(), get(), get(), get()) }
     viewModel { AppLogViewModel(get(),get()) }
     viewModel { PluginViewModel(get(), get(), get(), get(), get()) }

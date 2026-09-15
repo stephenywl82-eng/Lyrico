@@ -9,13 +9,17 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.LocalScaffoldIncludesStartPadding
+import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.blur.BlendColorEntry
 import top.yukonga.miuix.kmp.blur.BlurColors
 import top.yukonga.miuix.kmp.blur.LayerBackdrop
@@ -90,6 +94,14 @@ internal fun rememberBlurBackdrop(enableBlur: Boolean = true): LayerBackdrop? {
         drawContent()
     }
     return if (enableBlur && isRenderEffectSupported()) backdrop else null
+}
+
+/** 顶栏/底栏模糊开关，各页面统一从这里读。 */
+@Composable
+internal fun rememberBarBlurEnabled(): Boolean {
+    val settings: SettingsRepository = koinInject()
+    val enabled by settings.barBlurEnabled.collectAsStateWithLifecycle(initialValue = false)
+    return enabled
 }
 
 @Composable

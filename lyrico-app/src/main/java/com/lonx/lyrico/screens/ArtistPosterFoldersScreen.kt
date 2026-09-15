@@ -27,9 +27,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.FolderManagementItem
 import com.lonx.lyrico.ui.components.library.LibraryBlurredBar
+import com.lonx.lyrico.ui.components.library.rememberBarBlurEnabled
 import com.lonx.lyrico.ui.components.library.rememberBlurBackdrop
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
@@ -41,7 +41,6 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.koinInject
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -78,9 +77,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
     val currentFolder = state.folders.find { it.uri == currentFolderUri }
     BackHandler(currentFolder != null) { currentFolderUri = null }
     val scrollBehavior = MiuixScrollBehavior()
-    val settingsRepository: SettingsRepository = koinInject()
-    val barBlurEnabled by settingsRepository.barBlurEnabled.collectAsStateWithLifecycle(initialValue = false)
-    val topBarBackdrop = rememberBlurBackdrop(enableBlur = barBlurEnabled)
+    val topBarBackdrop = rememberBlurBackdrop(enableBlur = rememberBarBlurEnabled())
 
     Scaffold(
         topBar = {
