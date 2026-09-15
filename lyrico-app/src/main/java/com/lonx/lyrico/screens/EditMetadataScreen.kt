@@ -93,6 +93,8 @@ import com.lonx.lyrico.data.model.lyrics.LyricsProcessingOptions
 import com.lonx.lyrico.data.model.plugin.PluginSourceType
 import com.lonx.lyrico.data.model.search.LyricsSearchResult
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
+import com.lonx.lyrico.ui.components.CoverRequest
+import com.lonx.lyrico.ui.components.cover.rememberArtistPosterSource
 import com.lonx.lyrico.ui.components.crop.ImageCropper
 import com.lonx.lyrico.ui.components.getBitmap
 import com.lonx.lyrico.ui.components.crop.rememberImageCropperState
@@ -197,6 +199,21 @@ fun EditMetadataScreen(
     val replayGainCalculateProgress = uiState.replayGainCalculateProgress
     val originalTagData = uiState.originalTagData
     val editingTagData = uiState.editingTagData
+    // 没有内嵌艺术家图片时，回退到外置的艺术家海报文件夹
+    val artistPosterSource = rememberArtistPosterSource()
+    val artistPosterFallback = remember(songFileUri, editingTagData?.artist, artistPosterSource) {
+        CoverRequest(
+            uri = songFileUri.toUri(),
+            lastUpdate = 0L,
+            pictureType = AudioPictureType.Artist,
+            fallbackPictureTypes = listOf(AudioPictureType.LeadArtist, AudioPictureType.Band),
+            // 外置海报只是内嵌艺术家图片缺失时的兜底，不要退化成普通封面
+            fallbackToAny = false,
+            artistName = editingTagData?.artist?.takeIf { it.isNotBlank() },
+            artistPosterFolders = artistPosterSource.folders,
+            artistPosterRevision = artistPosterSource.revision
+        )
+    }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -544,7 +561,7 @@ fun EditMetadataScreen(
                         Column {
                             CoverSection(
                                 coverUri = uiState.coverUri,
-                                artistImageUri = uiState.artistImageUri,
+                                artistImageUri = uiState.artistImageUri ?: artistPosterFallback,
                                 title = editingTagData?.title
                                     ?: uiState.songInfo?.tagData?.fileName?.substringBeforeLast(".")
                                     ?: "",

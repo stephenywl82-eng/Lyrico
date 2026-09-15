@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -81,14 +80,12 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
@@ -99,7 +96,6 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.AddFolder
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Sort
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -1192,54 +1188,15 @@ private fun FolderListItem(
 
     val actionEntry = DropdownEntry(items = actionItems)
 
-    Card(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        BasicComponent(
-            endActions = {
-                OverlayIconDropdownMenu(
-                    entry = actionEntry,
-                    enabled = !isBusy
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.More,
-                        contentDescription = stringResource(R.string.cd_more_actions)
-                    )
-                }
-            },
-            bottomAction = {
-                AnimatedVisibility(
-                    visible = isScanning
-                ) {
-                    LinearProgressIndicator()
-                }
-            },
-            enabled = !isBusy,
-            onClick = onClick
-        ) {
-            Text(
-                text = folderName,
-                color = MiuixTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Medium
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Text(
-                text = folder.path,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                fontSize = MiuixTheme.textStyles.body2.fontSize
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = statusText,
-                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                fontSize = MiuixTheme.textStyles.body2.fontSize
-            )
-        }
-    }
+    com.lonx.lyrico.ui.components.FolderManagementItem(
+        name = folderName,
+        path = folder.path,
+        status = statusText,
+        actions = actionEntry,
+        enabled = !isBusy,
+        isLoading = isScanning,
+        onClick = onClick
+    )
 }
 
 private data class FolderTree(

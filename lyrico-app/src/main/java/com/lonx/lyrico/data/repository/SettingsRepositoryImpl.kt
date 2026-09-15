@@ -100,6 +100,36 @@ object SettingsDefaults {
 }
 
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
+    private val artistPosterFoldersKey = stringPreferencesKey("artist_poster_folders")
+    private val artistPosterRevisionKey = longPreferencesKey("artist_poster_revision")
+    override val artistPosterRevision: Flow<Long> = context.settingsDataStore.data.map {
+        it[artistPosterRevisionKey] ?: 0L
+    }
+
+    override suspend fun refreshArtistPosters() {
+        context.settingsDataStore.edit {
+            it[artistPosterRevisionKey] = (it[artistPosterRevisionKey] ?: 0L) + 1L
+        }
+    }
+    override val artistPosterFolders: Flow<List<String>> = context.settingsDataStore.data.map {
+        decodePosterFolders(it[artistPosterFoldersKey])
+    }
+
+    private fun decodePosterFolders(value: String?): List<String> =
+        runCatching { Json.decodeFromString<List<String>>(value ?: "[]") }.getOrDefault(emptyList())
+
+    override suspend fun addArtistPosterFolder(uri: String) {
+        context.settingsDataStore.edit {
+            it[artistPosterFoldersKey] = Json.encodeToString((decodePosterFolders(it[artistPosterFoldersKey]) + uri).distinct())
+        }
+    }
+
+    override suspend fun removeArtistPosterFolder(uri: String) {
+        context.settingsDataStore.edit {
+            it[artistPosterFoldersKey] = Json.encodeToString(decodePosterFolders(it[artistPosterFoldersKey]) - uri)
+        }
+    }
+
     private val jsonFormatter = Json {
         ignoreUnknownKeys = true // 允许 JSON 中包含当前版本未知的字段
         prettyPrint = true       // 导出的 JSON 格式化，易于阅读

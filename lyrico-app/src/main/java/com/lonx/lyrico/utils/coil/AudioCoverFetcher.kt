@@ -2,7 +2,6 @@ package com.lonx.lyrico.utils.coil
 
 import android.content.ContentResolver
 import android.net.Uri
-import android.util.Log
 import coil3.ImageLoader
 import coil3.decode.DataSource
 import coil3.decode.ImageSource
@@ -15,6 +14,8 @@ import com.lonx.audiotag.rw.AudioTagReader
 import com.lonx.lyrico.ui.components.CoverCandidate
 import com.lonx.lyrico.ui.components.CoverRequest
 import okio.Buffer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class AudioCoverFetcher(
     private val contentResolver: ContentResolver,
@@ -23,6 +24,8 @@ class AudioCoverFetcher(
     private val fallbackPictureTypes: List<AudioPictureType>,
     private val fallbackToAny: Boolean,
     private val candidates: List<CoverCandidate>,
+    private val artistName: String?,
+    private val artistPosterFolders: List<String>,
     private val options: Options
 ) : Fetcher {
 
@@ -30,9 +33,11 @@ class AudioCoverFetcher(
         val candidateList = candidates.takeIf { it.isNotEmpty() }
             ?: listOf(CoverCandidate(uri, 0L))
 
-        val pictureBytes = readRequestedPicture(candidateList)
-            ?: readFallbackPicture(candidateList)
-            ?: return null
+        val pictureBytes = withContext(Dispatchers.IO) {
+            readRequestedPicture(candidateList)
+                ?: readExternalArtistPoster(options.context, artistName, artistPosterFolders)
+                ?: readFallbackPicture(candidateList)
+        } ?: return null
 
         if (pictureBytes.isEmpty()) {
             return null
@@ -53,13 +58,16 @@ class AudioCoverFetcher(
         candidates: List<CoverCandidate>
     ): ByteArray? {
         for (candidate in candidates) {
-            val bytes = contentResolver.openFileDescriptor(candidate.uri, "r")?.use { pfd ->
-                AudioTagReader.readPicture(
-                    pfd = pfd,
-                    pictureType = pictureType,
-                    fallbackPictureTypes = fallbackPictureTypes,
-                    fallbackToAny = false
-                )
+            // A missing or unreadable candidate must not stop the poster folder lookup below.
+            val bytes = readArtworkSafely {
+                contentResolver.openFileDescriptor(candidate.uri, "r")?.use { pfd ->
+                    AudioTagReader.readPicture(
+                        pfd = pfd,
+                        pictureType = pictureType,
+                        fallbackPictureTypes = fallbackPictureTypes,
+                        fallbackToAny = false
+                    )
+                }
             }
             if (bytes != null && bytes.isNotEmpty()) return bytes
         }
@@ -71,12 +79,14 @@ class AudioCoverFetcher(
     ): ByteArray? {
         if (!fallbackToAny) return null
         val firstCandidate = candidates.firstOrNull() ?: return null
-        return contentResolver.openFileDescriptor(firstCandidate.uri, "r")?.use { pfd ->
-            AudioTagReader.readPicture(
-                pfd = pfd,
-                pictureType = AudioPictureType.FrontCover,
-                fallbackToAny = true
-            )
+        return readArtworkSafely {
+            contentResolver.openFileDescriptor(firstCandidate.uri, "r")?.use { pfd ->
+                AudioTagReader.readPicture(
+                    pfd = pfd,
+                    pictureType = AudioPictureType.FrontCover,
+                    fallbackToAny = true
+                )
+            }
         }
     }
 
@@ -93,6 +103,8 @@ class AudioCoverFetcher(
             fallbackPictureTypes = data.fallbackPictureTypes,
             fallbackToAny = data.fallbackToAny,
             candidates = data.candidates,
+            artistName = data.artistName,
+            artistPosterFolders = data.artistPosterFolders,
             options = options
         )
     }

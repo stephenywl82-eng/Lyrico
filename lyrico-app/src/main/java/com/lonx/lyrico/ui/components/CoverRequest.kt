@@ -14,7 +14,10 @@ data class CoverRequest(
     val pictureType: AudioPictureType = AudioPictureType.FrontCover,
     val fallbackPictureTypes: List<AudioPictureType> = emptyList(),
     val fallbackToAny: Boolean = pictureType == AudioPictureType.FrontCover,
-    val candidates: List<CoverCandidate> = emptyList()
+    val candidates: List<CoverCandidate> = emptyList(),
+    val artistName: String? = null,
+    val artistPosterFolders: List<String> = emptyList(),
+    val artistPosterRevision: Long = 0L
 ) {
     companion object {
         /**

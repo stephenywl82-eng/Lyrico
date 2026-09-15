@@ -85,6 +85,7 @@ class App : Application(), SingletonImageLoader.Factory {
         return ImageLoader.Builder(context)
             .components {
                 add(AudioCoverKeyer())
+                add(com.lonx.lyrico.utils.coil.PosterFileFetcherFactory())
                 add(AudioCoverFetcher.Factory(context.contentResolver))
             }
             .diskCache {

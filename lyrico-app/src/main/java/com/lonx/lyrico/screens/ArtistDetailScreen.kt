@@ -488,7 +488,8 @@ private fun ArtistDetailHeader(
                 AudioPictureType.Band
             ),
             fallbackToAny = true,
-            candidates = coverCandidates
+            candidates = coverCandidates,
+            artistName = artist
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {

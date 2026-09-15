@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 
 /** Application configuration honors both system and per-app language preferences. */
 object PluginLocales {
-    private val current = MutableStateFlow(listOf(java.util.Locale.getDefault().toLanguageTag()))
+    private val current = MutableStateFlow<List<String>>(emptyList())
     val preferences = current.asStateFlow()
     private var initialized = false
 
@@ -22,6 +22,7 @@ object PluginLocales {
         update(context.resources.configuration)
         context.applicationContext.registerComponentCallbacks(object : ComponentCallbacks {
             override fun onConfigurationChanged(newConfig: Configuration) = update(newConfig)
+            @Deprecated("Deprecated in Java")
             override fun onLowMemory() = Unit
         })
     }

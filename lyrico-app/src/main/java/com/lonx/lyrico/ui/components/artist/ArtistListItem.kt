@@ -69,7 +69,8 @@ fun ArtistListItem(
                     AudioPictureType.Band
                 ),
                 fallbackToAny = true,
-                candidates = coverCandidates
+                candidates = coverCandidates,
+                artistName = artist.name
             )
 
 

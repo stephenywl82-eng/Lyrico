@@ -70,6 +70,9 @@ import com.ramcosta.composedestinations.generated.destinations.BatchTaskListDest
 import com.ramcosta.composedestinations.generated.destinations.CustomTagManagementDestination
 import com.ramcosta.composedestinations.generated.destinations.EditFieldVisibilityDestination
 import com.ramcosta.composedestinations.generated.destinations.FolderManagerDestination
+import com.ramcosta.composedestinations.generated.destinations.ArtistPosterFoldersDestination
+import com.lonx.lyrico.data.repository.SettingsRepository
+import org.koin.compose.koinInject
 import com.ramcosta.composedestinations.generated.destinations.LyricsCleanupRulesDestination
 import com.ramcosta.composedestinations.generated.destinations.PluginManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.QuickjsTestDestination
@@ -122,6 +125,8 @@ fun SettingsScreen(
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val folderViewModel: FolderManagerViewModel = koinViewModel()
     val folderUiState by folderViewModel.uiState.collectAsStateWithLifecycle()
+    val settingsRepository: SettingsRepository = koinInject()
+    val artistPosterFolders by settingsRepository.artistPosterFolders.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val lyricFormat = settingsUiState.lyricFormat
     val artistSeparator = settingsUiState.separator
@@ -493,6 +498,11 @@ fun SettingsScreen(
                         title = stringResource(R.string.folder_manager),
                         summary = folderSummary,
                         onClick = { navigator.navigate(FolderManagerDestination()) }
+                    )
+                    ArrowPreference(
+                        title = stringResource(R.string.artist_poster_folders),
+                        summary = stringResource(R.string.artist_poster_folders_count, artistPosterFolders.size),
+                        onClick = { navigator.navigate(ArtistPosterFoldersDestination()) }
                     )
                     SwitchPreference(
                         title = stringResource(R.string.ignore_short_audio),
