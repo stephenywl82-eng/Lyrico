@@ -12,6 +12,20 @@ plugins {
 val baseVersionName = "1.5.0"
 val baseVersionCode = 19
 
+val releaseSigningEnv = listOf(
+    "LYRICO_KEYSTORE_PATH",
+    "LYRICO_KEYSTORE_PASSWORD",
+    "LYRICO_KEY_ALIAS",
+    "LYRICO_KEY_PASSWORD"
+).associateWith { providers.environmentVariable(it).orNull?.takeIf(String::isNotEmpty) }
+val hasReleaseSigning = releaseSigningEnv.values.any { it != null }
+if (hasReleaseSigning) {
+    require(releaseSigningEnv.values.all { it != null }) {
+        "Incomplete Release signing configuration. Missing: " +
+            releaseSigningEnv.filterValues { it == null }.keys.joinToString()
+    }
+}
+
 fun gitCommitHash(): Provider<String> = providers.exec {
     commandLine("git", "rev-parse", "--short", "HEAD")
     isIgnoreExitValue = true
@@ -50,8 +64,20 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(releaseSigningEnv.getValue("LYRICO_KEYSTORE_PATH")!!)
+                storePassword = releaseSigningEnv.getValue("LYRICO_KEYSTORE_PASSWORD")
+                keyAlias = releaseSigningEnv.getValue("LYRICO_KEY_ALIAS")
+                keyPassword = releaseSigningEnv.getValue("LYRICO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles(
