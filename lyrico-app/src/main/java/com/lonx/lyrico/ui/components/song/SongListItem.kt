@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,6 +45,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,6 +73,7 @@ fun SongListItem(
     swipeSelectionSecondaryLabel: String? = null,
     lyricPreview: String? = null,
     lyricMatchQuery: String? = null,
+    showTrackNumbers: Boolean = false,
     onClick: () -> Unit,
     onToggleSelection: (() -> Unit)? = null,
     onSwipeSelection: (() -> Unit)? = null,
@@ -223,6 +226,23 @@ fun SongListItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                if (showTrackNumbers) {
+                    val trackNumber = song.trackerNumber
+                        ?.substringBefore('/')
+                        ?.trim()
+                        ?.takeIf { it.isNotEmpty() }
+                        ?: "—"
+                    Text(
+                        text = song.discNumber?.let { "$trackNumber ($it)" } ?: trackNumber,
+                        modifier = Modifier.widthIn(min = 36.dp, max = 72.dp),
+                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .size(48.dp)

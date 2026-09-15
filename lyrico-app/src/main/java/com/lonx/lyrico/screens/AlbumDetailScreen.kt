@@ -248,6 +248,7 @@ fun AlbumDetailScreen(
                         ) { song ->
                             SongListItem(
                                 song = song,
+                                showTrackNumbers = true,
                                 isSelectionMode = isSelectionMode,
                                 isSelected = selectedSongUris.contains(song.uri),
                                 swipeSelectionLabel = swipeSelectionLabel,
