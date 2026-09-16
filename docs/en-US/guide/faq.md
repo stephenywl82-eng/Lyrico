@@ -28,6 +28,39 @@ Use the **Hide Folder** feature (`Settings` → `Scan Settings` → `Folder Mana
 
 For individual songs, move them to a separate folder and hide that folder.
 
+### Embedded artist artwork vs. poster folders—which wins?
+
+**Embedded artwork** in the audio file (of the artist picture type) always wins. Only when a song has no usable embedded image does Lyrico look up a poster by file name in your artist poster folders. So a same-named poster file has no effect for an artist that already carries embedded artwork.
+
+### I added an artist poster folder but artists still show no image?
+
+Check in order:
+
+1. Are the poster files **directly inside** the selected folder? (Lyrico does not search subfolders.)
+2. Does the file name match the artist name (e.g., `周杰伦.jpg`)? Names containing `\ / : * ? " < > |` need a substitute such as an underscore—`AC/DC` becomes `AC_DC.jpg`.
+3. Does the artist already have embedded artwork? Embedded artwork takes priority and overrides the poster file.
+4. Is the "matched to library artists" count 0? A count of 0 means the file names do not line up with the artist names.
+
+See [Artist Poster Folders](./library.md#artist-poster-folders) for details.
+
+### One artist got split into several in the artist list?
+
+That is artist splitting breaking a multi-artist tag apart by separator; the tags in the audio files themselves are not modified. To keep an artist intact, add its name to the **No-Split Whitelist** under `Settings` → `Metadata Processing` → `Artist Split Rules`, then rebuild the artist index.
+
+## Interface
+
+### How do I switch the app language?
+
+Go to `Settings` → `Appearance` → `App Language` and choose Follow System, English, 简体中文, 繁體中文（台灣）, or 繁體中文（香港）. The interface switches immediately; no restart is needed.
+
+### The bottom bar turned into a floating style—how do I undo that?
+
+Turn off **Floating Navigation Bar** in `Settings` → `Appearance` to get the normal bottom bar back. While it is on, you can also choose the **Floating Bar Effect** right below it (None / Frosted glass / Liquid glass). See [Appearance](./settings/appearance.md#floating-navigation-bar).
+
+### What is the number on the left of each song row?
+
+That is the **track number**, taken from the song's "track number" tag. When the tags include a disc number it is shown as `track (disc)`; songs without a track number show `—`. Only the song lists in album detail and artist detail show it.
+
 ## Plugin Issues
 
 ### Plugin installed but no search results?

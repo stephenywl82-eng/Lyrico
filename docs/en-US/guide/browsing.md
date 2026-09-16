@@ -25,6 +25,12 @@ Album covers displayed in a grid. Tap an album to see its detail page with all s
 
 Song lists in album detail pages also support tap-to-edit, long-press multi-select, and other operations.
 
+**Track numbers**: In the album detail and artist detail song lists, each song shows its track number on the left; when the tags include a disc number, it is shown as `track (disc)`. Songs without a track number show `—`.
+
+::: tip Floating navigation bar
+If the bottom bar takes up too much room, enable **Floating Navigation Bar** in `Settings` → `Appearance` and pick a frosted-glass or liquid-glass effect. See [Appearance](./settings/appearance.md#floating-navigation-bar).
+:::
+
 ## Sorting
 
 Songs, artists, and albums all support sorting. Tap the sort button at the top of each list to change the sort order:

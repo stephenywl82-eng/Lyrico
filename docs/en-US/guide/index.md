@@ -28,6 +28,8 @@ If you're new to Lyrico, read in this order:
 | Batch-edit the same field across songs | [Batch Operations](./batch.md#edit-tags) |
 | Batch-rename files by pattern | [Batch Operations](./batch.md#rename-files) |
 | Install new search source plugins | [Using Plugins](./plugins.md) |
+| Show a custom poster for an artist | [Library & Folders](./library.md#artist-poster-folders) |
+| Switch the app language or bottom bar style | [Appearance](./settings/appearance.md) |
 | Change theme, scan, lyrics, or other settings | [Settings Overview](./settings/) |
 | Troubleshoot a feature | [FAQ](./faq.md) |
 

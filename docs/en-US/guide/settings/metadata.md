@@ -49,11 +49,17 @@ Use this to simplify the editor by hiding fields you rarely use.
 
 ## Custom Tags
 
-Controls which custom tag keys are shown in the editor and batch editor.
+Controls which custom tag keys are shown in the editor and batch editor. Go to: `Settings` → `Metadata Processing` → `Custom Tag Management`.
 
-- Adding a custom tag key makes it visible in the editor's custom tags section.
-- Removing visibility does **not** delete existing custom tag data from songs—it only stops displaying them.
-- The system tracks usage counts for each custom tag key.
+- The tags in the list are exactly the tag fields that appear in the single-song and batch editors, in the same order.
+- Tap **Add Tag** to add a tag:
+  - Pick a scanned key directly from **Tags found in the library**, ordered by usage count (most used first).
+  - Or type a key by hand (for example `SOURCE`, `MOOD`). Keys are trimmed and upper-cased automatically; empty input, line breaks, more than 64 characters, or a duplicate reports the specific reason.
+- Tap a tag in the list to see **which songs use it**; tapping a song there opens its editor.
+- Deleting a tag only removes it from the list—it does **not** delete existing data from songs, and re-adding it brings the values back into view.
+- **Reset to Default** clears the list back to its default state.
+
+Tag keys come from the audio files themselves, and Lyrico tracks how often each key is used.
 
 ## Character Mapping
 

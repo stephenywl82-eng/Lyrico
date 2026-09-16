@@ -53,7 +53,7 @@ Use plugins to search online song metadata to fill in title, artist, lyrics, and
 3. Search results are shown under "All" and per-plugin-source tabs.
    - Tap **Load more** at the bottom of the results to load the next page. The “All” tab continues loading every source that still has more results.
 4. Tap a search result to view its metadata and lyrics.
-   - By default, only fields containing values are shown. Enable **Show All Search Result Fields** under `Settings` → `Search Settings` to display missing fields as “(empty)”.
+   - By default, only fields containing values are shown. Enable **Show All Fields** under `Settings` → `Search Settings` to display missing fields as "(empty)".
 5. Choose an action:
    - **Apply**: Apply both the selected metadata fields and lyrics to the editor.
    - **Lyrics Only**: Apply only the lyrics to the editor.

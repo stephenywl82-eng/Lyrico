@@ -17,6 +17,15 @@ Choose the preferred lyric format when searching:
 - **Translation**: When enabled, requests translated lyrics during search.
 - **Download Translation Only**: When enabled, only downloads the translated portion if the song already has original lyrics.
 
+## Lyric Line Order
+
+**Lyric Line Order** decides the output order of **original / romanization / translation** in line-timed lyrics. The default is "Original / Romanization / Translation".
+
+In the sheet, **drag** the enabled entries to reorder them; the change applies to lyrics written afterwards. Only enabled content appears in the sheet:
+
+- With "Download Translation Only" enabled there is just the translation entry, so no reordering is needed.
+- Romanization is absent unless romanization is enabled; translation is absent unless translation is enabled.
+
 ## Notes
 
 Changing the lyric mode, romanization, or translation settings does **not auto-refresh** existing search results. Re-search to apply the new settings.
