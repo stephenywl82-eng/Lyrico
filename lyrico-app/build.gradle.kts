@@ -9,8 +9,8 @@ plugins {
     alias(libs.plugins.aboutLibraries)
 }
 // 记得在发布版本时更新此处的值
-val baseVersionName = "1.5.0"
-val baseVersionCode = 19
+val baseVersionName = "1.6.0"
+val baseVersionCode = 20
 
 val releaseSigningEnv = listOf(
     "LYRICO_KEYSTORE_PATH",
