@@ -449,7 +449,10 @@
     <string name="conversion_mode_hint">套用於搜尋到的文字中繼資料和歌詞；ID、日期、數字、URL、封面不會轉換</string>
     <string name="offset_adjust_hint">調整位移</string>
     <string name="label_lyrics_offset">歌詞位移（毫秒）</string>
-    <string name="batch_edit_lyrics_offset_hint">支援正負值，未填寫正負號預設為正</string>
+    <string name="action_manual_input">手動輸入</string>
+    <string name="lyrics_offset_input_invalid">請輸入毫秒數值</string>
+    <string name="lyrics_offset_input_out_of_range">數值超出範圍。%1$s</string>
+    <string name="lyrics_offset_input_hint">範圍 %1$d ~ %2$d 毫秒，正數延後歌詞，負數提前歌詞</string>
     <string name="pull_to_refresh">下拉重新整理</string>
     <string name="release_to_refresh">放開以重新整理</string>
     <string name="refresh">重新整理</string>

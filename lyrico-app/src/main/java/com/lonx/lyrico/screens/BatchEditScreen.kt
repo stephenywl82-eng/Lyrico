@@ -65,6 +65,7 @@ import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.components.CoverRequest
+import com.lonx.lyrico.ui.components.base.LyricsOffsetField
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenu
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenuStyle
 import com.lonx.lyrico.ui.components.fab.FabMenuItem
@@ -429,27 +430,18 @@ fun BatchEditScreen(
                                                                 onRevert = { viewModel.resetRating() }
                                                             )
 
-                                                            // 歌词偏移是数值输入加提示，不是标签字段。
+                                                            // 歌词偏移是数值调整控件，不是标签字段；正负号由控件本身表达，无需额外说明。
                                                             "lyrics_offset" -> {
-                                                                TextField(
-                                                                    modifier = Modifier
-                                                                        .fillMaxWidth()
-                                                                        .padding(
-                                                                            horizontal = 12.dp,
-                                                                            vertical = 6.dp
-                                                                        ),
-                                                                    value = uiState.lyricsOffset,
-                                                                    onValueChange = {
+                                                                LyricsOffsetField(
+                                                                    offset = uiState.lyricsOffset,
+                                                                    onOffsetChange = {
                                                                         viewModel.updateLyricsOffset(it)
                                                                     },
-                                                                    label = stringResource(R.string.label_lyrics_offset),
-                                                                )
-                                                                Text(
-                                                                    text = stringResource(R.string.batch_edit_lyrics_offset_hint),
-                                                                    style = MiuixTheme.textStyles.footnote1,
-                                                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                                                    modifier = Modifier
-                                                                        .padding(horizontal = 12.dp)
+                                                                    enabled = !uiState.isSaving,
+                                                                    modifier = Modifier.padding(
+                                                                        horizontal = 12.dp,
+                                                                        vertical = 6.dp
+                                                                    )
                                                                 )
                                                             }
 

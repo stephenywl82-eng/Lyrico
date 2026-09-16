@@ -97,6 +97,7 @@ import com.lonx.lyrico.data.model.plugin.PluginSourceType
 import com.lonx.lyrico.data.model.search.LyricsSearchResult
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.ui.components.CoverRequest
+import com.lonx.lyrico.ui.components.base.LyricsOffsetField
 import com.lonx.lyrico.ui.components.cover.rememberArtistPosterSource
 import com.lonx.lyrico.ui.components.crop.ImageCropper
 import com.lonx.lyrico.ui.components.getBitmap
@@ -240,15 +241,7 @@ fun EditMetadataScreen(
     var bitmapToCrop by remember { mutableStateOf<Bitmap?>(null) }
     var isFabMenuExpanded by remember { mutableStateOf(false) }
     var photoPickerTarget by remember { mutableStateOf(AudioPictureType.FrontCover) }
-    val lyricsOffsetState = rememberTextFieldState(initialText = "0")
-
-    LaunchedEffect(lyricsOffsetState) {
-        snapshotFlow { lyricsOffsetState.text.toString() }
-            .distinctUntilChanged()
-            .collectLatest { text ->
-                text.toLongOrNull()?.let(viewModel::applyLyricsOffset)
-            }
-    }
+    val currentShiftOffset by viewModel.currentShiftOffset.collectAsState()
 
     val clipboardManager = LocalClipboard.current
 
@@ -1149,9 +1142,6 @@ fun EditMetadataScreen(
                         onClick = {
                             showLyricsActionBottomSheet = false
                             viewModel.prepareLyricsOffset()
-                            lyricsOffsetState.edit {
-                                replace(0, length, "0")
-                            }
                             showOffsetSheet = true
                         }
                     )
@@ -1471,27 +1461,16 @@ fun EditMetadataScreen(
                 }
             }
 
-            TextField(
-                state = lyricsOffsetState,
-                label = stringResource(R.string.label_lyrics_offset),
-                modifier = Modifier.padding(top = 12.dp),
-                lineLimits = TextFieldLineLimits.SingleLine,
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            viewModel.resetLyricsOffset()
-                            lyricsOffsetState.edit {
-                                replace(0, length, "0")
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Reset,
-                            contentDescription = stringResource(R.string.action_reset)
-                        )
-                    }
-                }
-            )
+            Card(
+                colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+                modifier = Modifier.padding(top = 12.dp)
+            ) {
+                LyricsOffsetField(
+                    offset = currentShiftOffset,
+                    onOffsetChange = { viewModel.applyLyricsOffset(it) },
+                    modifier = Modifier.padding(vertical = 12.dp)
+                )
+            }
         }
     }
     // 添加自定义标签 dialog

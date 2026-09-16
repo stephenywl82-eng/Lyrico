@@ -103,8 +103,8 @@ data class BatchEditUiState(
     val coverUri: Any? = null,
     val removeCover: Boolean = false,
 
-    /** 歌词偏移（毫秒） */
-    val lyricsOffset: String = "",
+    /** 歌词偏移（毫秒），0 表示不偏移 */
+    val lyricsOffset: Long = 0L,
 
     /** 回放增益（"<keep>"表示不修改，""表示清除） */
     val replayGainTrackGain: String = "<keep>",
@@ -125,7 +125,11 @@ data class BatchEditUiState(
     val saveTimeMillis: Long = 0,  // 保存总用时（毫秒）
     val selectedSongsVersion: Int = 0,
     val customTagPreviewVersion: Int = 0
-)
+) {
+    /** 传给批处理任务的偏移值：0 表示不偏移（空串），任务配置沿用字符串以兼容历史任务。 */
+    val lyricsOffsetForTask: String
+        get() = lyricsOffset.takeIf { it != 0L }?.toString().orEmpty()
+}
 
 data class BatchEditPreview(
     val songUri: String,
@@ -277,7 +281,7 @@ class BatchEditViewModel(
 
     // ── 歌词偏移 ──────────────────────────────────────────
 
-    fun updateLyricsOffset(value: String) {
+    fun updateLyricsOffset(value: Long) {
         _uiState.update { it.copy(lyricsOffset = value) }
     }
 
@@ -565,18 +569,15 @@ class BatchEditViewModel(
                 )
             }
 
-            if (visible("lyrics_offset") && state.lyricsOffset.isNotBlank()) {
-                val offsetValue = parseLyricsOffset(state.lyricsOffset)
-                if (offsetValue != 0 && song.lyrics != null) {
-                    add(
-                        BatchEditPreviewChange(
-                            labelResId = R.string.label_lyrics_offset,
-                            customLabel = null,
-                            oldValue = song.lyrics,
-                            newValue = LyricEncoder.shiftLyricsOffset(song.lyrics, offsetValue.toLong())
-                        )
+            if (visible("lyrics_offset") && state.lyricsOffset != 0L && song.lyrics != null) {
+                add(
+                    BatchEditPreviewChange(
+                        labelResId = R.string.label_lyrics_offset,
+                        customLabel = null,
+                        oldValue = song.lyrics,
+                        newValue = LyricEncoder.shiftLyricsOffset(song.lyrics, state.lyricsOffset)
                     )
-                }
+                )
             }
 
             state.customFields
@@ -686,7 +687,7 @@ class BatchEditViewModel(
             ratingModified = visible("rating") && ratingModified,
             coverUri = if (visible("picture")) coverUri else null,
             removeCover = visible("picture") && removeCover,
-            lyricsOffset = if (visible("lyrics_offset")) lyricsOffset else "",
+            lyricsOffset = if (visible("lyrics_offset")) lyricsOffset else 0L,
             replayGainTrackGain = if (visible("track_gain")) replayGainTrackGain else keep,
             replayGainTrackPeak = if (visible("track_peak")) replayGainTrackPeak else keep,
             replayGainAlbumGain = if (visible("album_gain")) replayGainAlbumGain else keep,
@@ -792,7 +793,7 @@ class BatchEditViewModel(
             ratingModified = visible("rating") && ratingModified,
             coverUri = if (visible("picture")) coverUri?.toString() else null,
             removeCover = visible("picture") && removeCover,
-            lyricsOffset = if (visible("lyrics_offset")) lyricsOffset else "",
+            lyricsOffset = if (visible("lyrics_offset")) lyricsOffsetForTask else "",
             replayGainTrackGain = if (visible("track_gain")) replayGainTrackGain else keep,
             replayGainTrackPeak = if (visible("track_peak")) replayGainTrackPeak else keep,
             replayGainAlbumGain = if (visible("album_gain")) replayGainAlbumGain else keep,
@@ -807,24 +808,6 @@ class BatchEditViewModel(
                 .distinctBy { it.key }
                 .map { EditTagsCustomField(key = it.key, value = it.value) }
         )
-    }
-
-    /**
-     * 解析歌词偏移值
-     * 支持正负号，未填写正负号默认为正
-     */
-    private fun parseLyricsOffset(input: String): Int {
-        return try {
-            val trimmed = input.trim()
-            if (trimmed.startsWith("+") || trimmed.startsWith("-")) {
-                trimmed.toInt()
-            } else {
-                // 未填写正负号，默认为正
-                trimmed.toInt()
-            }
-        } catch (e: NumberFormatException) {
-            0
-        }
     }
 
     // ── 状态清理 ──────────────────────────────────────────
