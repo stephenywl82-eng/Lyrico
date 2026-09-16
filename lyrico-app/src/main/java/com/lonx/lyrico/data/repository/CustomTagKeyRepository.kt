@@ -1,10 +1,10 @@
 package com.lonx.lyrico.data.repository
 
 import com.lonx.audiotag.model.CustomTagField
+import com.lonx.lyrico.data.editfield.CustomTagKey
 import com.lonx.lyrico.data.model.dao.CustomTagKeyCount
 import com.lonx.lyrico.data.model.dao.SongCustomTagKeyDao
 import kotlinx.coroutines.flow.Flow
-import java.util.Locale
 
 class CustomTagKeyRepository(
     private val dao: SongCustomTagKeyDao,
@@ -37,13 +37,5 @@ class CustomTagKeyRepository(
         return dao.getSongUrisByKey(normalizeCustomTagKey(key) ?: return emptyList())
     }
 
-    private fun normalizeCustomTagKey(input: String): String? {
-        val key = input.trim()
-        return when {
-            key.isBlank() -> null
-            key.length > 64 -> null
-            key.any { it == '\n' || it == '\r' } -> null
-            else -> key.uppercase(Locale.ROOT)
-        }
-    }
+    private fun normalizeCustomTagKey(input: String): String? = CustomTagKey.normalize(input)
 }

@@ -60,10 +60,6 @@ fun LyricLineOrderBottomSheetContent(
             .fillMaxWidth()
             .padding(bottom = 32.dp)
     ) {
-        SmallTitle(
-            text = stringResource(R.string.lyric_line_order),
-            insideMargin = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
-        )
         Text(
             text = stringResource(R.string.lyric_line_order_hint),
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,

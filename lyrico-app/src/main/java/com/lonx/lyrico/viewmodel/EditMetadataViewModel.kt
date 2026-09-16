@@ -23,13 +23,15 @@ import com.lonx.audiotag.model.pictureOfType
 import com.lonx.audiotag.model.removePictureType
 import com.lonx.audiotag.model.replacePicture
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.editfield.CustomTagKey
+import com.lonx.lyrico.data.editfield.EditFieldConfigRepository
+import com.lonx.lyrico.data.editfield.EditFieldDefinition
 import com.lonx.lyrico.data.editfield.EditFieldScene
-import com.lonx.lyrico.data.editfield.EditFieldVisibilityRepository
-import com.lonx.lyrico.data.editfield.VisibleEditFieldGroup
 import com.lonx.lyrico.data.exception.RequiresUserPermissionException
+import com.lonx.lyrico.data.model.ConversionMode
+import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
-import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.model.lyrics.LyricsProcessingOptions
@@ -39,12 +41,10 @@ import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
 import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.data.model.metadata.SearchResultApplier
 import com.lonx.lyrico.data.model.metadata.StandardPluginField
-import com.lonx.lyrico.data.model.search.LyricsSearchResult
-import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings
 import com.lonx.lyrico.data.model.plugin.defaultPluginFieldProcessConfig
+import com.lonx.lyrico.data.model.search.LyricsSearchResult
 import com.lonx.lyrico.data.repository.AppLogRepository
-import com.lonx.lyrico.data.repository.CustomTagSettingsRepository
 import com.lonx.lyrico.data.repository.PlaybackRepository
 import com.lonx.lyrico.data.repository.SettingsDefaults
 import com.lonx.lyrico.data.repository.SettingsRepository
@@ -55,13 +55,13 @@ import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
 import com.lonx.lyrico.utils.CoverSourceType
 import com.lonx.lyrico.utils.LyricDecoder
 import com.lonx.lyrico.utils.LyricEncoder
-import com.lonx.lyrico.utils.lyrics.LyricsTextCleanup
 import com.lonx.lyrico.utils.PluginFieldPostProcessor
 import com.lonx.lyrico.utils.ReplayGainCalculateState
 import com.lonx.lyrico.utils.ReplayGainError
 import com.lonx.lyrico.utils.ReplayGainScanner
 import com.lonx.lyrico.utils.UiMessage
 import com.lonx.lyrico.utils.getCoverSourceType
+import com.lonx.lyrico.utils.lyrics.LyricsTextCleanup
 import com.lonx.lyrico.utils.lyrics.document.LyricsDocumentPipeline
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -131,8 +131,7 @@ class EditMetadataViewModel(
     private val playbackRepository: PlaybackRepository,
     private val replayGainScanner: ReplayGainScanner,
     private val appLogRepository: AppLogRepository,
-    private val editFieldVisibilityRepository: EditFieldVisibilityRepository,
-    private val customTagSettingsRepository: CustomTagSettingsRepository,
+    private val editFieldConfigRepository: EditFieldConfigRepository,
 ) : ViewModel() {
 
     private val TAG = "EditMetadataVM"
@@ -159,23 +158,15 @@ class EditMetadataViewModel(
     private val _uiState = MutableStateFlow(EditMetadataUiState())
     val uiState: StateFlow<EditMetadataUiState> = _uiState.asStateFlow()
 
-    val visibleFieldGroups: StateFlow<List<VisibleEditFieldGroup>> =
-        editFieldVisibilityRepository.configFlow
+    /** 单曲编辑页按配置排序后的可见字段。 */
+    val visibleFields: StateFlow<List<EditFieldDefinition>> =
+        editFieldConfigRepository.configFlow
             .map { config ->
-                config.visibleGroupsForScene(EditFieldScene.SingleEdit)
+                config.visibleFieldsForScene(EditFieldScene.SingleEdit)
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = emptyList(),
-            )
-
-    val visibleCustomKeys: StateFlow<List<String>> =
-        customTagSettingsRepository.settingsFlow
-            .map { it.visibleKeys }
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
+                started = SharingStarted.Eagerly,
                 initialValue = emptyList(),
             )
 
@@ -302,21 +293,13 @@ class EditMetadataViewModel(
         val normalizedKey = normalizeCustomTagKey(key) ?: return
 
         viewModelScope.launch {
-            customTagSettingsRepository.addVisibleKeys(listOf(normalizedKey))
+            editFieldConfigRepository.addCustomTag(normalizedKey)
         }
 
         updateCustomFieldValue(normalizedKey, value)
     }
 
-    private fun normalizeCustomTagKey(input: String): String? {
-        val key = input.trim()
-        return when {
-            key.isBlank() -> null
-            key.length > 64 -> null
-            key.any { it == '\n' || it == '\r' } -> null
-            else -> key.uppercase(Locale.ROOT)
-        }
-    }
+    private fun normalizeCustomTagKey(input: String): String? = CustomTagKey.normalize(input)
     /**
      * 打开弹窗前准备：拍快照，并重置累计偏移量
      */
@@ -804,10 +787,6 @@ class EditMetadataViewModel(
         val state = _uiState.value
         val uriString = state.songInfo?.uriString ?: return
         val editingTagData = state.editingTagData ?: return
-        val audioTagData = editingTagData.filterHiddenEditFields(
-            original = state.originalTagData,
-            visibleFieldCodes = currentVisibleFieldCodes(),
-        )
 
         if (_uiState.value.isSaving) return
 
@@ -823,6 +802,11 @@ class EditMetadataViewModel(
             }
 
             try {
+                val audioTagData = editingTagData.filterHiddenEditFields(
+                    original = state.originalTagData,
+                    visibleFieldCodes = editFieldConfigRepository.configFlow.first()
+                        .visibleFieldCodesForScene(EditFieldScene.SingleEdit),
+                )
                 when (val saveResult = overwriteSongTagsUseCase(uriString, audioTagData)) {
                     is SaveAudioTagsResult.Success -> {
                         val savedTagData = saveResult.tagData
@@ -906,13 +890,6 @@ class EditMetadataViewModel(
         }
     }
 
-    private fun currentVisibleFieldCodes(): Set<String> {
-        return visibleFieldGroups.value
-            .flatMap { it.fields }
-            .map { it.code }
-            .toSet()
-    }
-
     private fun AudioTagData.filterHiddenEditFields(
         original: AudioTagData?,
         visibleFieldCodes: Set<String>,
@@ -922,48 +899,53 @@ class EditMetadataViewModel(
         fun visible(code: String): Boolean = code in visibleFieldCodes
 
         return copy(
-            title = if (visible("basic_info.title")) title else base.title,
-            artist = if (visible("basic_info.artist")) artist else base.artist,
-            albumArtist = if (visible("basic_info.album_artist")) albumArtist else base.albumArtist,
-            album = if (visible("basic_info.album")) album else base.album,
-            date = if (visible("basic_info.date")) date else base.date,
-            language = if (visible("basic_info.language")) language else base.language,
-            genre = if (visible("basic_info.genre")) genre else base.genre,
-            trackNumber = if (visible("track_details.track_number")) trackNumber else base.trackNumber,
-            discNumber = if (visible("track_details.disc_number")) discNumber else base.discNumber,
-            composer = if (visible("credits_other.composer")) composer else base.composer,
-            lyricist = if (visible("credits_other.lyricist")) lyricist else base.lyricist,
-            copyright = if (visible("credits_other.copyright")) copyright else base.copyright,
-            comment = if (visible("credits_other.comment")) comment else base.comment,
-            replayGainTrackGain = if (visible("replay_gain.track_gain")) {
+            customFields = customFields.filter { field ->
+                visible(com.lonx.lyrico.data.editfield.EditFieldRegistry.customTagCode(field.key.uppercase(Locale.ROOT)))
+            } + base.customFields.filterNot { field ->
+                visible(com.lonx.lyrico.data.editfield.EditFieldRegistry.customTagCode(field.key.uppercase(Locale.ROOT)))
+            },
+            title = if (visible("title")) title else base.title,
+            artist = if (visible("artist")) artist else base.artist,
+            albumArtist = if (visible("album_artist")) albumArtist else base.albumArtist,
+            album = if (visible("album")) album else base.album,
+            date = if (visible("date")) date else base.date,
+            language = if (visible("language")) language else base.language,
+            genre = if (visible("genre")) genre else base.genre,
+            trackNumber = if (visible("track_number")) trackNumber else base.trackNumber,
+            discNumber = if (visible("disc_number")) discNumber else base.discNumber,
+            composer = if (visible("composer")) composer else base.composer,
+            lyricist = if (visible("lyricist")) lyricist else base.lyricist,
+            copyright = if (visible("copyright")) copyright else base.copyright,
+            comment = if (visible("comment")) comment else base.comment,
+            replayGainTrackGain = if (visible("track_gain")) {
                 replayGainTrackGain
             } else {
                 base.replayGainTrackGain
             },
-            replayGainTrackPeak = if (visible("replay_gain.track_peak")) {
+            replayGainTrackPeak = if (visible("track_peak")) {
                 replayGainTrackPeak
             } else {
                 base.replayGainTrackPeak
             },
-            replayGainAlbumGain = if (visible("replay_gain.album_gain")) {
+            replayGainAlbumGain = if (visible("album_gain")) {
                 replayGainAlbumGain
             } else {
                 base.replayGainAlbumGain
             },
-            replayGainAlbumPeak = if (visible("replay_gain.album_peak")) {
+            replayGainAlbumPeak = if (visible("album_peak")) {
                 replayGainAlbumPeak
             } else {
                 base.replayGainAlbumPeak
             },
-            replayGainReferenceLoudness = if (visible("replay_gain.reference_loudness")) {
+            replayGainReferenceLoudness = if (visible("reference_loudness")) {
                 replayGainReferenceLoudness
             } else {
                 base.replayGainReferenceLoudness
             },
-            lyrics = if (visible("lyrics.lyrics")) lyrics else base.lyrics,
-            pictures = if (visible("cover.picture")) pictures else base.pictures,
-            picUrl = if (visible("cover.picture")) picUrl else base.picUrl,
-            rating = if (visible("cover.rating")) rating else base.rating,
+            lyrics = if (visible("lyrics")) lyrics else base.lyrics,
+            pictures = if (visible("picture")) pictures else base.pictures,
+            picUrl = if (visible("picture")) picUrl else base.picUrl,
+            rating = if (visible("rating")) rating else base.rating,
         )
     }
 

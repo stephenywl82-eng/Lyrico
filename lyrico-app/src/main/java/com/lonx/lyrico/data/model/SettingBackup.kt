@@ -1,6 +1,7 @@
 package com.lonx.lyrico.data.model
 
 
+import com.lonx.lyrico.data.editfield.EditFieldConfigJson
 import com.lonx.lyrico.data.model.artist.ArtistSplitConfig
 import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
 import kotlinx.serialization.Serializable
@@ -47,5 +48,8 @@ data class SettingsBackup(
     @SerialName("bar_blur_enabled") val barBlurEnabled: Boolean? = null,
     @SerialName("floating_bar_effect") val floatingBarEffect: String? = null,
     @SerialName("artist_split_config") val artistSplitConfig: ArtistSplitConfig? = null,
-    @SerialName("edit_field_visibility_overrides") val editFieldVisibilityOverrides: Map<String, Boolean>? = null
+    /** 只用于导入旧备份；新备份使用 editFieldConfig。 */
+    @SerialName("edit_field_visibility_overrides") val editFieldVisibilityOverrides: Map<String, Boolean>? = null,
+    /** 字段顺序、显隐与自定义标签。 */
+    @SerialName("edit_field_config") val editFieldConfig: EditFieldConfigJson? = null
 )

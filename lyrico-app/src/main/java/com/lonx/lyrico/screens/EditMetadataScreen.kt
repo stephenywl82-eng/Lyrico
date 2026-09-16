@@ -86,6 +86,9 @@ import com.lonx.audiotag.model.AudioPictureType
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.model.CustomTagField
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.editfield.EditFieldKind
+import com.lonx.lyrico.data.editfield.toEditFieldBlocks
+import com.lonx.lyrico.data.editfield.EditFieldDefinition
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
@@ -118,7 +121,7 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.SearchCoverDestination
 import com.ramcosta.composedestinations.generated.destinations.SearchLyricsDestination
 import com.ramcosta.composedestinations.generated.destinations.SearchResultsDestination
-import com.ramcosta.composedestinations.generated.destinations.EditFieldVisibilityDestination
+import com.ramcosta.composedestinations.generated.destinations.EditFieldSettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.result.ResultRecipient
 import com.ramcosta.composedestinations.result.onResult
@@ -137,7 +140,6 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
@@ -170,6 +172,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowBottomSheet
 import top.yukonga.miuix.kmp.window.WindowDialog
 import java.net.URL
+import kotlin.apply
 
 private const val LIMITED_LYRICS_INPUT_MAX_LINES = 30
 
@@ -198,8 +201,8 @@ fun EditMetadataScreen(
         searchSourceProvider.observeSources(PluginSourceType.COVER)
     }.collectAsState(initial = emptyList())
     val uiState by viewModel.uiState.collectAsState()
-    val visibleFieldGroups by viewModel.visibleFieldGroups.collectAsState()
-    val visibleCustomKeys by viewModel.visibleCustomKeys.collectAsState()
+    // 字段顺序与显隐来自「编辑字段」配置；字段块按该配置的顺序渲染。
+    val visibleFields by viewModel.visibleFields.collectAsState()
     val limitLyricsInputLines by viewModel.limitLyricsInputLines.collectAsState()
     val replayGainCalculateProgress = uiState.replayGainCalculateProgress
     val originalTagData = uiState.originalTagData
@@ -272,6 +275,19 @@ fun EditMetadataScreen(
         showCancelUndoSnackbar(fieldLabel) {
             viewModel.updateTag { applyValue(currentValue) }
         }
+    }
+
+    fun revertSimpleTextField(
+        definition: EditFieldDefinition,
+        field: SimpleTextField,
+        original: AudioTagData?,
+        edited: AudioTagData?,
+    ) {
+        revertField(
+            fieldLabel = context.getString(definition.titleRes),
+            currentValue = edited?.let(field.valueOf),
+            originalValue = original?.let(field.valueOf),
+        ) { value -> field.write(this, value) }
     }
 
     val imeVisible = WindowInsets.isImeVisible
@@ -493,6 +509,98 @@ fun EditMetadataScreen(
         onValueChange = { viewModel.updateTag { copy(lyrics = it) } }
     )
 
+    // 文本输入的状态与读写映射；显示顺序只由 visibleFields 决定。
+    val simpleTextFields = remember(
+        titleState, artistState, albumArtistState, albumState, dateState, languageState,
+        genreState, composerState, lyricistState, copyrightState, commentState,
+        replayGainTrackGainState, replayGainTrackPeakState, replayGainAlbumGainState,
+        replayGainAlbumPeakState, replayGainReferenceLoudnessState,
+    ) {
+        mapOf(
+            "title" to SimpleTextField(
+                state = titleState,
+                valueOf = { it.title },
+                write = { value -> copy(title = value) },
+            ),
+            "artist" to SimpleTextField(
+                state = artistState,
+                valueOf = { it.artist },
+                write = { value -> copy(artist = value) },
+            ),
+            "album_artist" to SimpleTextField(
+                state = albumArtistState,
+                valueOf = { it.albumArtist },
+                write = { value -> copy(albumArtist = value) },
+            ),
+            "album" to SimpleTextField(
+                state = albumState,
+                valueOf = { it.album },
+                write = { value -> copy(album = value) },
+            ),
+            "date" to SimpleTextField(
+                state = dateState,
+                valueOf = { it.date },
+                write = { value -> copy(date = value) },
+            ),
+            "language" to SimpleTextField(
+                state = languageState,
+                valueOf = { it.language },
+                write = { value -> copy(language = value) },
+            ),
+            "genre" to SimpleTextField(
+                state = genreState,
+                valueOf = { it.genre },
+                write = { value -> copy(genre = value) },
+            ),
+            "composer" to SimpleTextField(
+                state = composerState,
+                valueOf = { it.composer },
+                write = { value -> copy(composer = value) },
+            ),
+            "lyricist" to SimpleTextField(
+                state = lyricistState,
+                valueOf = { it.lyricist },
+                write = { value -> copy(lyricist = value) },
+            ),
+            "copyright" to SimpleTextField(
+                state = copyrightState,
+                valueOf = { it.copyright },
+                write = { value -> copy(copyright = value) },
+            ),
+            "comment" to SimpleTextField(
+                state = commentState,
+                valueOf = { it.comment },
+                write = { value -> copy(comment = value) },
+            ),
+            "track_gain" to SimpleTextField(
+                state = replayGainTrackGainState,
+                valueOf = { it.replayGainTrackGain },
+                write = { value -> copy(replayGainTrackGain = value) },
+            ),
+            "track_peak" to SimpleTextField(
+                state = replayGainTrackPeakState,
+                valueOf = { it.replayGainTrackPeak },
+                write = { value -> copy(replayGainTrackPeak = value) },
+            ),
+            "album_gain" to SimpleTextField(
+                state = replayGainAlbumGainState,
+                valueOf = { it.replayGainAlbumGain },
+                write = { value -> copy(replayGainAlbumGain = value) },
+            ),
+            "album_peak" to SimpleTextField(
+                state = replayGainAlbumPeakState,
+                valueOf = { it.replayGainAlbumPeak },
+                write = { value -> copy(replayGainAlbumPeak = value) },
+            ),
+            "reference_loudness" to SimpleTextField(
+                state = replayGainReferenceLoudnessState,
+                valueOf = { it.replayGainReferenceLoudness },
+                write = { value -> copy(replayGainReferenceLoudness = value) },
+            ),
+        )
+    }
+
+    val fieldBlocks = remember(visibleFields) { visibleFields.toEditFieldBlocks() }
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val topBarBackdrop = rememberBlurBackdrop(enableBlur = rememberBarBlurEnabled())
     Box(
@@ -568,589 +676,269 @@ fun EditMetadataScreen(
                 // 用 contentPadding 而不是 padding，表单才会从毛玻璃顶栏下面滚过
                 contentPadding = scaffoldTopHorizontalPadding(paddingValues),
             ) {
-                val visibleFieldCodes = visibleFieldGroups
-                    .flatMap { it.fields }
-                    .map { it.code }
-                    .toSet()
-
-                val visibleGroupCodes = visibleFieldGroups
-                    .map { it.group.code }
-                    .toSet()
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_COVER)) {
-                    item(key = "cover") {
+                fieldBlocks.forEach { block ->
+                    val definition = block.fields.first()
+                    item(key = block.key) {
                         Column {
-                            CoverSection(
-                                coverUri = uiState.coverUri,
-                                artistImageUri = uiState.artistImageUri ?: artistPosterFallback,
-                                title = editingTagData?.title
-                                    ?: uiState.songInfo?.tagData?.fileName?.substringBeforeLast(".")
-                                    ?: "",
-                                artist = editingTagData?.artist ?: "",
-                                rating = editingTagData?.rating ?: 0,
-                                showCover = visibleFieldCodes.contains("cover.picture"),
-                                supportsTypedPictures = originalTagData?.supportsTypedPictures
-                                    ?: false,
-                                showRating = visibleFieldCodes.contains("cover.rating"),
-                                isCoverModified = uiState.coverUri != uiState.originalCover,
-                                isArtistImageModified = uiState.artistImageUri != uiState.originalArtistImage,
-                                onCoverClick = { showCoverOptionsSheet = true },
-                                onArtistImageClick = { showArtistImageOptionsSheet = true },
-                                onRevertCoverClick = {
-                                    val previousCoverUri = uiState.coverUri
-                                    val previousPicture = uiState.picture
-                                    val previousPictures = editingTagData?.pictures.orEmpty()
-                                    val previousPicUrl = editingTagData?.picUrl
-                                    viewModel.revertCover()
-                                    showCancelUndoSnackbar(context.getString(R.string.label_cover)) {
-                                        viewModel.restoreCoverSnapshot(
-                                            coverUri = previousCoverUri,
-                                            picture = previousPicture,
-                                            pictures = previousPictures,
-                                            picUrl = previousPicUrl
-                                        )
-                                    }
-                                },
-                                onRevertArtistImageClick = {
-                                    val previousArtistImageUri = uiState.artistImageUri
-                                    val previousArtistPicture = uiState.artistPicture
-                                    val previousPictures = editingTagData?.pictures.orEmpty()
-                                    viewModel.revertArtistImage()
-                                    showCancelUndoSnackbar(context.getString(R.string.label_artist_image)) {
-                                        viewModel.restoreArtistImageSnapshot(
-                                            artistImageUri = previousArtistImageUri,
-                                            artistPicture = previousArtistPicture,
-                                            pictures = previousPictures
-                                        )
-                                    }
-                                },
-                                onRatingChange = { newRating ->
-                                    viewModel.updateTag { copy(rating = newRating) }
-                                }
-                            )
-                        }
-                    }
-                }
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_BASIC_INFO)) {
-                    item(key = "basic_info") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.group_basic_info))
-
-                            if (visibleFieldCodes.contains("basic_info.title")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_title),
-                                    state = titleState,
-                                    isModified = !editingTagData?.title.isEqualIgnoringBlank(
-                                        originalTagData?.title
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_title),
-                                            currentValue = editingTagData?.title ?: "",
-                                            originalValue = originalTagData?.title ?: ""
-                                        ) { copy(title = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.artist")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_artists),
-                                    state = artistState,
-                                    isModified = !editingTagData?.artist.isEqualIgnoringBlank(
-                                        originalTagData?.artist
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_artists),
-                                            currentValue = editingTagData?.artist ?: "",
-                                            originalValue = originalTagData?.artist ?: ""
-                                        ) { copy(artist = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.album_artist")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_album_artist),
-                                    state = albumArtistState,
-                                    isModified = !editingTagData?.albumArtist.isEqualIgnoringBlank(
-                                        originalTagData?.albumArtist
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_album_artist),
-                                            currentValue = editingTagData?.albumArtist ?: "",
-                                            originalValue = originalTagData?.albumArtist ?: ""
-                                        ) { copy(albumArtist = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.album")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_album),
-                                    state = albumState,
-                                    isModified = !editingTagData?.album.isEqualIgnoringBlank(
-                                        originalTagData?.album
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_album),
-                                            currentValue = editingTagData?.album ?: "",
-                                            originalValue = originalTagData?.album ?: ""
-                                        ) { copy(album = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.date")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_year),
-                                    state = dateState,
-                                    isModified = !editingTagData?.date.isEqualIgnoringBlank(
-                                        originalTagData?.date
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_year),
-                                            currentValue = editingTagData?.date ?: "",
-                                            originalValue = originalTagData?.date ?: ""
-                                        ) { copy(date = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.language")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_language),
-                                    state = languageState,
-                                    isModified = !editingTagData?.language.isEqualIgnoringBlank(
-                                        originalTagData?.language
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_language),
-                                            currentValue = editingTagData?.language ?: "",
-                                            originalValue = originalTagData?.language ?: ""
-                                        ) { copy(language = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("basic_info.genre")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_genre),
-                                    state = genreState,
-                                    isModified = !editingTagData?.genre.isEqualIgnoringBlank(
-                                        originalTagData?.genre
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_genre),
-                                            currentValue = editingTagData?.genre ?: "",
-                                            originalValue = originalTagData?.genre ?: ""
-                                        ) { copy(genre = it) }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_TRACK_DETAILS)) {
-                    item(key = "track_details") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.group_track_details))
-
-                            if (visibleFieldCodes.contains("track_details.track_number")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_track_number),
-                                    state = trackNumberState,
-                                    isModified = !editingTagData?.trackNumber.isEqualIgnoringBlank(
-                                        originalTagData?.trackNumber
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_track_number),
-                                            currentValue = editingTagData?.trackNumber ?: "",
-                                            originalValue = originalTagData?.trackNumber ?: ""
-                                        ) { copy(trackNumber = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("track_details.disc_number")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_disc_number),
-                                    state = discNumberState,
-                                    isModified = editingTagData?.discNumber != originalTagData?.discNumber,
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_disc_number),
-                                            currentValue = editingTagData?.discNumber,
-                                            originalValue = originalTagData?.discNumber
-                                        ) { copy(discNumber = it) }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_CREDITS_OTHER)) {
-                    item(key = "credits_other") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.group_credits_other))
-
-                            if (visibleFieldCodes.contains("credits_other.lyricist")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_lyricist),
-                                    state = lyricistState,
-                                    isModified = !editingTagData?.lyricist.isEqualIgnoringBlank(
-                                        originalTagData?.lyricist
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_lyricist),
-                                            currentValue = editingTagData?.lyricist ?: "",
-                                            originalValue = originalTagData?.lyricist ?: ""
-                                        ) { copy(lyricist = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("credits_other.composer")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_composer),
-                                    state = composerState,
-                                    isModified = !editingTagData?.composer.isEqualIgnoringBlank(
-                                        originalTagData?.composer
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_composer),
-                                            currentValue = editingTagData?.composer ?: "",
-                                            originalValue = originalTagData?.composer ?: ""
-                                        ) { copy(composer = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("credits_other.copyright")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_copyright),
-                                    state = copyrightState,
-                                    isModified = !editingTagData?.copyright.isEqualIgnoringBlank(
-                                        originalTagData?.copyright
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_copyright),
-                                            currentValue = editingTagData?.copyright,
-                                            originalValue = originalTagData?.copyright
-                                        ) { copy(copyright = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("credits_other.comment")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_comment),
-                                    state = commentState,
-                                    isModified = !editingTagData?.comment.isEqualIgnoringBlank(
-                                        originalTagData?.comment
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_comment),
-                                            currentValue = editingTagData?.comment ?: "",
-                                            originalValue = originalTagData?.comment ?: ""
-                                        ) { copy(comment = it) }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_REPLAY_GAIN)) {
-                    item(key = "replay_gain") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.group_replay_gain))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
+                            if (block.kind == EditFieldKind.ReplayGain) {
+                                Row(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .padding(start = 4.dp),
-                                    contentAlignment = Alignment.CenterStart
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = uiState.isReplayGainCalculating,
-                                        enter = fadeIn(),
-                                        exit = fadeOut()
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(start = 4.dp),
+                                        contentAlignment = Alignment.CenterStart
                                     ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            androidx.compose.material3.CircularProgressIndicator(
-                                                progress = { replayGainCalculateProgress ?: 0f },
-                                                modifier = Modifier.size(20.dp),
-                                                color = MiuixTheme.colorScheme.primary,
-                                                strokeWidth = 2.5.dp,
-                                                trackColor = MiuixTheme.colorScheme.primary.copy(
-                                                    alpha = 0.2f
-                                                )
-                                            )
-
-                                            Spacer(modifier = Modifier.width(8.dp))
-
-                                            Text(
-                                                text = "${((replayGainCalculateProgress ?: 0f) * 100).toInt()}%",
-                                                fontSize = 12.sp,
-                                                color = MiuixTheme.colorScheme.primary,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        }
-                                    }
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(MiuixTheme.colorScheme.primary)
-                                        .clickable {
-                                            if (!uiState.isReplayGainCalculating) {
-                                                viewModel.calculateReplayGain()
-                                            } else {
-                                                viewModel.cancelScan()
-                                            }
-                                        }
-                                        .padding(horizontal = 10.dp, vertical = 5.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (uiState.isReplayGainCalculating) {
-                                            stringResource(R.string.replay_gain_calculate_in_progress)
-                                        } else {
-                                            stringResource(R.string.action_calculate_replay_gain)
-                                        },
-                                        fontSize = 11.sp,
-                                        color = MiuixTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                            if (visibleFieldCodes.contains("replay_gain.track_gain")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_replaygain_track_gain),
-                                    state = replayGainTrackGainState,
-                                    isModified = !editingTagData?.replayGainTrackGain.isEqualIgnoringBlank(
-                                        originalTagData?.replayGainTrackGain
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_replaygain_track_gain),
-                                            currentValue = editingTagData?.replayGainTrackGain
-                                                ?: "",
-                                            originalValue = originalTagData?.replayGainTrackGain
-                                                ?: ""
-                                        ) { copy(replayGainTrackGain = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("replay_gain.track_peak")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_replaygain_track_peak),
-                                    state = replayGainTrackPeakState,
-                                    isModified = !editingTagData?.replayGainTrackPeak.isEqualIgnoringBlank(
-                                        originalTagData?.replayGainTrackPeak
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_replaygain_track_peak),
-                                            currentValue = editingTagData?.replayGainTrackPeak
-                                                ?: "",
-                                            originalValue = originalTagData?.replayGainTrackPeak
-                                                ?: ""
-                                        ) { copy(replayGainTrackPeak = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("replay_gain.album_gain")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_replaygain_album_gain),
-                                    state = replayGainAlbumGainState,
-                                    isModified = !editingTagData?.replayGainAlbumGain.isEqualIgnoringBlank(
-                                        originalTagData?.replayGainAlbumGain
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_replaygain_album_gain),
-                                            currentValue = editingTagData?.replayGainAlbumGain
-                                                ?: "",
-                                            originalValue = originalTagData?.replayGainAlbumGain
-                                                ?: ""
-                                        ) { copy(replayGainAlbumGain = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("replay_gain.album_peak")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_replaygain_album_peak),
-                                    state = replayGainAlbumPeakState,
-                                    isModified = !editingTagData?.replayGainAlbumPeak.isEqualIgnoringBlank(
-                                        originalTagData?.replayGainAlbumPeak
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_replaygain_album_peak),
-                                            currentValue = editingTagData?.replayGainAlbumPeak
-                                                ?: "",
-                                            originalValue = originalTagData?.replayGainAlbumPeak
-                                                ?: ""
-                                        ) { copy(replayGainAlbumPeak = it) }
-                                    }
-                                )
-                            }
-
-                            if (visibleFieldCodes.contains("replay_gain.reference_loudness")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_replaygain_reference_loudness),
-                                    state = replayGainReferenceLoudnessState,
-                                    isModified = !editingTagData?.replayGainReferenceLoudness.isEqualIgnoringBlank(
-                                        originalTagData?.replayGainReferenceLoudness
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_replaygain_reference_loudness),
-                                            currentValue = editingTagData?.replayGainReferenceLoudness
-                                                ?: "",
-                                            originalValue = originalTagData?.replayGainReferenceLoudness
-                                                ?: ""
-                                        ) { copy(replayGainReferenceLoudness = it) }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (visibleCustomKeys.isNotEmpty()) {
-                    item(key = "custom_fields") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.group_custom_tags))
-                            visibleCustomKeys.forEach { key ->
-                                val field = editingTagData?.customFields
-                                    .orEmpty()
-                                    .firstOrNull { it.key.equals(key, ignoreCase = true) }
-                                    ?.copy(key = key)
-                                    ?: CustomTagField(
-                                        key = key,
-                                        value = "",
-                                    )
-
-                                val originalField = originalTagData?.customFields
-                                    .orEmpty()
-                                    .firstOrNull { it.key.equals(key, ignoreCase = true) }
-                                    ?.copy(key = key)
-
-                                CustomMetadataFieldEditor(
-                                    field = field,
-                                    isModified = originalField
-                                        ?.let { field != it }
-                                        ?: field.value.isNotEmpty(),
-                                    onValueChange = { newValue ->
-                                        viewModel.updateCustomFieldValue(key, newValue)
-                                    },
-                                    onRemove = {
-                                        viewModel.removeCustomFieldValue(key)
-                                    },
-                                    onRevert = {
-                                        val previousField = editingTagData?.customFields
-                                            .orEmpty()
-                                            .firstOrNull { it.key.equals(key, ignoreCase = true) }
-                                            ?.copy(key = key)
-                                        viewModel.revertCustomField(key)
-                                        showCancelUndoSnackbar(key) {
-                                            if (previousField != null) {
-                                                viewModel.updateCustomFieldValue(
-                                                    key = key,
-                                                    value = previousField.value
-                                                )
-                                            } else {
-                                                viewModel.removeCustomFieldValue(key)
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_LYRICS)) {
-                    item(key = "lyrics") {
-                        Column {
-                            SmallTitle(text = stringResource(R.string.label_lyrics))
-
-                            if (visibleFieldCodes.contains("lyrics.lyrics")) {
-                                MetadataInputField(
-                                    label = stringResource(R.string.label_lyrics),
-                                    state = lyricsState,
-                                    isModified = !editingTagData?.lyrics.isEqualIgnoringBlank(
-                                        originalTagData?.lyrics
-                                    ),
-                                    onRevert = {
-                                        revertField(
-                                            fieldLabel = context.getString(R.string.label_lyrics),
-                                            currentValue = editingTagData?.lyrics ?: "",
-                                            originalValue = originalTagData?.lyrics ?: ""
-                                        ) { copy(lyrics = it) }
-                                    },
-                                    actionButtons = {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(
-                                                6.dp,
-                                                Alignment.End
-                                            )
+                                        androidx.compose.animation.AnimatedVisibility(
+                                            visible = uiState.isReplayGainCalculating,
+                                            enter = fadeIn(),
+                                            exit = fadeOut()
                                         ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(CircleShape)
-                                                    .background(MiuixTheme.colorScheme.primary)
-                                                    .clickable {
-                                                        showLyricsActionBottomSheet = true
-                                                    }
-                                                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                                                contentAlignment = Alignment.Center
-                                            ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                androidx.compose.material3.CircularProgressIndicator(
+                                                    progress = { replayGainCalculateProgress ?: 0f },
+                                                    modifier = Modifier.size(20.dp),
+                                                    color = MiuixTheme.colorScheme.primary,
+                                                    strokeWidth = 2.5.dp,
+                                                    trackColor = MiuixTheme.colorScheme.primary.copy(
+                                                        alpha = 0.2f
+                                                    )
+                                                )
+
+                                                Spacer(modifier = Modifier.width(8.dp))
+
                                                 Text(
-                                                    text = stringResource(R.string.action_lyrics_options),
-                                                    fontSize = 11.sp,
-                                                    color = MiuixTheme.colorScheme.onPrimary,
+                                                    text = "${((replayGainCalculateProgress ?: 0f) * 100).toInt()}%",
+                                                    fontSize = 12.sp,
+                                                    color = MiuixTheme.colorScheme.primary,
                                                     fontWeight = FontWeight.Medium
                                                 )
                                             }
                                         }
-                                    },
-                                    isMultiline = true,
-                                    limitMultilineLines = limitLyricsInputLines
-                                )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(MiuixTheme.colorScheme.primary)
+                                            .clickable {
+                                                if (!uiState.isReplayGainCalculating) {
+                                                    viewModel.calculateReplayGain()
+                                                } else {
+                                                    viewModel.cancelScan()
+                                                }
+                                            }
+                                            .padding(horizontal = 10.dp, vertical = 5.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (uiState.isReplayGainCalculating) {
+                                                stringResource(R.string.replay_gain_calculate_in_progress)
+                                            } else {
+                                                stringResource(R.string.action_calculate_replay_gain)
+                                            },
+                                            fontSize = 11.sp,
+                                            color = MiuixTheme.colorScheme.onPrimary,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+                            when {
+                                definition.custom -> {
+                                    val key = requireNotNull(EditFieldRegistry.customTagKeyOf(definition.code))
+                                    val field = editingTagData?.customFields
+                                        .orEmpty()
+                                        .firstOrNull { it.key.equals(key, ignoreCase = true) }
+                                        ?.copy(key = key)
+                                        ?: CustomTagField(
+                                            key = key,
+                                            value = "",
+                                        )
+                                    val originalField = originalTagData?.customFields
+                                        .orEmpty()
+                                        .firstOrNull { it.key.equals(key, ignoreCase = true) }
+                                        ?.copy(key = key)
+                                    CustomMetadataFieldEditor(
+                                        field = field,
+                                        isModified = originalField
+                                            ?.let { field != it }
+                                            ?: field.value.isNotEmpty(),
+                                        onValueChange = { newValue ->
+                                            viewModel.updateCustomFieldValue(key, newValue)
+                                        },
+                                        onRemove = {
+                                            viewModel.removeCustomFieldValue(key)
+                                        },
+                                        onRevert = {
+                                            val previousField = editingTagData?.customFields
+                                                .orEmpty()
+                                                .firstOrNull { it.key.equals(key, ignoreCase = true) }
+                                                ?.copy(key = key)
+                                            viewModel.revertCustomField(key)
+                                            showCancelUndoSnackbar(key) {
+                                                if (previousField != null) {
+                                                    viewModel.updateCustomFieldValue(
+                                                        key = key,
+                                                        value = previousField.value
+                                                    )
+                                                } else {
+                                                    viewModel.removeCustomFieldValue(key)
+                                                }
+                                            }
+                                        }
+                                    )
+                                }
+                                block.kind == EditFieldKind.Cover -> {
+                                    CoverSection(
+                                        coverUri = uiState.coverUri,
+                                        artistImageUri = uiState.artistImageUri ?: artistPosterFallback,
+                                        title = editingTagData?.title
+                                            ?: uiState.songInfo?.tagData?.fileName?.substringBeforeLast(".")
+                                            ?: "",
+                                        artist = editingTagData?.artist ?: "",
+                                        supportsTypedPictures = originalTagData?.supportsTypedPictures
+                                            ?: false,
+                                        isCoverModified = uiState.coverUri != uiState.originalCover,
+                                        isArtistImageModified = uiState.artistImageUri != uiState.originalArtistImage,
+                                        onCoverClick = { showCoverOptionsSheet = true },
+                                        onArtistImageClick = { showArtistImageOptionsSheet = true },
+                                        onRevertCoverClick = {
+                                            val previousCoverUri = uiState.coverUri
+                                            val previousPicture = uiState.picture
+                                            val previousPictures = editingTagData?.pictures.orEmpty()
+                                            val previousPicUrl = editingTagData?.picUrl
+                                            viewModel.revertCover()
+                                            showCancelUndoSnackbar(context.getString(R.string.label_cover)) {
+                                                viewModel.restoreCoverSnapshot(
+                                                    coverUri = previousCoverUri,
+                                                    picture = previousPicture,
+                                                    pictures = previousPictures,
+                                                    picUrl = previousPicUrl
+                                                )
+                                            }
+                                        },
+                                        onRevertArtistImageClick = {
+                                            val previousArtistImageUri = uiState.artistImageUri
+                                            val previousArtistPicture = uiState.artistPicture
+                                            val previousPictures = editingTagData?.pictures.orEmpty()
+                                            viewModel.revertArtistImage()
+                                            showCancelUndoSnackbar(context.getString(R.string.label_artist_image)) {
+                                                viewModel.restoreArtistImageSnapshot(
+                                                    artistImageUri = previousArtistImageUri,
+                                                    artistPicture = previousArtistPicture,
+                                                    pictures = previousPictures
+                                                )
+                                            }
+                                        },
+                                    )
+                                }
+                                definition.code == "rating" -> {
+                                    RatingField(
+                                        rating = editingTagData?.rating,
+                                        onRatingChange = { value -> viewModel.updateTag { copy(rating = value) } },
+                                    )
+                                }
+                                definition.code == "lyrics" -> {
+                                    MetadataInputField(
+                                        label = stringResource(R.string.label_lyrics),
+                                        state = lyricsState,
+                                        isModified = !editingTagData?.lyrics.isEqualIgnoringBlank(
+                                            originalTagData?.lyrics
+                                        ),
+                                        onRevert = {
+                                            revertField(
+                                                fieldLabel = context.getString(R.string.label_lyrics),
+                                                currentValue = editingTagData?.lyrics ?: "",
+                                                originalValue = originalTagData?.lyrics ?: ""
+                                            ) { copy(lyrics = it) }
+                                        },
+                                        actionButtons = {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(
+                                                    6.dp,
+                                                    Alignment.End
+                                                )
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(CircleShape)
+                                                        .background(MiuixTheme.colorScheme.primary)
+                                                        .clickable {
+                                                            showLyricsActionBottomSheet = true
+                                                        }
+                                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.action_lyrics_options),
+                                                        fontSize = 11.sp,
+                                                        color = MiuixTheme.colorScheme.onPrimary,
+                                                        fontWeight = FontWeight.Medium
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        isMultiline = true,
+                                        limitMultilineLines = limitLyricsInputLines
+                                    )
+                                }
+                                definition.code == "track_number" -> {
+                                    MetadataInputField(
+                                        label = stringResource(R.string.label_track_number),
+                                        state = trackNumberState,
+                                        isModified = !editingTagData?.trackNumber.isEqualIgnoringBlank(
+                                            originalTagData?.trackNumber
+                                        ),
+                                        onRevert = {
+                                            revertField(
+                                                fieldLabel = context.getString(R.string.label_track_number),
+                                                currentValue = editingTagData?.trackNumber ?: "",
+                                                originalValue = originalTagData?.trackNumber ?: ""
+                                            ) { copy(trackNumber = it) }
+                                        }
+                                    )
+                                }
+                                definition.code == "disc_number" -> {
+                                    MetadataInputField(
+                                        label = stringResource(R.string.label_disc_number),
+                                        state = discNumberState,
+                                        isModified = editingTagData?.discNumber != originalTagData?.discNumber,
+                                        onRevert = {
+                                            revertField(
+                                                fieldLabel = context.getString(R.string.label_disc_number),
+                                                currentValue = editingTagData?.discNumber,
+                                                originalValue = originalTagData?.discNumber
+                                            ) { copy(discNumber = it) }
+                                        }
+                                    )
+                                }
+                                definition.simpleTextInput -> {
+                                    block.fields.forEach { textDefinition ->
+                                        val field = simpleTextFields.getValue(textDefinition.code)
+                                        MetadataInputField(
+                                            label = stringResource(textDefinition.titleRes),
+                                            state = field.state,
+                                            isModified = !editedValue(editingTagData, field)
+                                                .isEqualIgnoringBlank(editedValue(originalTagData, field)),
+                                            onRevert = {
+                                                revertSimpleTextField(textDefinition, field, originalTagData, editingTagData)
+                                            },
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
+
             }
         }
         val fabMenuItemCount = remember(
@@ -1227,11 +1015,11 @@ fun EditMetadataScreen(
             )
 
             FabMenuItem(
-                label = stringResource(R.string.edit_field_visibility_settings),
+                label = stringResource(R.string.edit_field_settings_title),
                 icon = MiuixIcons.Settings,
                 onClick = {
                     isFabMenuExpanded = false
-                    navigator.navigate(EditFieldVisibilityDestination())
+                    navigator.navigate(EditFieldSettingsDestination())
                 }
             )
         }
@@ -1808,7 +1596,6 @@ fun EditMetadataScreen(
         onDismissRequest = { showLyricsFormatBottomSheet = false }
     ) {
 
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1926,17 +1713,13 @@ private fun CoverSection(
     artistImageUri: Any?,
     title: String,
     artist: String,
-    rating: Int?,
     supportsTypedPictures: Boolean,
-    showCover: Boolean,
-    showRating: Boolean,
     isCoverModified: Boolean,
     isArtistImageModified: Boolean,
     onCoverClick: () -> Unit,
     onArtistImageClick: () -> Unit,
     onRevertCoverClick: () -> Unit,
     onRevertArtistImageClick: () -> Unit,
-    onRatingChange: (Int) -> Unit
 ) {
     val surfaceVariant = MiuixTheme.colorScheme.surfaceVariant
     val onSurface = MiuixTheme.colorScheme.onSurface
@@ -1973,8 +1756,8 @@ private fun CoverSection(
     var imageSize by remember(currentImageSource) { mutableStateOf<Pair<Int, Int>?>(null) }
 
     // 加载图片尺寸
-    LaunchedEffect(currentImageSource, showCover) {
-        if (showCover && currentImageSource != null) {
+    LaunchedEffect(currentImageSource) {
+        if (currentImageSource != null) {
             imageSize = withContext(Dispatchers.IO) {
                 try {
                     val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -2044,19 +1827,17 @@ private fun CoverSection(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(if (showCover) 220.dp else 120.dp)
+                    .height(220.dp)
             ) {
 
-                if (showCover) {
-                    AsyncImage(
-                        model = currentImageSource ?: coverUri,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .matchParentSize()
-                            .graphicsLayer { alpha = 0.15f }
-                    )
-                }
+                AsyncImage(
+                    model = currentImageSource ?: coverUri,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .matchParentSize()
+                        .graphicsLayer { alpha = 0.15f }
+                )
 
                 Box(
                     modifier = Modifier
@@ -2078,123 +1859,121 @@ private fun CoverSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    if (showCover) {
-                        HorizontalPager(
-                            state = pagerState,
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier
+                            .size(160.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MiuixTheme.colorScheme.onSurfaceContainerVariant)
+                    ) { page ->
+                        val item = picturePages[page]
+                        Box(
                             modifier = Modifier
-                                .size(160.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MiuixTheme.colorScheme.onSurfaceContainerVariant)
-                        ) { page ->
-                            val item = picturePages[page]
+                                .fillMaxSize()
+                                .clickable { item.onClick() }
+                        ) {
+                            AsyncImage(
+                                model = item.source,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize(),
+                                placeholder = rememberTintedPainter(
+                                    painter = painterResource(id = R.drawable.ic_album_24dp),
+                                    tint = LyricoColors.coverPlaceholderIcon
+                                ),
+                                error = rememberTintedPainter(
+                                    painter = painterResource(id = R.drawable.ic_album_24dp),
+                                    tint = LyricoColors.coverPlaceholderIcon
+                                )
+                            )
+
                             Box(
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .clickable { item.onClick() }
+                                    .align(Alignment.TopStart)
+                                    .padding(8.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.6f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
-                                AsyncImage(
-                                    model = item.source,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.matchParentSize(),
-                                    placeholder = rememberTintedPainter(
-                                        painter = painterResource(id = R.drawable.ic_album_24dp),
-                                        tint = LyricoColors.coverPlaceholderIcon
-                                    ),
-                                    error = rememberTintedPainter(
-                                        painter = painterResource(id = R.drawable.ic_album_24dp),
-                                        tint = LyricoColors.coverPlaceholderIcon
-                                    )
+                                Text(
+                                    text = item.label,
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
+                            }
 
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(8.dp)
-                                        .background(
-                                            color = Color.Black.copy(alpha = 0.6f),
-                                            shape = RoundedCornerShape(4.dp)
-                                        )
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = item.label,
-                                        color = Color.White,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
-                                if (page == currentPage) {
-                                    imageSize?.let {
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomStart)
-                                                .padding(8.dp)
-                                                .background(
-                                                    color = Color.Black.copy(alpha = 0.6f),
-                                                    shape = RoundedCornerShape(4.dp)
-                                                )
-                                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                                        ) {
-                                            Text(
-                                                text = "${it.first}×${it.second}",
-                                                color = Color.White,
-                                                fontSize = 9.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(8.dp)
-                                        .background(
-                                            color = Color.Black.copy(alpha = 0.6f),
-                                            shape = RoundedCornerShape(4.dp)
-                                        )
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = item.editLabel,
-                                        color = Color.White,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
-                                androidx.compose.animation.AnimatedVisibility(
-                                    visible = item.isModified,
-                                    enter = scaleIn() + fadeIn(),
-                                    exit = scaleOut() + fadeOut(),
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(8.dp)
-                                ) {
+                            if (page == currentPage) {
+                                imageSize?.let {
                                     Box(
                                         modifier = Modifier
-                                            .clip(CircleShape)
+                                            .align(Alignment.BottomStart)
+                                            .padding(8.dp)
                                             .background(
-                                                LyricoColors.modifiedBadgeBackground.copy(alpha = 0.95f)
+                                                color = Color.Black.copy(alpha = 0.6f),
+                                                shape = RoundedCornerShape(4.dp)
                                             )
-                                            .clickable { item.onRevertClick() }
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
                                     ) {
                                         Text(
-                                            text = stringResource(R.string.action_undo_changes),
-                                            fontSize = 10.sp,
-                                            color = LyricoColors.modifiedText,
+                                            text = "${it.first}×${it.second}",
+                                            color = Color.White,
+                                            fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                 }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.width(16.dp))
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(8.dp)
+                                    .background(
+                                        color = Color.Black.copy(alpha = 0.6f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = item.editLabel,
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = item.isModified,
+                                enter = scaleIn() + fadeIn(),
+                                exit = scaleOut() + fadeOut(),
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .background(
+                                            LyricoColors.modifiedBadgeBackground.copy(alpha = 0.95f)
+                                        )
+                                        .clickable { item.onRevertClick() }
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.action_undo_changes),
+                                        fontSize = 10.sp,
+                                        color = LyricoColors.modifiedText,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
                     }
+
+                    Spacer(modifier = Modifier.width(16.dp))
 
                     Column(
                         modifier = Modifier.weight(1f),
@@ -2221,38 +2000,51 @@ private fun CoverSection(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        if (showRating) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                for (i in 1..5) {
-                                    val isFilled = rating?.let { i <= it }
-                                    Icon(
-                                        painter = painterResource(
-                                            if (isFilled == true) R.drawable.ic_filled_star_24dp
-                                            else R.drawable.ic_outline_star_24dp
-                                        ),
-                                        contentDescription = null,
-                                        tint = if (isFilled == true)
-                                            MiuixTheme.colorScheme.primary
-                                        else
-                                            onSurfaceDim.copy(alpha = 0.4f),
-                                        modifier = Modifier
-                                            .size(24.dp)
-                                            .clickable(
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                indication = null
-                                            ) {
-                                                onRatingChange(
-                                                    if (rating == i) 0 else i
-                                                )
-                                            }
-                                    )
-                                }
-                            }
-                        }
+
                     }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.label_rating))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                for (i in 1..5) {
+                    val isFilled = rating?.let { i <= it }
+                    Icon(
+                        painter = painterResource(
+                            if (isFilled == true) R.drawable.ic_filled_star_24dp
+                            else R.drawable.ic_outline_star_24dp
+                        ),
+                        contentDescription = null,
+                        tint = if (isFilled == true)
+                            MiuixTheme.colorScheme.primary
+                        else
+                            MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.4f),
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onRatingChange(
+                                    if (rating == i) 0 else i
+                                )
+                            }
+                    )
                 }
             }
         }
@@ -2362,7 +2154,6 @@ private fun MetadataInputField(
         )
     }
 }
-
 
 @Composable
 private fun CustomMetadataFieldEditor(
@@ -2474,3 +2265,12 @@ private fun rememberMetadataTextFieldState(
 private class MetadataTextSyncState(
     var lastTextSentToModel: String
 )
+
+private data class SimpleTextField(
+    val state: TextFieldState,
+    val valueOf: (AudioTagData) -> String?,
+    val write: AudioTagData.(String?) -> AudioTagData,
+)
+
+private fun editedValue(data: AudioTagData?, field: SimpleTextField): String =
+    data?.let(field.valueOf).orEmpty()

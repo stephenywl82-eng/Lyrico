@@ -68,8 +68,7 @@ import com.ramcosta.composedestinations.generated.destinations.AboutDestination
 import com.ramcosta.composedestinations.generated.destinations.AppLogsDestination
 import com.ramcosta.composedestinations.generated.destinations.ArtistSplitSettingsDestination
 import com.ramcosta.composedestinations.generated.destinations.BatchTaskListDestination
-import com.ramcosta.composedestinations.generated.destinations.CustomTagManagementDestination
-import com.ramcosta.composedestinations.generated.destinations.EditFieldVisibilityDestination
+import com.ramcosta.composedestinations.generated.destinations.EditFieldSettingsDestination
 import com.ramcosta.composedestinations.generated.destinations.FolderManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.ArtistPosterFoldersDestination
 import com.lonx.lyrico.data.repository.SettingsRepository
@@ -652,12 +651,9 @@ fun SettingsScreen(
                         onClick = { navigator.navigate(ArtistSplitSettingsDestination()) }
                     )
                     ArrowPreference(
-                        title = stringResource(R.string.edit_field_visibility_settings),
-                        onClick = { navigator.navigate(EditFieldVisibilityDestination()) }
-                    )
-                    ArrowPreference(
-                        title = stringResource(R.string.custom_tag_management_title),
-                        onClick = { navigator.navigate(CustomTagManagementDestination()) }
+                        title = stringResource(R.string.edit_field_settings_title),
+                        summary = stringResource(R.string.edit_field_settings_summary),
+                        onClick = { navigator.navigate(EditFieldSettingsDestination()) }
                     )
                 }
             }

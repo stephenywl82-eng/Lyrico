@@ -27,7 +27,6 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.BatchMatchConfig
-import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
 import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
 import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
@@ -51,17 +50,13 @@ fun BatchMatchConfigBottomSheet(
     show: Boolean,
     matchType: BatchMatchType,
     initialConfig: BatchMatchConfig,
+    visibleTargets: List<MetadataFieldTarget>,
     onDismissRequest: (BatchMatchConfig) -> Unit,
     onConfirm: (BatchMatchConfig) -> Unit
 ) {
     var config by remember(show, initialConfig) { mutableStateOf(initialConfig) }
 
-    val targetGroups = remember(matchType) {
-        BatchMatchConfigDefaults.TARGET_GROUPS.mapNotNull { group ->
-            group.copy(targets = group.targets.filter { it in matchType.targets })
-                .takeIf { it.targets.isNotEmpty() }
-        }
-    }
+    val targets = visibleTargets.filter { it in matchType.targets }
 
     fun updateTarget(
         target: MetadataFieldTarget,
@@ -103,45 +98,34 @@ fun BatchMatchConfigBottomSheet(
                     LazyColumn(
                         modifier = Modifier.heightIn(max = 250.dp)
                     ) {
-                        targetGroups.forEach { group ->
-                            item("group_${group.titleRes}") {
-                                Text(
-                                    text = stringResource(group.titleRes),
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    style = MiuixTheme.textStyles.footnote1,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantActions
-                                )
+                        items(targets, key = { it.name }) { target ->
+                            val mode = config.targetModes[target] ?: MetadataWriteMode.DISABLED
+                            val isSelected = mode != MetadataWriteMode.DISABLED
+                            val effectiveMode = if (isSelected) {
+                                mode
+                            } else {
+                                MetadataWriteMode.SUPPLEMENT
                             }
 
-                            items(group.targets, key = { it.name }) { target ->
-                                val mode = config.targetModes[target] ?: MetadataWriteMode.DISABLED
-                                val isSelected = mode != MetadataWriteMode.DISABLED
-                                val effectiveMode = if (isSelected) {
-                                    mode
-                                } else {
-                                    MetadataWriteMode.SUPPLEMENT
+                            BatchMatchTargetItem(
+                                target = target,
+                                isSelected = isSelected,
+                                mode = effectiveMode,
+                                onCheckedChange = { checked ->
+                                    updateTarget(target, checked, effectiveMode)
+                                },
+                                onModeToggle = {
+                                    updateTarget(
+                                        target = target,
+                                        isSelected = isSelected,
+                                        mode = if (effectiveMode == MetadataWriteMode.OVERWRITE) {
+                                            MetadataWriteMode.SUPPLEMENT
+                                        } else {
+                                            MetadataWriteMode.OVERWRITE
+                                        }
+                                    )
                                 }
-
-                                BatchMatchTargetItem(
-                                    target = target,
-                                    isSelected = isSelected,
-                                    mode = effectiveMode,
-                                    onCheckedChange = { checked ->
-                                        updateTarget(target, checked, effectiveMode)
-                                    },
-                                    onModeToggle = {
-                                        updateTarget(
-                                            target = target,
-                                            isSelected = isSelected,
-                                            mode = if (effectiveMode == MetadataWriteMode.OVERWRITE) {
-                                                MetadataWriteMode.SUPPLEMENT
-                                            } else {
-                                                MetadataWriteMode.OVERWRITE
-                                            }
-                                        )
-                                    }
-                                )
-                            }
+                            )
                         }
                     }
                 }

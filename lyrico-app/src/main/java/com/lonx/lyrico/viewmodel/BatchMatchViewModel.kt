@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import com.lonx.lyrico.data.editfield.EditFieldConfigRepository
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -73,8 +76,12 @@ class BatchMatchViewModel(
     private val selectionManager: SharedSelectionManager,
     private val batchTaskRepository: BatchTaskRepository,
     private val batchTaskScheduler: BatchTaskScheduler,
+    private val editFieldConfigRepository: EditFieldConfigRepository,
     private val searchSourceProvider: SearchSourceProvider
 ) : ViewModel() {
+
+    val visibleTargets = editFieldConfigRepository.configFlow.map { it.matchTargets() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val batchMatchConfig: StateFlow<BatchMatchConfig> = settingsRepository.batchMatchConfig
         .stateIn(viewModelScope, SharingStarted.Eagerly, BatchMatchConfigDefaults.DEFAULT_CONFIG)
@@ -213,11 +220,8 @@ class BatchMatchViewModel(
             }
 
             val matchType = _uiState.value.matchType
-            val effectiveConfig = matchConfig.copy(
-                targetModes = matchConfig.targetModes.mapValues { (target, mode) ->
-                    if (target in matchType.targets) mode else MetadataWriteMode.DISABLED
-                }
-            )
+            val allowedTargets = editFieldConfigRepository.configFlow.first().matchTargets().toSet()
+            val effectiveConfig = matchConfig.restrictedTo(allowedTargets intersect matchType.targets)
             val currentOrderIds = buildEnabledSourceOrderIds(matchType)
             val configJson = Json.encodeToString(
                 MatchMetadataTaskConfig.serializer(),

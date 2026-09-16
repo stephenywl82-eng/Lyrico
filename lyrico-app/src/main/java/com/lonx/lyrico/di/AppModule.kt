@@ -6,13 +6,12 @@ import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.data.LyricoDatabase
 import com.lonx.lyrico.data.SharedSelectionManager
 import com.lonx.lyrico.data.network.NetworkLoggingInterceptor
-import com.lonx.lyrico.data.editfield.EditFieldVisibilityRepository
+import com.lonx.lyrico.data.editfield.EditFieldConfigRepository
 import com.lonx.lyrico.data.repository.BatchTaskRepository
 import com.lonx.lyrico.data.repository.BatchTaskRepositoryImpl
 import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.AppLogRepositoryImpl
 import com.lonx.lyrico.data.repository.CustomTagKeyRepository
-import com.lonx.lyrico.data.repository.CustomTagSettingsRepository
 import com.lonx.lyrico.data.repository.GhContributorRepository
 import com.lonx.lyrico.data.repository.GhContributorRepositoryImpl
 import com.lonx.lyrico.data.repository.LibraryIndexRepository
@@ -94,8 +93,7 @@ import com.lonx.lyrico.viewmodel.BatchRenameViewModel
 import com.lonx.lyrico.viewmodel.BatchReplayGainViewModel
 import com.lonx.lyrico.viewmodel.CoverSearchViewModel
 import com.lonx.lyrico.viewmodel.CharacterMappingViewModel
-import com.lonx.lyrico.viewmodel.CustomTagManagementViewModel
-import com.lonx.lyrico.viewmodel.EditFieldVisibilitySettingsViewModel
+import com.lonx.lyrico.viewmodel.EditFieldSettingsViewModel
 import com.lonx.lyrico.viewmodel.EditMetadataViewModel
 import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.lonx.lyrico.viewmodel.LocalSearchViewModel
@@ -231,9 +229,8 @@ val appModule = module {
     single { get<LyricoDatabase>().sourcePluginDao() }
     single { get<LyricoDatabase>().songCustomTagKeyDao() }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
-    single { CustomTagSettingsRepository(androidContext(), get()) }
     single { CustomTagKeyRepository(get()) }
-    single { EditFieldVisibilityRepository(androidContext()) }
+    single { EditFieldConfigRepository(androidContext()) }
     single<UpdateRepository> { UpdateRepositoryImpl(get(), get()) }
     single<PlaybackRepository> { PlaybackRepositoryImpl() }
     single<LibraryIndexRepository> { LibraryIndexRepositoryImpl(get(), get<LyricoDatabase>().songDao(), get(), get()) }
@@ -311,10 +308,9 @@ val appModule = module {
     viewModel { LyricsSearchViewModel(get(), get(), get()) }
     viewModel { CoverSearchViewModel(get(), get(), get(), get()) }
     viewModel { SearchSourceConfigViewModel(get(), get()) }
-    viewModel { EditMetadataViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel { EditFieldVisibilitySettingsViewModel(get()) }
-    viewModel { CustomTagManagementViewModel(get(), get(), get()) }
-    viewModel { BatchMatchViewModel(get(), get(), get(), get(), get()) }
+    viewModel { EditMetadataViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { EditFieldSettingsViewModel(get(), get(), get(), get()) }
+    viewModel { BatchMatchViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { AppLogViewModel(get(),get()) }
     viewModel { PluginViewModel(get(), get(), get(), get(), get()) }
 
@@ -323,7 +319,7 @@ val appModule = module {
     viewModel { BatchRenameViewModel(get(), get(), get(), get(), get()) }
     viewModel { CharacterMappingViewModel(get()) }
     viewModel { BatchExportViewModel(get(), get(), get()) }
-    viewModel { BatchEditViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel { BatchEditViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { BatchReplayGainViewModel(get(), get(), get()) }
     viewModel { BatchLyricsFormatViewModel(get(), get(), get(), get()) }
     viewModel { (taskId: String) -> BatchTaskDetailViewModel(taskId, get(), get()) }

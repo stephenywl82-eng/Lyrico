@@ -35,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.core.net.toUri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +60,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.editfield.toEditFieldBlocks
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
@@ -72,10 +74,11 @@ import com.lonx.lyrico.viewmodel.BatchEditField
 import com.lonx.lyrico.viewmodel.BatchEditPreview
 import com.lonx.lyrico.viewmodel.BatchEditSelectableCover
 import com.lonx.lyrico.viewmodel.BatchEditSelectableValue
+import com.lonx.lyrico.viewmodel.BatchEditUiState
 import com.lonx.lyrico.viewmodel.BatchEditViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
-import com.ramcosta.composedestinations.generated.destinations.EditFieldVisibilityDestination
+import com.ramcosta.composedestinations.generated.destinations.EditFieldSettingsDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -123,8 +126,10 @@ fun BatchEditScreen(
 ) {
     val viewModel: BatchEditViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val visibleFieldGroups by viewModel.visibleFieldGroups.collectAsStateWithLifecycle()
-    val visibleCustomKeys by viewModel.visibleCustomKeys.collectAsStateWithLifecycle()
+    // 字段顺序与显隐来自「编辑字段」配置，页面按这份列表遍历渲染。
+    val visibleFields by viewModel.visibleFields.collectAsStateWithLifecycle()
+    val visibleFieldCodes = visibleFields.map { it.code }.toSet()
+    val fieldBlocks = remember(visibleFields) { visibleFields.toEditFieldBlocks() }
 
     var showCoverOptionsSheet by remember { mutableStateOf(false) }
     var showSelectedCoverSheet by remember { mutableStateOf(false) }
@@ -142,15 +147,14 @@ fun BatchEditScreen(
     val tabs = remember { BatchEditTab.entries }
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val currentTab = tabs[pagerState.currentPage]
-    val visibleFieldCodes = visibleFieldGroups
-        .flatMap { it.fields }
-        .map { it.code }
-        .toSet()
-    val visibleGroupCodes = visibleFieldGroups
-        .map { it.group.code }
-        .toSet()
     val editPreviews = remember(uiState, visibleFieldCodes) {
         viewModel.buildEditPreviews(visibleFieldCodes)
+    }
+
+    // 自定义标签的预览值只需要可见的自定义标签，从同一份字段列表里取。
+    val visibleCustomKeys = remember(visibleFields) {
+        visibleFields.filter { it.custom }
+            .mapNotNull { EditFieldRegistry.customTagKeyOf(it.code) }
     }
 
     LaunchedEffect(visibleCustomKeys, uiState.selectedSongsVersion) {
@@ -359,416 +363,22 @@ fun BatchEditScreen(
                                         )
                                     }
 
-                                    // 封面编辑区
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_COVER)) {
-                                        item(key = "cover_editor") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.edit_field_group_cover))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("cover.picture")) {
-                                                            BatchEditCoverSection(
-                                                                coverUri = uiState.coverUri,
-                                                                isRemoved = uiState.removeCover,
-                                                                onCoverClick = {
-                                                                    showCoverOptionsSheet = true
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("cover.rating")) {
-                                                            BatchEditRatingItem(
-                                                                rating = uiState.rating,
-                                                                isModified = uiState.ratingModified,
-                                                                onRatingChange = {
-                                                                    viewModel.updateRating(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onRevert = { viewModel.resetRating() }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    // 基础信息组
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_BASIC_INFO)) {
-                                        item(key = "basic_info") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.group_basic_info))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("basic_info.title")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.TITLE,
-                                                                value = uiState.title,
-                                                                onValueChange = {
-                                                                    viewModel.updateTitle(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.TITLE
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.artist")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.ARTIST,
-                                                                value = uiState.artist,
-                                                                onValueChange = {
-                                                                    viewModel.updateArtist(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.ARTIST
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.album_artist")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.ALBUM_ARTIST,
-                                                                value = uiState.albumArtist,
-                                                                onValueChange = {
-                                                                    viewModel.updateAlbumArtist(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.ALBUM_ARTIST
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.album")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.ALBUM,
-                                                                value = uiState.album,
-                                                                onValueChange = {
-                                                                    viewModel.updateAlbum(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.ALBUM
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.date")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.DATE,
-                                                                value = uiState.date,
-                                                                onValueChange = {
-                                                                    viewModel.updateDate(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.DATE
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.language")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.LANGUAGE,
-                                                                value = uiState.language,
-                                                                onValueChange = {
-                                                                    viewModel.updateLanguage(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.LANGUAGE
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("basic_info.genre")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.GENRE,
-                                                                value = uiState.genre,
-                                                                onValueChange = {
-                                                                    viewModel.updateGenre(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.GENRE
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    fieldBlocks.forEach { block ->
+                                        val field = block.fields.first()
+                                        val fieldCode = field.code
 
-                                    // 曲目详情组
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_TRACK_DETAILS)) {
-                                        item(key = "track_details") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.group_track_details))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("track_details.track_number")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.TRACK_NUMBER,
-                                                                value = uiState.trackNumber,
-                                                                onValueChange = {
-                                                                    viewModel.updateTrackNumber(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.TRACK_NUMBER
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("track_details.disc_number")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.DISC_NUMBER,
-                                                                value = uiState.discNumber,
-                                                                onValueChange = {
-                                                                    viewModel.updateDiscNumber(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.DISC_NUMBER
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // 制作人员和其他信息组
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_CREDITS_OTHER)) {
-                                        item(key = "credits_other") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.group_credits_other))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("credits_other.composer")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.COMPOSER,
-                                                                value = uiState.composer,
-                                                                onValueChange = {
-                                                                    viewModel.updateComposer(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.COMPOSER
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("credits_other.lyricist")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.LYRICIST,
-                                                                value = uiState.lyricist,
-                                                                onValueChange = {
-                                                                    viewModel.updateLyricist(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.LYRICIST
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("credits_other.copyright")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.COPYRIGHT,
-                                                                value = uiState.copyright,
-                                                                onValueChange = {
-                                                                    viewModel.updateCopyright(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.COPYRIGHT
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("credits_other.comment")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.COMMENT,
-                                                                value = uiState.comment,
-                                                                onValueChange = {
-                                                                    viewModel.updateComment(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.COMMENT
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    // 回放增益组
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_REPLAY_GAIN)) {
-                                        item(key = "replay_gain") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.group_replay_gain))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("replay_gain.track_gain")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.REPLAY_GAIN_TRACK_GAIN,
-                                                                value = uiState.replayGainTrackGain,
-                                                                onValueChange = {
-                                                                    viewModel.updateReplayGainTrackGain(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.REPLAY_GAIN_TRACK_GAIN
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("replay_gain.track_peak")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.REPLAY_GAIN_TRACK_PEAK,
-                                                                value = uiState.replayGainTrackPeak,
-                                                                onValueChange = {
-                                                                    viewModel.updateReplayGainTrackPeak(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.REPLAY_GAIN_TRACK_PEAK
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("replay_gain.album_gain")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.REPLAY_GAIN_ALBUM_GAIN,
-                                                                value = uiState.replayGainAlbumGain,
-                                                                onValueChange = {
-                                                                    viewModel.updateReplayGainAlbumGain(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.REPLAY_GAIN_ALBUM_GAIN
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("replay_gain.album_peak")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.REPLAY_GAIN_ALBUM_PEAK,
-                                                                value = uiState.replayGainAlbumPeak,
-                                                                onValueChange = {
-                                                                    viewModel.updateReplayGainAlbumPeak(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.REPLAY_GAIN_ALBUM_PEAK
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("replay_gain.reference_loudness")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS,
-                                                                value = uiState.replayGainReferenceLoudness,
-                                                                onValueChange = {
-                                                                    viewModel.updateReplayGainReferenceLoudness(
-                                                                        it
-                                                                    )
-                                                                },
-                                                                onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS
-                                                                    )
-                                                                }
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (visibleCustomKeys.isNotEmpty()) {
-                                        item(key = "custom_fields") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.group_custom_tags))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        visibleCustomKeys.forEach { key ->
+                                        // 自定义标签没有内置字段枚举，单独渲染。
+                                        if (field.custom) {
+                                            val key = EditFieldRegistry.customTagKeyOf(fieldCode)
+                                            if (key != null) {
+                                                item(key = fieldCode) {
+                                                    Card(
+                                                        modifier = Modifier.padding(
+                                                            horizontal = 12.dp,
+                                                            vertical = 6.dp
+                                                        )
+                                                    ) {
+                                                        Column(modifier = Modifier.padding(vertical = 6.dp)) {
                                                             BatchEditCustomFieldItem(
                                                                 keyName = key,
                                                                 value = uiState.customFields
@@ -792,60 +402,67 @@ fun BatchEditScreen(
                                                     }
                                                 }
                                             }
+                                            return@forEach
                                         }
-                                    }
 
-                                    // 歌词组
-                                    if (visibleGroupCodes.contains(EditFieldRegistry.GROUP_LYRICS)) {
-                                        item(key = "lyrics") {
-                                            Column {
-                                                SmallTitle(text = stringResource(R.string.label_lyrics))
-                                                Card(
-                                                    modifier = Modifier.padding(
-                                                        horizontal = 12.dp,
-                                                        vertical = 6.dp
-                                                    )
-                                                ) {
-                                                    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-                                                        if (visibleFieldCodes.contains("lyrics.lyrics_offset")) {
-                                                            TextField(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .padding(
-                                                                        horizontal = 12.dp,
-                                                                        vertical = 6.dp
-                                                                    ),
-                                                                value = uiState.lyricsOffset,
-                                                                onValueChange = {
-                                                                    viewModel.updateLyricsOffset(
-                                                                        it
-                                                                    )
+                                        item(key = block.key) {
+                                            Card(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+                                                Column(modifier = Modifier.padding(vertical = 6.dp)) {
+                                                    block.fields.forEach { member ->
+                                                        val editField = BatchEditField.entries.firstOrNull { it.target == member.target }
+                                                        when (member.code) {
+                                                            // 封面和评级共用一张卡片，分别保留显隐开关。
+                                                            "picture" -> BatchEditCoverSection(
+                                                                coverUri = uiState.coverUri,
+                                                                isRemoved = uiState.removeCover,
+                                                                onCoverClick = {
+                                                                    showCoverOptionsSheet = true
+                                                                }
+                                                            )
+
+                                                            "rating" -> BatchEditRatingItem(
+                                                                rating = uiState.rating,
+                                                                isModified = uiState.ratingModified,
+                                                                onRatingChange = {
+                                                                    viewModel.updateRating(it)
                                                                 },
-                                                                label = stringResource(R.string.label_lyrics_offset),
+                                                                onRevert = { viewModel.resetRating() }
                                                             )
-                                                            Text(
-                                                                text = stringResource(R.string.batch_edit_lyrics_offset_hint),
-                                                                style = MiuixTheme.textStyles.footnote1,
-                                                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                                                modifier = Modifier
-                                                                    .padding(horizontal = 12.dp)
-                                                            )
-                                                        }
-                                                        if (visibleFieldCodes.contains("lyrics.lyrics")) {
-                                                            BatchEditFieldItem(
-                                                                field = BatchEditField.LYRICS,
-                                                                value = uiState.lyrics,
-                                                                onValueChange = {
-                                                                    viewModel.updateLyrics(
-                                                                        it
-                                                                    )
+
+                                                            // 歌词偏移是数值输入加提示，不是标签字段。
+                                                            "lyrics_offset" -> {
+                                                                TextField(
+                                                                    modifier = Modifier
+                                                                        .fillMaxWidth()
+                                                                        .padding(
+                                                                            horizontal = 12.dp,
+                                                                            vertical = 6.dp
+                                                                        ),
+                                                                    value = uiState.lyricsOffset,
+                                                                    onValueChange = {
+                                                                        viewModel.updateLyricsOffset(it)
+                                                                    },
+                                                                    label = stringResource(R.string.label_lyrics_offset),
+                                                                )
+                                                                Text(
+                                                                    text = stringResource(R.string.batch_edit_lyrics_offset_hint),
+                                                                    style = MiuixTheme.textStyles.footnote1,
+                                                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                                                    modifier = Modifier
+                                                                        .padding(horizontal = 12.dp)
+                                                                )
+                                                            }
+
+                                                            else -> BatchEditFieldItem(
+                                                                field = requireNotNull(editField),
+                                                                value = editField.currentValueIn(uiState),
+                                                                onValueChange = { newValue ->
+                                                                    editField.applyTo(viewModel, newValue)
                                                                 },
                                                                 onSelectFromSongs = {
-                                                                    openSelectedValueSheet(
-                                                                        BatchEditField.LYRICS
-                                                                    )
+                                                                    openSelectedValueSheet(editField)
                                                                 },
-                                                                isMultiline = true
+                                                                isMultiline = editField == BatchEditField.LYRICS
                                                             )
                                                         }
                                                     }
@@ -886,12 +503,12 @@ fun BatchEditScreen(
                 }
             )
             FabMenuItem(
-                label = stringResource(R.string.edit_field_visibility_settings),
+                label = stringResource(R.string.edit_field_settings_title),
                 icon = MiuixIcons.Settings,
                 enabled = !uiState.isSaving,
                 onClick = {
                     expandedFabMenu = false
-                    navigator.navigate(EditFieldVisibilityDestination())
+                    navigator.navigate(EditFieldSettingsDestination())
                 }
             )
             FabMenuItem(
@@ -1765,3 +1382,54 @@ private fun BatchEditCustomFieldItem(
     )
 }
 
+/** 批量编辑页当前值；未修改的字段是 `<keep>`。 */
+private fun BatchEditField.currentValueIn(state: BatchEditUiState): String = when (this) {
+    BatchEditField.TITLE -> state.title
+    BatchEditField.ARTIST -> state.artist
+    BatchEditField.ALBUM_ARTIST -> state.albumArtist
+    BatchEditField.ALBUM -> state.album
+    BatchEditField.DATE -> state.date
+    BatchEditField.LANGUAGE -> state.language
+    BatchEditField.GENRE -> state.genre
+    BatchEditField.TRACK_NUMBER -> state.trackNumber
+    BatchEditField.DISC_NUMBER -> state.discNumber
+    BatchEditField.COMPOSER -> state.composer
+    BatchEditField.LYRICIST -> state.lyricist
+    BatchEditField.COPYRIGHT -> state.copyright
+    BatchEditField.COMMENT -> state.comment
+    BatchEditField.LYRICS -> state.lyrics
+    BatchEditField.REPLAY_GAIN_TRACK_GAIN -> state.replayGainTrackGain
+    BatchEditField.REPLAY_GAIN_TRACK_PEAK -> state.replayGainTrackPeak
+    BatchEditField.REPLAY_GAIN_ALBUM_GAIN -> state.replayGainAlbumGain
+    BatchEditField.REPLAY_GAIN_ALBUM_PEAK -> state.replayGainAlbumPeak
+    BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS -> state.replayGainReferenceLoudness
+    // 封面与评级走各自的组合件渲染，不会走到这里。
+    BatchEditField.COVER, BatchEditField.RATING -> "<keep>"
+}
+
+private fun BatchEditField.applyTo(viewModel: BatchEditViewModel, value: String) {
+    when (this) {
+        BatchEditField.TITLE -> viewModel.updateTitle(value)
+        BatchEditField.ARTIST -> viewModel.updateArtist(value)
+        BatchEditField.ALBUM_ARTIST -> viewModel.updateAlbumArtist(value)
+        BatchEditField.ALBUM -> viewModel.updateAlbum(value)
+        BatchEditField.DATE -> viewModel.updateDate(value)
+        BatchEditField.LANGUAGE -> viewModel.updateLanguage(value)
+        BatchEditField.GENRE -> viewModel.updateGenre(value)
+        BatchEditField.TRACK_NUMBER -> viewModel.updateTrackNumber(value)
+        BatchEditField.DISC_NUMBER -> viewModel.updateDiscNumber(value)
+        BatchEditField.COMPOSER -> viewModel.updateComposer(value)
+        BatchEditField.LYRICIST -> viewModel.updateLyricist(value)
+        BatchEditField.COPYRIGHT -> viewModel.updateCopyright(value)
+        BatchEditField.COMMENT -> viewModel.updateComment(value)
+        BatchEditField.LYRICS -> viewModel.updateLyrics(value)
+        BatchEditField.REPLAY_GAIN_TRACK_GAIN -> viewModel.updateReplayGainTrackGain(value)
+        BatchEditField.REPLAY_GAIN_TRACK_PEAK -> viewModel.updateReplayGainTrackPeak(value)
+        BatchEditField.REPLAY_GAIN_ALBUM_GAIN -> viewModel.updateReplayGainAlbumGain(value)
+        BatchEditField.REPLAY_GAIN_ALBUM_PEAK -> viewModel.updateReplayGainAlbumPeak(value)
+        BatchEditField.REPLAY_GAIN_REFERENCE_LOUDNESS ->
+            viewModel.updateReplayGainReferenceLoudness(value)
+        // 封面与评级走各自的组合件回调。
+        BatchEditField.COVER, BatchEditField.RATING -> Unit
+    }
+}

@@ -11,7 +11,8 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.lonx.lyrico.data.editfield.EditFieldVisibilityOverridesJson
+import com.lonx.lyrico.data.editfield.EditFieldConfigJson
+import com.lonx.lyrico.data.editfield.EditFieldConfigRepository
 import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
 import com.lonx.lyrico.data.model.CharacterMappingConfig
@@ -845,12 +846,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             logRetentionOption = prefs[PreferencesKeys.LOG_RETENTION_OPTION]
                 ?: SettingsDefaults.LOG_RETENTION_OPTION.name,
             artistSplitConfig = artistSplitConfig,
-            editFieldVisibilityOverrides = runCatching {
-                prefs[com.lonx.lyrico.data.editfield.EditFieldVisibilityRepository.EDIT_FIELD_VISIBILITY_OVERRIDES]
-                    ?.let { json ->
-                        jsonFormatter.decodeFromString<EditFieldVisibilityOverridesJson>(json).values
-                    }
-            }.getOrNull(),
+            editFieldConfig = EditFieldConfigJson.from(EditFieldConfigRepository.readConfig(prefs)),
         )
 
         return jsonFormatter.encodeToString(backup)
@@ -955,12 +951,16 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                     prefs[PreferencesKeys.ARTIST_SPLIT_CONFIG] = jsonFormatter.encodeToString(config)
                     prefs[PreferencesKeys.LIBRARY_INDEX_VERSION] = 0
                 }
-                backup.editFieldVisibilityOverrides?.let { overrides ->
-                    prefs[com.lonx.lyrico.data.editfield.EditFieldVisibilityRepository.EDIT_FIELD_VISIBILITY_OVERRIDES] =
-                        jsonFormatter.encodeToString(
-                            EditFieldVisibilityOverridesJson(values = overrides)
+                if (backup.editFieldConfig != null || backup.editFieldVisibilityOverrides != null) {
+                    val config = backup.editFieldConfig?.toConfig(backup.editFieldVisibilityOverrides.orEmpty())
+                        ?: EditFieldConfigRepository.readConfig(prefs).copy(
+                            overrides = EditFieldConfigJson(
+                                version = 2,
+                                overrides = backup.editFieldVisibilityOverrides.orEmpty(),
+                            ).toConfig().overrides,
                         )
-                    }
+                    EditFieldConfigRepository.writeConfig(prefs, config)
+                }
             }
             true
         } catch (e: Exception) {

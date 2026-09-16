@@ -464,19 +464,15 @@
     <string name="group_track_details">音軌資訊</string>
     <string name="group_custom_tags">自訂標籤</string>
     <string name="action_add_custom_tag">新增自訂標籤</string>
-    <string name="custom_tag_management_title">自訂標籤管理</string>
-    <string name="custom_tag_hint">清單中的標籤會顯示在單曲編輯頁和批次編輯頁，點擊標籤可以查看使用它的歌曲。刪除標籤不會刪除歌曲裡已有的資料</string>
     <string name="custom_tag_add_key">新增標籤</string>
     <string name="custom_tag_key">標籤鍵名</string>
     <string name="custom_tag_key_hint">自訂音訊標籤的鍵名，例如 SOURCE、MOOD</string>
     <string name="custom_tag_key_invalid">標籤鍵名無效</string>
-    <string name="custom_tag_empty">還沒有新增標籤</string>
     <string name="custom_tag_library_section">音樂庫中發現的標籤</string>
     <string name="custom_tag_library_empty">音樂庫中沒有其他標籤</string>
     <string name="custom_tag_delete_title">刪除標籤？</string>
     <string name="custom_tag_delete_message">刪除“%1$s”？不會刪除歌曲裡已有的資料</string>
-    <string name="custom_tag_songs_title">含“%1$s”的歌曲</string>
-    <string name="custom_tag_songs_empty">沒有歌曲使用這個標籤</string>
+    <string name="edit_field_songs_empty">暫無符合條件的歌曲</string>
 
     <!-- 批次編輯 -->
     <string name="batch_edit_title">編輯標籤</string>
@@ -650,14 +646,21 @@
     <string name="log_retention_90_days">90 天</string>
     <string name="log_retention_forever">永久保留</string>
 
-    <string name="edit_field_visibility_settings">編輯頁欄位顯示</string>
-    <string name="edit_field_group_lyrics">歌詞</string>
+    <string name="edit_field_settings_title">編輯欄位</string>
+    <string name="edit_field_settings_summary">調整編輯頁欄位的順序與顯示</string>
+    <string name="edit_field_settings_hint">長按卡片排序，點擊按鈕操作</string>
+    <string name="edit_field_settings_enabled_count">已啟用 %1$d / %2$d</string>
+    <string name="edit_field_settings_drag_handle">拖曳排序</string>
+    <string name="edit_field_settings_custom_tag_badge">自訂</string>
+    <string name="edit_field_settings_scope_single">僅在單曲編輯頁顯示</string>
+    <string name="edit_field_settings_scope_batch">僅在批次編輯頁顯示</string>
+    <string name="edit_field_settings_reset_message">還原預設順序與顯示？自訂標籤會從清單中移除，但歌曲裡已有的資料不會被刪除</string>
+    <string name="edit_field_songs_with">已填寫</string>
+    <string name="edit_field_songs_without">未填寫</string>
+    <string name="edit_field_songs_truncated">歌曲較多，僅顯示前一部分</string>
+    <string name="custom_tag_song_count">%1$d 首歌</string>
     <string name="edit_field_group_cover">封面</string>
     <string name="reset_to_default">還原預設值</string>
-    <string name="edit_field_visibility_group_enabled">顯示此群組</string>
-    <string name="edit_field_visibility_group_enabled_summary">關閉後，此群組下的欄位不會出現在編輯頁面中</string>
-    <string name="edit_field_visibility_group_summary">已啟用 %1$d / %2$d 個欄位</string>
-    <string name="edit_field_visibility_field_scope_summary">適用範圍：%1$s</string>
     <string name="edit_field_scope_single_edit">單曲編輯</string>
     <string name="edit_field_scope_batch_edit">批次編輯</string>
     <string name="edit_field_scope_both">單曲編輯和批次編輯</string>
@@ -772,4 +775,9 @@
     <string name="field_group_extra_info">擴充資訊</string>
     <string name="field_group_replay_gain">回放增益</string>
     <string name="lyric_preview_text">歌詞：%s</string>
+    <string name="edit_field_view_songs">查看歌曲</string>
+    <string name="edit_field_manage_members">管理欄位</string>
+    <string name="edit_field_component_hint">長按卡片調整內部順序，開關控制欄位顯示</string>
+    <string name="edit_field_component_short_tag">組</string>
+    <string name="edit_field_custom_short_tag">自</string>
 </resources>
