@@ -2,7 +2,7 @@ package com.lonx.lyrico.plugin.runtime
 
 object HostApiRegistry {
     const val MIN_PLUGIN_PROTOCOL_VERSION = 1
-    const val PLUGIN_PROTOCOL_VERSION = 4
+    const val PLUGIN_PROTOCOL_VERSION = 5
     const val MIN_PLATFORM_API_VERSION = 1
     const val PLATFORM_API_VERSION = 4
 

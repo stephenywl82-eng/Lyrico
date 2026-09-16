@@ -88,7 +88,7 @@ Tap "Lyrics Options" to:
 | Import | Read lyrics from a text file as UTF-8 |
 | Export | Export current lyrics. TTML exports as `.ttml`, others as `.lrc`; empty lyrics are not exported |
 | Simplify / Traditionalize | Convert lyrics between Simplified and Traditional Chinese |
-| Lyric Offset | Adjust timing with `-500`, `-100`, `+100`, `+500` ms buttons |
+| Lyric Offset | Adjust in 100 ms steps, enter a value manually, or reset to 0 |
 | Format Lyrics | Convert format, sort by line, remove empty lines, or strip non-lyric content |
 | View Lyrics Text | Render word-level lyrics as plain text, with options to toggle romanization and translation |
 
@@ -96,7 +96,7 @@ Tap "Lyrics Options" to:
 Formatting lyrics cannot generate word-level timings from scratch. If the source lacks word-level timing data, it cannot be converted to a word-timed format.
 :::
 
-Enter lyric offsets directly in milliseconds. Positive values shift everything later and negative values shift everything earlier. Only complete integers are applied; clearing the field leaves it empty and does not reset the timeline. Use the reset button on the right to restore an offset of `0`.
+Adjust lyric offsets in 100 ms steps, or tap the value / Manual Input to enter an integer between -10,000 and 10,000 ms. Positive values delay lyrics; negative values advance them. Reset restores 0.
 
 ## ReplayGain
 

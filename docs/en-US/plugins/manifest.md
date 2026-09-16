@@ -37,7 +37,7 @@ Fields used by older protocols to declare host APIs, returned fields, or write p
   "versionName": "1.0.0",
   "author": "Plugin Author",
   "description": "Example source plugin",
-  "apiVersion": 4,
+  "apiVersion": 5,
   "minHostApiVersion": 1,
   "entry": "source.js",
   "includeDirs": ["lib"],
@@ -63,7 +63,7 @@ Fields used by older protocols to declare host APIs, returned fields, or write p
 
 `id` must use reverse-domain format, such as `com.example.music_source`.
 
-`apiVersion` is used for plugin protocol compatibility. The current plugin protocol is version 4 and accepts plugins whose `apiVersion` is 1, 2, 3, or 4. Newer versions are rejected. This is independent of the `Platform` host API version, which is currently 4. See [API Version History](./api-versions.md) for the exact differences.
+`apiVersion` is used for plugin protocol compatibility. The current plugin protocol is version 5 and accepts plugins whose `apiVersion` is 1, 2, 3, 4, or 5. Newer versions are rejected. This is independent of the `Platform` host API version, which is currently 4. See [API Version History](./api-versions.md) for the exact differences.
 
 `minHostApiVersion` declares the minimum host API version actually required by the plugin. It must be at least 1 and cannot exceed the current host version. Plugins can still inspect `Platform.runtime.getInfo().supportedHostApis` for individual capabilities; missing capabilities are returned as runtime errors.
 

@@ -1,5 +1,7 @@
 # Using Plugins
 
+The current version supports API 1–5 plugins. API5 plugins require a compatible Lyrico version; update the app if installation reports an unsupported protocol. API1–4 plugins remain supported.
+
 This page explains how plugins work in Lyrico. You do not need to understand JavaScript, manifests, or host APIs to use plugins.
 
 Plugins provide online search capabilities. Once enabled, Lyrico can use them to search song metadata, lyrics, and cover artwork.

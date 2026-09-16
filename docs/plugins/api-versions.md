@@ -8,19 +8,19 @@
 
 | Manifest 字段 | 当前宿主版本 | 控制内容 |
 |---|---:|---|
-| `apiVersion` | 4 | 插件回调 `searchSongs`、`getLyrics`、`searchCovers` 的返回协议 |
+| `apiVersion` | 5 | 插件回调 `searchSongs`、`getLyrics`、`searchCovers` 的返回协议 |
 | `minHostApiVersion` | 4 | 插件调用的 `Platform.*` 宿主函数集合 |
 
-例如，一个返回 API4 歌词候选、但只使用 `Platform.http` 的插件应声明：
+例如，一个返回 API5 扩展歌词候选、但只使用 `Platform.http` 的插件应声明：
 
 ```json
 {
-  "apiVersion": 4,
+  "apiVersion": 5,
   "minHostApiVersion": 1
 }
 ```
 
-宿主目前接受 `apiVersion: 1` 到 `4`，以及 `minHostApiVersion: 1` 到 `4`。声明更高版本时会在安装阶段被拒绝，避免插件进入运行阶段后才因未知协议或缺少宿主函数失败。
+宿主目前接受 `apiVersion: 1` 到 `5`，以及 `minHostApiVersion: 1` 到 `4`。声明更高版本时会在安装阶段被拒绝，避免插件进入运行阶段后才因未知协议或缺少宿主函数失败。
 
 插件可以在运行时检查实际能力：
 
@@ -98,46 +98,16 @@ function loadCookies() {
 
 这里的 `JSON.stringify` 用于把对象保存为缓存字符串，是正确用法；不要用它序列化插件回调的最终返回值。
 
-## API4：结果契约、TTML 元数据与文本本地化
+## API4：歌词与封面候选契约
 
-API4 相对 API3 的变化有三处：
-
-1. `getLyrics` 和 `searchCovers` 的结果契约调整，使不实现 `searchSongs` 的歌词源和封面源也能返回可供用户判断的候选。
-2. 宿主能解析返回歌词中更多的 TTML 元数据：`structured` 结果除原文、译文、音译外，还可以携带行级扩展属性、演唱者、`<head>` 元数据、时间粒度、语言码与段落时间窗，写回 TTML 时使用；旧插件不返回这些字段时行为不变。
-3. Platform Host API 提升到 4，精确新增两个文本本地化函数：
-
-| 新增函数 | 签名 | 返回值与行为 |
-|---|---|---|
-| 当前语言 | `Platform.i18n.getLocale()` | 返回选中语言的标签，例如 `"zh-Hans"`；插件没有 `i18n` 时返回 `"und"` |
-| 取文本 | `Platform.i18n.t(key, ...args)` | 返回该键在当前语言下的文本；传入参数时按位置占位符格式化 |
-
-Manifest 中使用 `@` 字符串引用，或脚本调用 `Platform.i18n` 的插件，需要把 `minHostApiVersion` 提高到 4。资源文件写法与占位符规则见[插件国际化](./i18n.md)。
-
-### 结构化歌词的 TTML 元数据
-
-`type: "structured"` 的歌词结果可以选择携带 TTML 专属信息。这类结构只影响 TTML 导出，导出为 LRC 时不会保留；旧插件只返回 `original`、`translated`、`romanization` 时，与 API3 的行为一致。
-
-| 载荷位置 | 内容 | 写回 TTML |
-|---|---|---|
-| `original` 行的第 4 个元素 | 行级扩展属性，例如 `ttm:agent`、`itunes:song-part`、`divBegin`/`divEnd` | `<p ttm:agent>`、`<div itunes:song-part>`、段落 `<div begin/end>` |
-| `original` 词的第 4 个元素 | Ruby 注音音节数组 `[[startMs, endMs, "注音"], ...]` | `<ruby>` / `<rt>`，缺失的音节边界由宿主规范化 |
-| `agents` | `{ id, type?, name? }[]` | `<head>` 中的 `<ttm:agent>` |
-| `metadata` | `{ name, namespace?, attributes?, text?, children? }[]` | `<head>` 中的元数据节点 |
-| `timing` | `"Word"` 或 `"Line"` | `<tt itunes:timing>` |
-| `language` | 原文语言码（BCP 47） | `<tt xml:lang>` |
-| `bodyDur` | TTML 时间表达式 | `<body dur>` |
-| `translatedLang` / `romanizationLang` | 翻译轨 / 音译轨语言码（BCP 47） | 对应轨的 `xml:lang` |
-
-`itunes:key` 由宿主重新生成，插件不需要提供。扩展属性只接受无前缀名称与 `ttm:`、`itunes:` 前缀，其他前缀会被忽略；非法的 `bodyDur` 会被丢弃。
-
-字段格式、`metadata` 的约束、逐词时间与缺失边界的处理，以及 `rawTtml` 的应用场景见[插件函数](./plugin-functions.md)的「结构化歌词的行格式」与「TTML 扩展」。
+API4 调整 getLyrics 和 searchCovers 的结果契约，使独立歌词源和封面源能够返回可识别的候选。TTML 载荷扩展属于 API5；国际化属于 Host API4。
 
 ### 三个回调的 API3 与 API4 对比
 
 | 回调 | 请求是否变化 | API1–3 返回值 | API4 返回值 |
 |---|---|---|---|
 | `searchSongs` | 否 | `SongSearchResult[]` | 不变 |
-| `getLyrics` | 是；新增可选 `page`、`pageSize` | 单个 `LyricsResult`、LRC 字符串或 `null` | `LyricsResult[]`；每项以 `tags.ti/ar/al/date` 提供标题、艺术家、专辑、日期；`structured` 载荷可携带 TTML 扩展元数据 |
+| `getLyrics` | 是；新增可选 `page`、`pageSize` | 单个 `LyricsResult`、LRC 字符串或 `null` | `LyricsResult[]`；每项以 `tags.ti/ar/al/date` 提供标题、艺术家、专辑、日期 |
 | `searchCovers` | 是；新增可选 `page` | `SongSearchResult[]`，旧字段继续兼容 | `SongSearchResult[]`；每项必须有标题、艺术家、专辑、日期和封面 URL，平台歌曲 `id` 可省略 |
 
 当前宿主还会向 `getLyrics` 提供可选的 `page` 和 `pageSize`，供不实现 `searchSongs` 的 API4 歌词源分页返回候选。旧插件可以忽略这些新增字段；函数调用签名仍是单个 `request` 对象。
@@ -207,6 +177,43 @@ function searchCovers(request) {
 
 歌曲 ID、`internal`、歌词和封面不会跨插件拼接。歌词页面中的“全部”只是在同一个页面保留并展示各源缓存的搜索结果，不会把一个源返回的歌曲交给另一个源获取歌词。
 
+## API5：歌词返回格式扩展与 TTML 信息保留
+
+API5 在 API4 歌词候选格式上扩展逐词音译、行级属性、演唱者、head 元数据、时间粒度、语言码、段落时间窗、正文时长和带时间的多音节 Ruby 注音。候选数组、必填歌曲标签以及 searchSongs / searchCovers 的契约不变。这些扩展来自提交 [0876c815](https://github.com/Replica0110/Lyrico/commit/0876c815) 和 [1071e09e](https://github.com/Replica0110/Lyrico/commit/1071e09e)。
+
+继续兼容 API1–4 插件。扩展字段可选；声明 API5 不会自动补出源数据中缺失的信息。
+
+### 结构化歌词的 TTML 元数据
+
+`type: "structured"` 的歌词结果可以选择携带 TTML 专属信息。TTML 专属结构在导出为 LRC 时不会保留；逐词音译可在逐字 LRC 中保留时间戳。旧插件只返回 `original`、`translated`、`romanization` 时，与 API3 的行为一致。
+
+| 载荷位置 | 内容 | 写回 TTML |
+|---|---|---|
+| `original` 行的第 4 个元素 | 行级扩展属性，例如 `ttm:agent`、`itunes:song-part`、`divBegin`/`divEnd` | `<p ttm:agent>`、`<div itunes:song-part>`、段落 `<div begin/end>` |
+| `original` 词的第 4 个元素 | Ruby 注音音节数组 `[[startMs, endMs, "注音"], ...]` | `<span tts:ruby="container">` / `<span tts:ruby="text">`，缺失的音节边界由宿主规范化 |
+| `romanization` 行第 3 个元素 | 词数组或旧版整行文本 | head `<transliteration>` 中的定时 span；逐字 LRC 也支持音译时间戳 |
+| `agents` | `{ id, type?, name? }[]` | `<head>` 中的 `<ttm:agent>` |
+| `metadata` | `{ name, namespace?, attributes?, text?, children? }[]` | `<head>` 中的元数据节点 |
+| `timing` | `"Word"` 或 `"Line"` | `<tt itunes:timing>` |
+| `language` | 原文语言码（BCP 47） | `<tt xml:lang>` |
+| `bodyDur` | TTML 时间表达式 | `<body dur>` |
+| `translatedLang` / `romanizationLang` | 翻译轨 / 音译轨语言码（BCP 47） | 对应轨的 `xml:lang` |
+
+`itunes:key` 由宿主重新生成，插件不需要提供。扩展属性只接受无前缀名称与 `ttm:`、`itunes:` 前缀，其他前缀会被忽略；非法的 `bodyDur` 会被丢弃。
+
+字段格式、`metadata` 的约束、逐词时间与缺失边界的处理，以及 `rawTtml` 的应用场景见[插件函数](./plugin-functions.md)的「结构化歌词的行格式」与「TTML 扩展」。
+
+## Host API4：插件国际化
+
+宿主 API4 独立新增两个本地化函数。仅使用 API5 歌词扩展并不要求 Host API4。
+
+| 新增函数 | 签名 | 返回值与行为 |
+|---|---|---|
+| 当前语言 | `Platform.i18n.getLocale()` | 返回选中语言的标签，例如 `"zh-Hans"`；插件没有 `i18n` 时返回 `"und"` |
+| 取文本 | `Platform.i18n.t(key, ...args)` | 返回该键在当前语言下的文本；传入参数时按位置占位符格式化 |
+
+Manifest 中使用 `@` 字符串引用，或脚本调用 `Platform.i18n` 的插件，需要把 `minHostApiVersion` 提高到 4。资源文件写法与占位符规则见[插件国际化](./i18n.md)。
+
 ## 从 API3 升级到 API4
 
 1. 将 `manifest.json` 的 `apiVersion` 改为 `4`。
@@ -215,8 +222,15 @@ function searchCovers(request) {
 4. 把 `getLyrics` 的单个结果改为数组；无结果返回 `[]`，每项补齐 `tags.ti`、`tags.ar`、`tags.al`、`tags.date`。
 5. 为每个 `searchCovers` 结果补齐 `title`、`artist`、`album`、`date` 和封面 URL；`id` 可以省略。
 6. 所有回调直接返回对象、数组、字符串或 `null`，不要对最终返回值调用 `JSON.stringify`。
-7. 需要在写回 TTML 时保留演唱者、段落、语言码等信息时，按[插件函数](./plugin-functions.md)的 TTML 扩展补充 `structured` 结果的扩展字段；不补充也能通过校验。
-8. 只有使用了 Base64URL、缓存或文本本地化时，才把 `minHostApiVersion` 分别提高到 2、3 或 4。
+7. 只有使用了 Base64URL、缓存或文本本地化时，才把 `minHostApiVersion` 分别提高到 2、3 或 4。
+
+## 从 API4 升级到 API5
+
+1. 将 manifest 中的 `apiVersion` 设为 `5`，保留 `getLyrics` 候选数组和 `tags.ti/ar/al/date`。
+2. 有逐词音译时返回词数组；按源数据补充行级扩展、agents、metadata、语言与时间粒度、bodyDur 和 Ruby。旧的整行字符串仍有效。
+3. 遵循[插件函数](./plugin-functions.md)中的字段格式和校验规则；Ruby 缺失边界用 `null`，非法 bodyDur 会被丢弃。
+4. `minHostApiVersion` 按实际使用的 Platform 能力填写（1–4），不要改成 5；国际化需要 Host API4。
+5. 协议上限为 4 的旧宿主会拒绝 API5 插件，安装或验证前需更新 Lyrico 和 Devkit。
 
 ## 用 Devkit 定位问题
 
@@ -234,7 +248,7 @@ node tools/plugin-devkit/src/cli.js test ./my-plugin searchCovers --keyword "晴
 
 | 现象或错误 | 先检查什么 | 常见原因 |
 |---|---|---|
-| 安装时提示插件协议不支持 | `manifest.apiVersion` | 高于宿主支持的 4，或把 Platform 版本误填到了这里 |
+| 安装时提示插件协议不支持 | `manifest.apiVersion` | 高于宿主支持的 5，或把 Platform 版本误填到了这里 |
 | 安装时提示宿主 API 不支持 | `manifest.minHostApiVersion` | 高于宿主支持的 4 |
 | `returned JSON.stringify(...) instead of a JavaScript value` | 回调中的最终 `return` | 插件提前序列化，Android 宿主又序列化一次 |
 | `getLyrics returned no usable lyrics candidates` | `raw`、歌词 `type` 与对应载荷字段 | 返回的数组为空，或歌词对象不能被解析 |

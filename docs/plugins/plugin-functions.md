@@ -9,7 +9,7 @@
 | 函数 | 触发场景 | 返回类型 | 对应能力 |
 |------|----------|----------|----------|
 | `searchSongs(request)` | 用户搜索歌曲 | JavaScript 数组 | `searchSongs` |
-| `getLyrics(request)` | 搜索歌词候选 | API 4 为 JavaScript 候选数组；API 1–3 为歌词对象、字符串或 `null` | `getLyrics` |
+| `getLyrics(request)` | 搜索歌词候选 | API 4–5 为 JavaScript 候选数组；API 1–3 为歌词对象、字符串或 `null` | `getLyrics` |
 | `searchCovers(request)` | 搜索封面图片 | JavaScript 数组 | `searchCovers` |
 
 函数通过 QuickJS 的全局作用域暴露，不需要（也不能）使用 `export`：
@@ -196,7 +196,7 @@ function searchSongs(request) {
 
 ### 返回值
 
-API 4 应返回歌词对象数组（也可包装在 `items`、`results` 或 `candidates` 中）。每个歌词
+API 4–5 应返回歌词对象数组（也可包装在 `items`、`results` 或 `candidates` 中）。每个歌词
 对象必须在 `tags` 中提供 `ti`（标题）、`ar`（艺术家）、`al`（专辑）和 `date`（年份），
 宿主从这些既有歌词标签生成候选列表，避免再声明一套重复的顶层歌曲字段：
 
@@ -217,7 +217,7 @@ function getLyrics(request) {
 
 API 1–3 的函数签名和原有返回完全不变：可返回单个结构化歌词对象、完整原始歌词文本，
 或 `null` 表示未找到歌词。宿主会把旧结果包装为一个候选，并使用请求中的歌曲信息供
-用户判断。下面各格式既是 API 1–3 的顶层返回格式，也是 API 4 数组中的候选格式。
+用户判断。下面各格式既是 API 1–3 的顶层返回格式，也是 API 4–5 数组中的候选格式。
 
 宿主先读取 `type` 判断载荷类型；当 `type` 为 `structured` 时解析 `original` /
 `translated` / `romanization` 列表，当 `type` 为 raw 类型时直接使用对应 raw 字段。
@@ -246,7 +246,11 @@ function getLyrics(request) {
 }
 ```
 
+以下格式示例中的单个对象用于展示候选载荷。API 4–5 的实际 `getLyrics` 回调必须将对象放入数组返回（`return [result]`）；无结果返回 `[]`。
+
 ### 结构化歌词的行格式
+
+API 5 扩展了结构化歌词载荷：逐词 `romanization`、行级扩展、`agents` / `metadata`、时间粒度与语言字段、`bodyDur` 和多音节 Ruby 注音。返回这些扩展时应声明 `apiVersion: 5`。候选数组及必填歌曲标签沿用 API 4，旧的整行文本格式仍兼容。宿主 API 独立编号，当前仍为 4。
 
 `original` 和 `romanization` 都可使用逐词格式：
 
@@ -415,7 +419,7 @@ function getLyrics(request) {
 
 ### 返回值
 
-顶层格式与 `searchSongs` 相同，但封面候选不要求平台歌曲 ID。API 4 的每个结果必须
+顶层格式与 `searchSongs` 相同，但封面候选不要求平台歌曲 ID。API 4–5 的每个结果必须
 返回标题、艺术家、专辑、年份以及封面 URL，供用户判断后应用；日期可使用 `year`、
 `date` 或 `releaseDate`，封面可使用 `picUrl`、`coverUrl` 等兼容键名。API 1–3 的既有
 返回格式继续兼容。

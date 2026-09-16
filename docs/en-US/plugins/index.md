@@ -21,7 +21,7 @@ These pages are for two audiences:
 | 1 | [Build a Plugin](./examples.md) | A complete plugin from manifest to packaged ZIP |
 | 2 | [Plugin Package Structure](./composition.md) | File layout, entry scripts, helper folders, and ZIP rules |
 | 3 | [Plugin Functions](./plugin-functions.md) | Implement `searchSongs`, `getLyrics`, and `searchCovers` |
-| 4 | [API Version History](./api-versions.md) | Compare plugin protocol API1 through API4 and host capability versions |
+| 4 | [API Version History](./api-versions.md) | Compare plugin protocol API1 through API5 and host capability versions |
 | 5 | [Manifest Reference](./manifest.md) | Manifest fields, values, and validation rules |
 | 6 | [Host API Reference](./host-api.md) | HTTP, crypto, encoding, compression, XML, and logging APIs |
 
@@ -47,7 +47,7 @@ Minimal `manifest.json`:
   "name": "Example Plugin",
   "versionCode": 1,
   "versionName": "1.0.0",
-  "apiVersion": 4
+  "apiVersion": 5
 }
 ```
 

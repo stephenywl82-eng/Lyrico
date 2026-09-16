@@ -8,19 +8,19 @@ The two version fields in `manifest.json` define separate compatibility boundari
 
 | Manifest field | Current host version | What it controls |
 |---|---:|---|
-| `apiVersion` | 4 | Return contracts of `searchSongs`, `getLyrics`, and `searchCovers` |
+| `apiVersion` | 5 | Return contracts of `searchSongs`, `getLyrics`, and `searchCovers` |
 | `minHostApiVersion` | 4 | The set of callable `Platform.*` host functions |
 
-For example, a plugin that returns API4 lyrics candidates but only uses `Platform.http` should declare:
+For example, a plugin that returns API5 extended lyrics candidates but only uses `Platform.http` should declare:
 
 ```json
 {
-  "apiVersion": 4,
+  "apiVersion": 5,
   "minHostApiVersion": 1
 }
 ```
 
-The current host accepts `apiVersion` 1 through 4 and `minHostApiVersion` 1 through 4. Higher versions are rejected during installation so an unknown protocol or missing host function does not fail later at runtime.
+The current host accepts `apiVersion` 1 through 5 and `minHostApiVersion` 1 through 4. Higher versions are rejected during installation so an unknown protocol or missing host function does not fail later at runtime.
 
 Inspect the effective runtime when diagnosing compatibility:
 
@@ -98,46 +98,16 @@ function loadCookies() {
 
 This `JSON.stringify` is correct because it creates a cache string. Do not serialize a plugin callback's final return value.
 
-## API4: result contracts, TTML metadata, and text localization
+## API4: lyrics and cover candidate contracts
 
-API4 differs from API3 in three ways:
-
-1. The result contracts of `getLyrics` and `searchCovers` change so lyrics and cover providers without `searchSongs` can still return candidates a user can identify.
-2. The host parses more TTML metadata out of returned lyrics: a `structured` result can carry line-level extension attributes, performers, `<head>` metadata, timing granularity, language codes, and paragraph time windows, which the host uses when it writes TTML back. Plugins that do not return these fields behave exactly as before.
-3. Platform Host API moves to 4, adding exactly two text-localization functions:
-
-| Added function | Signature | Return value and behavior |
-|---|---|---|
-| Current locale | `Platform.i18n.getLocale()` | Returns the selected language tag, for example `"zh-Hans"`; returns `"und"` when the plugin has no `i18n` |
-| Text lookup | `Platform.i18n.t(key, ...args)` | Returns the text of that key in the current language; formats positional placeholders when arguments are passed |
-
-Plugins that use `@` string references in the manifest, or call `Platform.i18n` from a script, must raise `minHostApiVersion` to 4. Resource files and placeholder rules are described in [Plugin Internationalization](./i18n.md).
-
-### TTML metadata in structured lyrics
-
-A lyrics result with `type: "structured"` may carry TTML-specific information. These structures affect TTML export only and are dropped when exporting LRC; a plugin that returns just `original`, `translated`, and `romanization` behaves as it did with API3.
-
-| Payload location | Content | Written back as |
-|---|---|---|
-| 4th element of an `original` line | Line-level extension attributes such as `ttm:agent`, `itunes:song-part`, `divBegin`/`divEnd` | `<p ttm:agent>`, `<div itunes:song-part>`, paragraph `<div begin/end>` |
-| 4th element of an `original` word | Ruby syllable array `[[startMs, endMs, "reading"], ...]` | `<ruby>` / `<rt>`, with missing syllable boundaries normalized by the host |
-| `agents` | `{ id, type?, name? }[]` | `<ttm:agent>` elements in `<head>` |
-| `metadata` | `{ name, namespace?, attributes?, text?, children? }[]` | Metadata nodes in `<head>` |
-| `timing` | `"Word"` or `"Line"` | `<tt itunes:timing>` |
-| `language` | Original language tag (BCP 47) | `<tt xml:lang>` |
-| `bodyDur` | A TTML time expression | `<body dur>` |
-| `translatedLang` / `romanizationLang` | Language tags of the translation / romanization track (BCP 47) | `xml:lang` of the corresponding track |
-
-The host regenerates `itunes:key`, so plugins never supply it. Extension attributes accept unprefixed names and the `ttm:` and `itunes:` prefixes only; any other prefix is ignored, and an invalid `bodyDur` is dropped.
-
-Field formats, `metadata` constraints, word-level timing and missing-boundary handling, and when to use `rawTtml` are documented under Structured Lyrics Line Format and TTML Extensions in [Plugin Functions](./plugin-functions.md).
+API4 changes getLyrics and searchCovers result contracts so independent sources can return identifiable candidates. TTML payload extensions belong to API5; localization belongs to Host API4.
 
 ### API3-to-API4 callback comparison
 
 | Callback | Request changed? | API1–3 return value | API4 return value |
 |---|---|---|---|
 | `searchSongs` | No | `SongSearchResult[]` | Unchanged |
-| `getLyrics` | Yes; optional `page` and `pageSize` added | One `LyricsResult`, an LRC string, or `null` | `LyricsResult[]`; every item identifies title, artist, album, and date through `tags.ti/ar/al/date`, and a `structured` payload may carry TTML extension metadata |
+| `getLyrics` | Yes; optional `page` and `pageSize` added | One `LyricsResult`, an LRC string, or `null` | `LyricsResult[]`; every item identifies title, artist, album, and date through `tags.ti/ar/al/date` |
 | `searchCovers` | Yes; optional `page` added | `SongSearchResult[]`; legacy fields remain compatible | `SongSearchResult[]`; every item requires title, artist, album, date, and a cover URL; a platform song `id` is optional |
 
 The current host also supplies optional `page` and `pageSize` fields to `getLyrics`, allowing an API4 lyrics source without `searchSongs` to paginate candidates. Legacy plugins may ignore these additive fields; the callback signature remains one `request` object.
@@ -207,6 +177,43 @@ Cover URL aliases `coverUrl`, `cover_url`, and `artworkUrl` are also accepted. S
 
 Song IDs, `internal`, lyrics, and covers are never joined across plugins. The lyrics screen's All tab only preserves and displays cached per-source results on one screen; it never passes a song from one source to another source's lyrics callback.
 
+## API5: extended lyrics payloads and TTML preservation
+
+API5 extends API4 lyrics candidates with word-timed romanization, line attributes, performers, head metadata, timing and language fields, paragraph time windows, body duration, and timed multi-syllable Ruby. Candidate arrays, required identification tags, and searchSongs / searchCovers contracts remain unchanged. These changes originate in commits [0876c815](https://github.com/Replica0110/Lyrico/commit/0876c815) and [1071e09e](https://github.com/Replica0110/Lyrico/commit/1071e09e).
+
+API1–4 plugins remain supported. Extension fields are optional; declaring API5 does not reconstruct missing source data.
+
+### TTML metadata in structured lyrics
+
+A lyrics result with `type: "structured"` may carry TTML-specific information. TTML-only structures are dropped in LRC; word-timed romanization can retain its timing in word-timed LRC; a plugin that returns just `original`, `translated`, and `romanization` behaves as it did with API3.
+
+| Payload location | Content | Written back as |
+|---|---|---|
+| 4th element of an `original` line | Line-level extension attributes such as `ttm:agent`, `itunes:song-part`, `divBegin`/`divEnd` | `<p ttm:agent>`, `<div itunes:song-part>`, paragraph `<div begin/end>` |
+| 4th element of an `original` word | Ruby syllable array `[[startMs, endMs, "reading"], ...]` | `<span tts:ruby="container">` / `<span tts:ruby="text">`, with missing syllable boundaries normalized by the host |
+| `romanization` line, 3rd element | Word array or legacy line text | Timed spans in head `<transliteration>` |
+| `agents` | `{ id, type?, name? }[]` | `<ttm:agent>` elements in `<head>` |
+| `metadata` | `{ name, namespace?, attributes?, text?, children? }[]` | Metadata nodes in `<head>` |
+| `timing` | `"Word"` or `"Line"` | `<tt itunes:timing>` |
+| `language` | Original language tag (BCP 47) | `<tt xml:lang>` |
+| `bodyDur` | A TTML time expression | `<body dur>` |
+| `translatedLang` / `romanizationLang` | Language tags of the translation / romanization track (BCP 47) | `xml:lang` of the corresponding track |
+
+The host regenerates `itunes:key`, so plugins never supply it. Extension attributes accept unprefixed names and the `ttm:` and `itunes:` prefixes only; any other prefix is ignored, and an invalid `bodyDur` is dropped.
+
+Field formats, `metadata` constraints, word-level timing and missing-boundary handling, and when to use `rawTtml` are documented under Structured Lyrics Line Format and TTML Extensions in [Plugin Functions](./plugin-functions.md).
+
+## Host API4: plugin internationalization
+
+Host API4 independently adds two localization functions. API5 lyrics extensions alone do not require Host API4.
+
+| Added function | Signature | Return value and behavior |
+|---|---|---|
+| Current locale | `Platform.i18n.getLocale()` | Returns the selected language tag, for example `"zh-Hans"`; returns `"und"` when the plugin has no `i18n` |
+| Text lookup | `Platform.i18n.t(key, ...args)` | Returns the text of that key in the current language; formats positional placeholders when arguments are passed |
+
+Plugins that use `@` string references in the manifest, or call `Platform.i18n` from a script, must raise `minHostApiVersion` to 4. Resource files and placeholder rules are described in [Plugin Internationalization](./i18n.md).
+
 ## Migrating from API3 to API4
 
 1. Change `manifest.json` to `apiVersion: 4`.
@@ -215,8 +222,15 @@ Song IDs, `internal`, lyrics, and covers are never joined across plugins. The ly
 4. Change `getLyrics` from one result to an array; return `[]` when empty and add `tags.ti`, `tags.ar`, `tags.al`, and `tags.date` to every item.
 5. Add `title`, `artist`, `album`, `date`, and a cover URL to every `searchCovers` item; `id` may be omitted.
 6. Return objects, arrays, strings, or `null` directly. Do not call `JSON.stringify` on the final callback result.
-7. To keep performers, paragraphs, language tags, and similar information when TTML is written back, add the extension fields described under TTML Extensions in [Plugin Functions](./plugin-functions.md). Omitting them still passes validation.
-8. Raise `minHostApiVersion` to 2, 3, or 4 only when using Base64URL, cache functions, or text localization, respectively.
+7. Raise `minHostApiVersion` to 2, 3, or 4 only when using Base64URL, cache functions, or text localization, respectively.
+
+## Migrating from API4 to API5
+
+1. Set manifest `apiVersion: 5`, retaining candidate arrays and `tags.ti/ar/al/date`.
+2. Return word arrays for timed romanization and add the new TTML fields only when present in the source; legacy line strings remain valid.
+3. Follow [Plugin Functions](./plugin-functions.md) for field shapes and validation. Use `null` for missing Ruby boundaries; invalid `bodyDur` is dropped.
+4. Set `minHostApiVersion` according to Platform functions used (1–4), not to 5. Localization requires Host API4.
+5. Hosts with a maximum protocol of 4 reject API5 plugins. Update Lyrico and the Devkit before installing or validating them.
 
 ## Diagnosing with the Devkit
 
@@ -234,7 +248,7 @@ Add `--json` to print the complete `request`, host-serialized `raw`, parsed `par
 
 | Symptom or error | Check first | Common cause |
 |---|---|---|
-| Plugin protocol rejected during installation | `manifest.apiVersion` | Greater than 4, or the Platform version was placed in this field |
+| Plugin protocol rejected during installation | `manifest.apiVersion` | Greater than 5, or the Platform version was placed in this field |
 | Host API rejected during installation | `manifest.minHostApiVersion` | Greater than 4 |
 | `returned JSON.stringify(...) instead of a JavaScript value` | Final `return` in the callback | The plugin serialized once and Android serialized it again |
 | `getLyrics returned no usable lyrics candidates` | `raw`, lyrics `type`, and its payload field | Empty array or an unparseable lyrics object |

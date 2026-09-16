@@ -60,7 +60,7 @@ Lyrico 插件系统是一个基于 **QuickJS 嵌入式 JavaScript 引擎** 的�
 | 验证项 | 规则 |
 |--------|------|
 | ID 格式 | 必须匹配 `^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$`（反向域名） |
-| API 版本 | 插件协议 `apiVersion` 必须在支持范围 **1..4** 内；`minHostApiVersion` 不得高于当前宿主 API **4** |
+| API 版本 | 插件协议 `apiVersion` 必须在支持范围 **1..5** 内；`minHostApiVersion` 不得高于当前宿主 API **4** |
 | 能力声明 | 仅允许已知能力；三项能力可独立声明；缺省或空数组按旧插件的 `searchSongs` 处理 |
 | 入口文件 | 必须存在、`.js` 扩展名、路径不能逃逸插件根目录、≤ 1 MB |
 | 包含目录 | `includeDirs` 中的目录必须存在且在插件根目录内 |
@@ -125,7 +125,7 @@ Lyrico 插件系统是一个基于 **QuickJS 嵌入式 JavaScript 引擎** 的�
 ### 阶段 5：运行时调用
 
 1. 单曲编辑页右上角统一提供主搜索、歌词和封面三个搜索入口；主搜索加载已启用且声明 `searchSongs` 的元数据源，并仅对同时声明 `getLyrics` 的插件结果显示歌词页签与操作
-2. 编辑页的独立歌词搜索只加载具备 `getLyrics` 的源；任何同时具备 `searchSongs` 的源都会先展示该源的歌曲候选，用户选择后再调用同一源的 `getLyrics`；没有 `searchSongs` 的 API 4 源直接返回歌词候选，并由 `tags.ti/ar/al/date` 提供判断信息
+2. 编辑页的独立歌词搜索只加载具备 `getLyrics` 的源；任何同时具备 `searchSongs` 的源都会先展示该源的歌曲候选，用户选择后再调用同一源的 `getLyrics`；没有 `searchSongs` 的 API 4 及以上版本的源直接返回歌词候选，并由 `tags.ti/ar/al/date` 提供判断信息
 3. 独立封面搜索只加载 `searchCovers` 源，并直接按关键词请求封面候选
 4. 批量匹配同样分为三个任务入口：元数据任务调用 `searchSongs`，歌词任务调用 `getLyrics`，封面任务调用 `searchCovers`
 5. `ScriptSearchSource` 将请求序列化为 JSON，通过 JNI 调用对应的插件全局函数

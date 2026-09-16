@@ -60,7 +60,7 @@ The Lyrico plugin system is a source-plugin framework based on the **QuickJS emb
 | Validation item | Rule |
 |-----------------|------|
 | ID format | Must match `^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$` reverse-domain format |
-| API version | Plugin protocol `apiVersion` must be in the supported range **1..4**; `minHostApiVersion` cannot exceed the current host API **4** |
+| API version | Plugin protocol `apiVersion` must be in the supported range **1..5**; `minHostApiVersion` cannot exceed the current host API **4** |
 | Capabilities | Only known capabilities are accepted; all three may be declared independently; a missing or empty list keeps legacy `searchSongs` behavior |
 | Entry file | Must exist, use `.js`, stay inside the plugin root, and be ≤ 1 MB |
 | Include directories | Directories in `includeDirs` must exist and stay inside the plugin root |
@@ -125,7 +125,7 @@ After installation, plugin metadata is written to the Room `source_plugins` tabl
 ### Stage 5: Runtime Calls
 
 1. The single-song editor exposes Main Search, Lyrics, and Covers from one search menu. Main Search loads enabled Metadata sources with `searchSongs`, and shows lyrics tabs and actions only for results from plugins that also declare `getLyrics`
-2. The independent lyrics search in the edit screen loads sources with `getLyrics`. Any source that also provides `searchSongs` first shows its own song candidates and calls that same source's `getLyrics` after selection; an API 4 source without `searchSongs` returns lyrics candidates directly and identifies them through `tags.ti/ar/al/date`
+2. The independent lyrics search in the edit screen loads sources with `getLyrics`. Any source that also provides `searchSongs` first shows its own song candidates and calls that same source's `getLyrics` after selection; an API 4+ source without `searchSongs` returns lyrics candidates directly and identifies them through `tags.ti/ar/al/date`
 3. Independent cover search loads only `searchCovers` sources and requests cover candidates directly by keyword
 4. Batch matching also has three task entries: metadata calls `searchSongs`, lyrics calls `getLyrics`, and covers call `searchCovers`
 5. `ScriptSearchSource` serializes the request and invokes the matching plugin global function through JNI

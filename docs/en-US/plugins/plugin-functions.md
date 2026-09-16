@@ -9,7 +9,7 @@ The plugin entry script must define global functions for the host to call. The h
 | Function | Trigger | Return type | Capability |
 |----------|---------|-------------|------------|
 | `searchSongs(request)` | User searches songs | JavaScript array | `searchSongs` |
-| `getLyrics(request)` | Search lyrics candidates | JavaScript candidate array in API 4; lyrics object, string, or `null` in API 1–3 | `getLyrics` |
+| `getLyrics(request)` | Search lyrics candidates | JavaScript candidate array in API 4–5; lyrics object, string, or `null` in API 1–3 | `getLyrics` |
 | `searchCovers(request)` | Cover images are searched | JavaScript array | `searchCovers` |
 
 Functions are exposed through the QuickJS global scope. You do not need, and cannot use, `export`:
@@ -198,7 +198,7 @@ sources.
 
 ### Return Value
 
-API 4 should return an array of lyrics objects. A wrapper using `items`, `results`, or
+API 4–5 should return an array of lyrics objects. A wrapper using `items`, `results`, or
 `candidates` is also accepted. Every object must provide `ti` (title), `ar` (artist), `al`
 (album), and `date` (year) in `tags`. The host builds the candidate list from these existing
 lyrics tags instead of requiring a duplicate set of top-level song fields:
@@ -221,7 +221,7 @@ function getLyrics(request) {
 API 1–3 signatures and existing return values are unchanged: they may return one structured
 lyrics object, full raw lyrics text, or `null`. The host wraps a legacy result as one candidate
 and uses the requested song metadata for display. The formats below are both API 1–3 top-level
-responses and valid candidate objects inside the API 4 array.
+responses and valid candidate objects inside the API 4–5 array.
 
 The host first reads `type` to determine payload type. For `type: "structured"`, it parses
 `original` / `translated` / `romanization` lists. For raw types, it uses the matching raw field.
@@ -250,7 +250,11 @@ function getLyrics(request) {
 }
 ```
 
+The single-object format examples below illustrate candidate payloads. Actual API 4–5 getLyrics callbacks must wrap each payload in an array (`return [result]`); return `[]` when empty.
+
 ### Structured line formats
+
+API 5 adds word-timed romanization, line extensions, agents and metadata, timing and language fields, bodyDur, and timed multi-syllable Ruby. Declare `apiVersion: 5` when returning these extensions. Candidate arrays and required tags remain as introduced in API 4. Legacy line strings remain supported. Host API remains independently versioned at 4.
 
 `original` and `romanization` both accept word-level lines:
 
@@ -420,7 +424,7 @@ does not need to implement `searchSongs`, and there is no preceding song-candida
 ### Return Value
 
 The top-level format matches `searchSongs`, but cover candidates do not require a platform song
-ID. In API 4, every result must include title, artist, album, year, and a cover URL so the user can
+ID. In API 4–5, every result must include title, artist, album, year, and a cover URL so the user can
 judge the match. A date may use `year`, `date`, or `releaseDate`; the cover may use `picUrl`,
 `coverUrl`, and other compatible aliases. Existing API 1–3 return formats remain compatible.
 

@@ -56,6 +56,8 @@ After selecting at least one song, an **expand button (FAB)** appears at the bot
 - Rename
 - Edit Tags
 - Tag Matching
+- Batch Match Lyrics
+- Batch Match Covers
 - Delete
 - Share
 
@@ -63,7 +65,9 @@ After selecting at least one song, an **expand button (FAB)** appears at the bot
 
 ## Tag Matching
 
-**Tag Matching** uses enabled plugins to search song metadata and writes title, artist, album, lyrics, cover, and other fields according to configuration.
+**Tag Matching** uses enabled metadata sources to write metadata fields such as title, artist and album. Lyrics and covers are handled by separate **Batch Match Lyrics** and **Batch Match Covers** tasks.
+
+Choose the corresponding task in the batch menu, then configure concurrency and write behavior before starting. Each task uses the enablement and priority of its own source type in Plugin Management. Lyrics-only sources can return candidates directly without song search; cover candidates are scored against local song information.
 
 **Full Steps:**
 
