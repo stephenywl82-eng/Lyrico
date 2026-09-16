@@ -28,6 +28,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -768,7 +769,7 @@ private fun ReplayGainTargetLoudnessSheet(
         R.string.replay_gain_target_preset_streaming
     )
     var selectedPreset by remember(show, currentLoudness) {
-        mutableStateOf(if (currentLoudness in presets) currentLoudness else presets.first())
+        mutableDoubleStateOf(if (currentLoudness in presets) currentLoudness else presets.first())
     }
     var customSelected by remember(show, currentLoudness) {
         mutableStateOf(currentLoudness !in presets)
@@ -780,7 +781,6 @@ private fun ReplayGainTargetLoudnessSheet(
 
     YesNoBottomSheet(
         show = show,
-        title = stringResource(R.string.settings_replay_gain_target_loudness),
         onDismissRequest = onDismiss,
         onConfirm = {
             if (customSelected) {
