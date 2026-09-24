@@ -19,9 +19,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
+import com.lonx.lyrico.data.model.LyricsExportDestination
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.ui.components.base.YesNoDialog
+import com.lonx.lyrico.ui.components.base.LyricsExportDestinationBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchExportBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchLyricsFormatBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchLyricsFormatConfigBottomSheet
@@ -151,6 +153,7 @@ fun BoxScope.SongBatchSelectionActions(
     val batchMatchConfig by batchMatchViewModel.batchMatchConfig.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
+    var showExportDestinationSheet by remember { mutableStateOf(false) }
     var pendingExportTaskType by remember { mutableStateOf<BatchTaskType?>(null) }
     val batchExportFolderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -164,9 +167,35 @@ fun BoxScope.SongBatchSelectionActions(
                 context.contentResolver.takePersistableUriPermission(uri, flags)
             }
             batchExportViewModel.setSelectionUris(selectedSongUris.toList())
-            batchExportViewModel.startBatchExport(taskType, uri)
+            batchExportViewModel.startBatchExport(
+                taskType = taskType,
+                destination = LyricsExportDestination.SELECTED_DIRECTORY,
+                destinationTreeUri = uri
+            )
         }
     }
+
+    LyricsExportDestinationBottomSheet(
+        show = showExportDestinationSheet,
+        onDismissRequest = { showExportDestinationSheet = false },
+        onConfirm = { destination ->
+            showExportDestinationSheet = false
+            when (destination) {
+                LyricsExportDestination.SELECTED_DIRECTORY -> {
+                    pendingExportTaskType = BatchTaskType.EXPORT_LYRICS
+                    batchExportFolderPickerLauncher.launch(null)
+                }
+
+                LyricsExportDestination.AUDIO_DIRECTORY -> {
+                    batchExportViewModel.setSelectionUris(selectedSongUris.toList())
+                    batchExportViewModel.startBatchExport(
+                        taskType = BatchTaskType.EXPORT_LYRICS,
+                        destination = LyricsExportDestination.AUDIO_DIRECTORY
+                    )
+                }
+            }
+        }
+    )
 
     YesNoDialog(
         show = showBatchDeleteDialog,
@@ -323,8 +352,7 @@ fun BoxScope.SongBatchSelectionActions(
             icon = MiuixIcons.Share,
             onClick = {
                 onExpandedChange(false)
-                pendingExportTaskType = BatchTaskType.EXPORT_LYRICS
-                batchExportFolderPickerLauncher.launch(null)
+                showExportDestinationSheet = true
             }
         )
 

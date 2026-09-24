@@ -595,6 +595,11 @@
     <string name="action_batch_export_lyrics">导出歌词</string>
     <string name="action_batch_export_cover">导出封面</string>
     <string name="batch_export_running">正在导出</string>
+    <string name="lyrics_export_destination_title">导出位置</string>
+    <string name="lyrics_export_destination_selected_folder">指定文件夹</string>
+    <string name="lyrics_export_destination_selected_folder_summary">选择歌词文件的保存文件夹</string>
+    <string name="lyrics_export_destination_audio_folder">音频同目录</string>
+    <string name="lyrics_export_destination_audio_folder_summary">每个歌词文件保存到对应音频所在目录</string>
     <string name="current_target_format">目标格式：%s</string>
 
     <!-- Batch Task Types -->

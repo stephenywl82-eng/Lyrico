@@ -483,7 +483,10 @@ class BatchTaskWorker(
     private fun summarizeExportConfig(configJson: String): String {
         val config = Json.decodeFromString<BatchExportTaskConfig>(configJson)
         return buildString {
-            appendLine("destinationTreeUri=${config.destinationTreeUri}")
+            appendLine("destination=${config.destination}")
+            if (config.destinationTreeUri != null) {
+                appendLine("destinationTreeUri=${config.destinationTreeUri}")
+            }
             appendLine("concurrency=${config.concurrency}")
         }.trimEnd()
     }

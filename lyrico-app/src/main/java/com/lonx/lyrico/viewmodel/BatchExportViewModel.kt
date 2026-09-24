@@ -3,6 +3,7 @@ package com.lonx.lyrico.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.lonx.lyrico.data.model.LyricsExportDestination
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.repository.BatchTaskRepository
@@ -57,8 +58,14 @@ class BatchExportViewModel(
         selectedUris = uris
     }
 
-    fun startBatchExport(taskType: BatchTaskType, destinationTreeUri: Uri) {
+    fun startBatchExport(
+        taskType: BatchTaskType,
+        destination: LyricsExportDestination,
+        destinationTreeUri: Uri? = null
+    ) {
         if (taskType != BatchTaskType.EXPORT_LYRICS && taskType != BatchTaskType.EXPORT_COVER) return
+        if (taskType == BatchTaskType.EXPORT_COVER && destination != LyricsExportDestination.SELECTED_DIRECTORY) return
+        if (destination == LyricsExportDestination.SELECTED_DIRECTORY && destinationTreeUri == null) return
         val uris = selectedUris.toList()
         if (uris.isEmpty()) return
 
@@ -87,7 +94,10 @@ class BatchExportViewModel(
 
             val configJson = Json.encodeToString(
                 BatchExportTaskConfig.serializer(),
-                BatchExportTaskConfig(destinationTreeUri = destinationTreeUri.toString())
+                BatchExportTaskConfig(
+                    destinationTreeUri = destinationTreeUri?.toString(),
+                    destination = destination
+                )
             )
             val taskId = batchTaskRepository.createTask(
                 type = taskType,

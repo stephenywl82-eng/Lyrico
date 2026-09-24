@@ -5,21 +5,26 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import com.lonx.audiotag.model.frontCoverOrFallback
+import com.lonx.lyrico.data.model.LyricsExportDestination
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.entity.BatchTaskEntity
 import com.lonx.lyrico.data.model.entity.BatchTaskItemEntity
 import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.utils.CoverSourceType
+import com.lonx.lyrico.utils.SafSiblingFileWriter
 import com.lonx.lyrico.utils.getCoverSourceType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.FileInputStream
 import java.net.URL
 
 @Serializable
 data class BatchExportTaskConfig(
-    val destinationTreeUri: String,
+    val destinationTreeUri: String? = null,
+    val destination: LyricsExportDestination = LyricsExportDestination.SELECTED_DIRECTORY,
     val concurrency: Int = 3
 )
 
@@ -27,6 +32,8 @@ class BatchExportProcessor(
     private val context: Context,
     private val audioTagRepository: AudioTagRepository
 ) : BatchTaskProcessor {
+
+    private val audioDirectoryWriteMutex = Mutex()
 
     override suspend fun process(
         task: BatchTaskEntity,
@@ -37,23 +44,40 @@ class BatchExportProcessor(
             Json.decodeFromString<BatchExportTaskConfig>(it)
         } ?: throw BatchTaskSkippedException("No config")
 
-        val directory = DocumentFile.fromTreeUri(context, config.destinationTreeUri.toUri())
-            ?: throw Exception("Destination folder unavailable")
-        if (!directory.canWrite()) {
-            throw Exception("Destination folder is not writable")
-        }
-
         val tagData = audioTagRepository.read(item.songUri, AudioTagReadOptions(strict = true))
         val result = when (task.type) {
-            BatchTaskType.EXPORT_LYRICS -> exportLyrics(item, tagData.lyrics, directory)
+            BatchTaskType.EXPORT_LYRICS -> when (config.destination) {
+                LyricsExportDestination.SELECTED_DIRECTORY -> exportLyrics(
+                    item = item,
+                    lyrics = tagData.lyrics,
+                    directory = requireSelectedDirectory(config)
+                )
+
+                LyricsExportDestination.AUDIO_DIRECTORY -> audioDirectoryWriteMutex.withLock {
+                    exportLyricsNextToAudio(item, tagData.lyrics)
+                }
+            }
             BatchTaskType.EXPORT_COVER -> {
                 val coverSource = tagData.pictures.frontCoverOrFallback()?.data
-                exportCover(item, coverSource, directory)
+                exportCover(item, coverSource, requireSelectedDirectory(config))
             }
             else -> throw IllegalArgumentException("Unsupported export task type: ${task.type}")
         }
         onProgress(1f)
         return result
+    }
+
+    private fun requireSelectedDirectory(config: BatchExportTaskConfig): DocumentFile {
+        val treeUri = config.destinationTreeUri
+            ?.takeIf { it.isNotBlank() }
+            ?.toUri()
+            ?: throw Exception("Destination folder unavailable")
+        val directory = DocumentFile.fromTreeUri(context, treeUri)
+            ?: throw Exception("Destination folder unavailable")
+        if (!directory.canWrite()) {
+            throw Exception("Destination folder is not writable")
+        }
+        return directory
     }
 
     private fun exportLyrics(
@@ -74,6 +98,29 @@ class BatchExportProcessor(
 
         return BatchTaskProcessResult(
             updatedFilePath = file.uri.toString(),
+            updatedFileName = fileName
+        )
+    }
+
+    private fun exportLyricsNextToAudio(
+        item: BatchTaskItemEntity,
+        lyrics: String?
+    ): BatchTaskProcessResult {
+        if (lyrics.isNullOrBlank()) throw BatchTaskSkippedException("No lyrics")
+
+        val extension = if (detectLyricsFormat(lyrics) == "ttml") "ttml" else "lrc"
+        val fileName = "${item.baseFileName()}.$extension"
+        val audioUri = item.songUri.toUri()
+        val outputUri = SafSiblingFileWriter.write(
+            context = context,
+            sourceDocumentUri = audioUri,
+            mimeType = LYRICS_EXPORT_MIME_TYPE,
+            fileName = fileName,
+            bytes = lyrics.toByteArray(Charsets.UTF_8)
+        )
+
+        return BatchTaskProcessResult(
+            updatedFilePath = outputUri.toString(),
             updatedFileName = fileName
         )
     }

@@ -65,6 +65,7 @@ import com.lonx.lyrico.utils.PluginFieldPostProcessor
 import com.lonx.lyrico.utils.ReplayGainCalculateState
 import com.lonx.lyrico.utils.ReplayGainError
 import com.lonx.lyrico.utils.ReplayGainScanner
+import com.lonx.lyrico.utils.SafSiblingFileWriter
 import com.lonx.lyrico.utils.UiMessage
 import com.lonx.lyrico.utils.getCoverSourceType
 import com.lonx.lyrico.utils.lyrics.LyricsTextCleanup
@@ -126,6 +127,8 @@ private data class LyricsFormatConversionSession(
     val sourceLyrics: String,
     val lastRenderedLyrics: String
 )
+
+private const val LYRICS_EXPORT_MIME_TYPE = "application/octet-stream"
 
 class EditMetadataViewModel(
     private val songLibraryRepository: SongLibraryRepository,
@@ -1348,6 +1351,43 @@ class EditMetadataViewModel(
                 Log.e(TAG, "导出歌词失败", e)
                 recordMetadataException(
                     message = "Failed to export lyrics",
+                    relatedId = currentSongUri,
+                    throwable = e
+                )
+                _uiState.update { it.copy(exportLyricsResult = false) }
+            }
+        }
+    }
+
+    fun exportLyricsToAudioDirectory(context: Context) {
+        viewModelScope.launch {
+            try {
+                val lyrics = _uiState.value.editingTagData?.lyrics
+                val audioUri = (currentSong?.uri ?: currentSongUri)?.toUri()
+                val fileName = getLyricsFileName()
+                if (lyrics.isNullOrBlank() || audioUri == null || fileName == null) {
+                    recordMetadataFailure(
+                        message = "Failed to export lyrics next to audio: source or lyrics unavailable",
+                        relatedId = currentSongUri,
+                        level = AppLogLevel.WARNING
+                    )
+                    _uiState.update { it.copy(exportLyricsResult = false) }
+                    return@launch
+                }
+
+                val outputUri = SafSiblingFileWriter.write(
+                    context = context,
+                    sourceDocumentUri = audioUri,
+                    mimeType = LYRICS_EXPORT_MIME_TYPE,
+                    fileName = fileName,
+                    bytes = lyrics.toByteArray(Charsets.UTF_8)
+                )
+                _uiState.update { it.copy(exportLyricsResult = true) }
+                Log.d(TAG, "歌词已导出到音频同目录: ${outputUri.path}")
+            } catch (e: Exception) {
+                Log.e(TAG, "导出歌词到音频同目录失败", e)
+                recordMetadataException(
+                    message = "Failed to export lyrics next to audio",
                     relatedId = currentSongUri,
                     throwable = e
                 )

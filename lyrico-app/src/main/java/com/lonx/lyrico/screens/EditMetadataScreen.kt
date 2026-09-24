@@ -95,6 +95,7 @@ import com.lonx.lyrico.data.editfield.EditFieldKind
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.data.editfield.toEditFieldBlocks
 import com.lonx.lyrico.data.model.ConversionMode
+import com.lonx.lyrico.data.model.LyricsExportDestination
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricsProcessingOptions
 import com.lonx.lyrico.data.model.plugin.PluginSourceType
@@ -106,6 +107,7 @@ import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.ui.components.CoverRequest
 import com.lonx.lyrico.ui.components.PagerDotsIndicator
 import com.lonx.lyrico.ui.components.base.LyricsOffsetField
+import com.lonx.lyrico.ui.components.base.LyricsExportDestinationBottomSheet
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
@@ -269,6 +271,7 @@ fun EditMetadataScreen(
     var showCoverOptionsSheet by remember { mutableStateOf(false) }
     var showSearchOptionsSheet by remember { mutableStateOf(false) }
     var showLyricsActionBottomSheet by remember { mutableStateOf(false) }
+    var showLyricsExportDestinationSheet by remember { mutableStateOf(false) }
     var showPlainLyricsSheet by remember { mutableStateOf(false) }
     var showCropSheet by remember { mutableStateOf(false) }
     var showAddCustomTagDialog by remember { mutableStateOf(false) }
@@ -462,6 +465,23 @@ fun EditMetadataScreen(
     val exportLyricsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("*/*")
     ) { uri -> uri?.let { viewModel.exportLyrics(context, it) } }
+
+    LyricsExportDestinationBottomSheet(
+        show = showLyricsExportDestinationSheet,
+        onDismissRequest = { showLyricsExportDestinationSheet = false },
+        onConfirm = { destination ->
+            showLyricsExportDestinationSheet = false
+            when (destination) {
+                LyricsExportDestination.SELECTED_DIRECTORY -> {
+                    viewModel.getLyricsFileName()?.let(exportLyricsLauncher::launch)
+                }
+
+                LyricsExportDestination.AUDIO_DIRECTORY -> {
+                    viewModel.exportLyricsToAudioDirectory(context)
+                }
+            }
+        }
+    )
 
     // 事件监听
     onLyricsResult.onResult { result -> viewModel.updateMetadataFromSearchResult(result) }
@@ -1243,10 +1263,7 @@ fun EditMetadataScreen(
                         title = stringResource(R.string.action_export_lyrics),
                         onClick = {
                             showLyricsActionBottomSheet = false
-                            val fileName = viewModel.getLyricsFileName()
-                            if (fileName != null) {
-                                exportLyricsLauncher.launch(fileName)
-                            }
+                            showLyricsExportDestinationSheet = true
                         }
                     )
                     ArrowPreference(

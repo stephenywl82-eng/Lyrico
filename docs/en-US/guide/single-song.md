@@ -110,7 +110,7 @@ Tap "Lyrics Options" to:
 |--------|-------------|
 | Search Lyrics | Search candidates through enabled lyrics sources; use **Load more** at the bottom for the next page |
 | Import | Read lyrics from a text file as UTF-8 |
-| Export | Export current lyrics. TTML exports as `.ttml`, others as `.lrc`; empty lyrics are not exported |
+| Export | Save current lyrics to a specified folder or next to the audio file. TTML exports as `.ttml`, others as `.lrc`; empty lyrics are not exported |
 | Simplify / Traditionalize | Convert lyrics between Simplified and Traditional Chinese |
 | Lyric Offset | Adjust in 100 ms steps, enter a value manually, or reset to 0 |
 | Format Lyrics | Convert format, sort by line, remove empty lines, or strip non-lyric content |
