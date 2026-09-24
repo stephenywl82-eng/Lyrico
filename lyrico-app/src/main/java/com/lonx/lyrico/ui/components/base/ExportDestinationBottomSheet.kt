@@ -12,25 +12,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.LyricsExportDestination
+import com.lonx.lyrico.data.model.ExportDestination
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun LyricsExportDestinationBottomSheet(
+fun ExportDestinationBottomSheet(
     show: Boolean,
     onDismissRequest: () -> Unit,
-    onConfirm: (LyricsExportDestination) -> Unit
+    onConfirm: (ExportDestination) -> Unit
 ) {
     var destination by remember(show) {
-        mutableStateOf(LyricsExportDestination.SELECTED_DIRECTORY)
+        mutableStateOf(ExportDestination.SELECTED_DIRECTORY)
     }
 
     YesNoBottomSheet(
         show = show,
-        title = stringResource(R.string.lyrics_export_destination_title),
+        title = stringResource(R.string.export_destination_title),
         onDismissRequest = onDismissRequest,
         onConfirm = { onConfirm(destination) },
         content = {
@@ -42,16 +42,16 @@ fun LyricsExportDestinationBottomSheet(
                     )
                 ) {
                     RadioButtonPreference(
-                        title = stringResource(R.string.lyrics_export_destination_selected_folder),
-                        summary = stringResource(R.string.lyrics_export_destination_selected_folder_summary),
-                        selected = destination == LyricsExportDestination.SELECTED_DIRECTORY,
-                        onClick = { destination = LyricsExportDestination.SELECTED_DIRECTORY }
+                        title = stringResource(R.string.export_destination_selected_folder),
+                        summary = stringResource(R.string.export_destination_selected_folder_summary),
+                        selected = destination == ExportDestination.SELECTED_DIRECTORY,
+                        onClick = { destination = ExportDestination.SELECTED_DIRECTORY }
                     )
                     RadioButtonPreference(
-                        title = stringResource(R.string.lyrics_export_destination_audio_folder),
-                        summary = stringResource(R.string.lyrics_export_destination_audio_folder_summary),
-                        selected = destination == LyricsExportDestination.AUDIO_DIRECTORY,
-                        onClick = { destination = LyricsExportDestination.AUDIO_DIRECTORY }
+                        title = stringResource(R.string.export_destination_audio_folder),
+                        summary = stringResource(R.string.export_destination_audio_folder_summary),
+                        selected = destination == ExportDestination.AUDIO_DIRECTORY,
+                        onClick = { destination = ExportDestination.AUDIO_DIRECTORY }
                     )
                 }
             }

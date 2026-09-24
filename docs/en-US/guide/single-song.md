@@ -73,7 +73,7 @@ Tap the cover area or "Cover Options" in the editor to:
 | Search Cover Online | Search covers via enabled plugins |
 | Use Same-Album Cover | Use the first readable cover found from songs in the same album |
 | Remove Cover | Delete the current cover |
-| Save Cover | Export the current cover to the system pictures directory |
+| Save Cover | Save the current cover to a specified location or next to the audio file |
 | Crop Image | Crop the current cover before applying |
 
 Online cover search requires a plugin that supports cover search. Tap **Load more** at the bottom of the results; the **All** tab continues every cover source that still has another page.

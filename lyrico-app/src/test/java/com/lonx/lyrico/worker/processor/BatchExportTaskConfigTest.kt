@@ -1,6 +1,6 @@
 package com.lonx.lyrico.worker.processor
 
-import com.lonx.lyrico.data.model.LyricsExportDestination
+import com.lonx.lyrico.data.model.ExportDestination
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -14,7 +14,7 @@ class BatchExportTaskConfigTest {
             """{"destinationTreeUri":"content://documents/tree/music","concurrency":3}"""
         )
 
-        assertEquals(LyricsExportDestination.SELECTED_DIRECTORY, config.destination)
+        assertEquals(ExportDestination.SELECTED_DIRECTORY, config.destination)
         assertEquals("content://documents/tree/music", config.destinationTreeUri)
     }
 
@@ -22,11 +22,11 @@ class BatchExportTaskConfigTest {
     fun audioDirectoryConfigDoesNotRequireOneSharedTreeUri() {
         val encoded = Json.encodeToString(
             BatchExportTaskConfig.serializer(),
-            BatchExportTaskConfig(destination = LyricsExportDestination.AUDIO_DIRECTORY)
+            BatchExportTaskConfig(destination = ExportDestination.AUDIO_DIRECTORY)
         )
 
         val decoded = Json.decodeFromString<BatchExportTaskConfig>(encoded)
-        assertEquals(LyricsExportDestination.AUDIO_DIRECTORY, decoded.destination)
+        assertEquals(ExportDestination.AUDIO_DIRECTORY, decoded.destination)
         assertNull(decoded.destinationTreeUri)
     }
 }

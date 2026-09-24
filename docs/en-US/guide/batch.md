@@ -186,17 +186,17 @@ The target loudness used for the calculation comes from `Settings` → `Scan Set
 
 ## Export Lyrics and Covers
 
-**Export Lyrics** can save all lyrics to one specified folder or save each lyric next to its audio file. **Export Covers** saves cover art to a specified folder.
+**Export Lyrics** and **Export Covers** can save all files to one specified folder or save each file next to its corresponding audio file.
 
 **Full Steps:**
 
 1. **Enter selection mode**, select songs, then choose **Export Lyrics** or **Export Covers**.
-2. For lyrics, choose **Specified folder** or **Audio folder**. When using a specified folder or exporting covers, select a writable destination in the system folder picker.
+2. Choose **Specified folder** or **Audio folder**. With a specified folder, select a writable destination in the system folder picker.
 3. Lyrico begins exporting. Songs without lyrics/covers are skipped.
 
 Export rules:
 - TTML lyrics export as `.ttml`; others as `.lrc`.
-- With **Audio folder**, each lyric is written to the directory containing its corresponding audio file, even when the selected audio files are in different directories.
+- With **Audio folder**, each lyric or cover is written to the directory containing its corresponding audio file, even when the selected audio files are in different directories.
 - Covers export as `.jpg` based on the audio filename.
 - Existing files in the destination with the same name may be reused and overwritten.
 

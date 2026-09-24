@@ -3,6 +3,7 @@ package com.lonx.lyrico.utils
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import java.io.OutputStream
 
 object SafSiblingFileWriter {
 
@@ -12,6 +13,16 @@ object SafSiblingFileWriter {
         mimeType: String,
         fileName: String,
         bytes: ByteArray
+    ): Uri = write(context, sourceDocumentUri, mimeType, fileName) { outputStream ->
+        outputStream.write(bytes)
+    }
+
+    fun write(
+        context: Context,
+        sourceDocumentUri: Uri,
+        mimeType: String,
+        fileName: String,
+        writeContent: (OutputStream) -> Unit
     ): Uri {
         val parentDocumentId = findParentDocumentId(context, sourceDocumentUri)
             ?: throw IllegalStateException("Source folder unavailable")
@@ -24,7 +35,7 @@ object SafSiblingFileWriter {
         ) ?: throw IllegalStateException("Failed to create sibling file")
 
         context.contentResolver.openOutputStream(outputUri, "wt")?.use { outputStream ->
-            outputStream.write(bytes)
+            writeContent(outputStream)
         } ?: throw IllegalStateException("Failed to open sibling output stream")
 
         return outputUri

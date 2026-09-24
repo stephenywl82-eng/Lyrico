@@ -95,7 +95,7 @@ import com.lonx.lyrico.data.editfield.EditFieldKind
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.data.editfield.toEditFieldBlocks
 import com.lonx.lyrico.data.model.ConversionMode
-import com.lonx.lyrico.data.model.LyricsExportDestination
+import com.lonx.lyrico.data.model.ExportDestination
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricsProcessingOptions
 import com.lonx.lyrico.data.model.plugin.PluginSourceType
@@ -107,7 +107,7 @@ import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.ui.components.CoverRequest
 import com.lonx.lyrico.ui.components.PagerDotsIndicator
 import com.lonx.lyrico.ui.components.base.LyricsOffsetField
-import com.lonx.lyrico.ui.components.base.LyricsExportDestinationBottomSheet
+import com.lonx.lyrico.ui.components.base.ExportDestinationBottomSheet
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
@@ -272,6 +272,7 @@ fun EditMetadataScreen(
     var showSearchOptionsSheet by remember { mutableStateOf(false) }
     var showLyricsActionBottomSheet by remember { mutableStateOf(false) }
     var showLyricsExportDestinationSheet by remember { mutableStateOf(false) }
+    var showCoverExportDestinationSheet by remember { mutableStateOf(false) }
     var showPlainLyricsSheet by remember { mutableStateOf(false) }
     var showCropSheet by remember { mutableStateOf(false) }
     var showAddCustomTagDialog by remember { mutableStateOf(false) }
@@ -466,18 +467,40 @@ fun EditMetadataScreen(
         contract = ActivityResultContracts.CreateDocument("*/*")
     ) { uri -> uri?.let { viewModel.exportLyrics(context, it) } }
 
-    LyricsExportDestinationBottomSheet(
+    // 导出封面文件选择器
+    val exportCoverLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("image/jpeg")
+    ) { uri -> uri?.let { viewModel.exportCover(context, it) } }
+
+    ExportDestinationBottomSheet(
         show = showLyricsExportDestinationSheet,
         onDismissRequest = { showLyricsExportDestinationSheet = false },
         onConfirm = { destination ->
             showLyricsExportDestinationSheet = false
             when (destination) {
-                LyricsExportDestination.SELECTED_DIRECTORY -> {
+                ExportDestination.SELECTED_DIRECTORY -> {
                     viewModel.getLyricsFileName()?.let(exportLyricsLauncher::launch)
                 }
 
-                LyricsExportDestination.AUDIO_DIRECTORY -> {
+                ExportDestination.AUDIO_DIRECTORY -> {
                     viewModel.exportLyricsToAudioDirectory(context)
+                }
+            }
+        }
+    )
+
+    ExportDestinationBottomSheet(
+        show = showCoverExportDestinationSheet,
+        onDismissRequest = { showCoverExportDestinationSheet = false },
+        onConfirm = { destination ->
+            showCoverExportDestinationSheet = false
+            when (destination) {
+                ExportDestination.SELECTED_DIRECTORY -> {
+                    exportCoverLauncher.launch(viewModel.getCoverFileName())
+                }
+
+                ExportDestination.AUDIO_DIRECTORY -> {
+                    viewModel.exportCoverToAudioDirectory(context)
                 }
             }
         }
@@ -1439,7 +1462,7 @@ fun EditMetadataScreen(
                         title = stringResource(R.string.label_save_cover),
                         onClick = {
                             showCoverOptionsSheet = false
-                            viewModel.exportCover(context)
+                            showCoverExportDestinationSheet = true
                         }
                     )
                     ArrowPreference(
