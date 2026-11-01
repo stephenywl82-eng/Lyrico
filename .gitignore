@@ -11,3 +11,12 @@ local.properties
 node_modules
 docs/.vitepress/dist
 docs/.vitepress/cache
+
+# ---- local build/debug artifacts (not part of source) ----
+/.kotlin/
+/_miuix_all/
+/_miuix_c/
+/_miuix_x/
+/_shots/
+/*.apk
+/*.log

@@ -334,4 +334,3 @@ val appModule = module {
     viewModel { (taskId: String) -> BatchTaskDetailViewModel(taskId, get(), get()) }
     viewModel { BatchTaskListViewModel(get(), get()) }
 }
-

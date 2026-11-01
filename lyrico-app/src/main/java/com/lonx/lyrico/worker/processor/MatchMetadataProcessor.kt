@@ -6,11 +6,9 @@ import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.ScoredSearchResult
 import com.lonx.lyrico.data.model.entity.BatchTaskEntity
 import com.lonx.lyrico.data.model.entity.BatchTaskItemEntity
-import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
-import com.lonx.lyrico.data.model.lyrics.SearchSource
 import com.lonx.lyrico.data.model.lyrics.SourceRuntimeConfig
 import com.lonx.lyrico.data.model.metadata.MetadataApplyPolicy
 import com.lonx.lyrico.data.model.plugin.GlobalFieldProcessSettings

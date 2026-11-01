@@ -1,4 +1,4 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -12,21 +12,15 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,8 +29,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,12 +36,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,7 +58,6 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,9 +71,6 @@ import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
 import com.lonx.lyrico.data.model.metadata.StandardPluginField
 import com.lonx.lyrico.data.model.search.LyricsSearchResult
 import com.lonx.lyrico.ui.components.bar.SearchBar
-import com.moriafly.salt.ui.icons.Check
-import com.moriafly.salt.ui.icons.SaltIcons
-import com.moriafly.salt.ui.icons.Uncheck
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.base.SheetActionBar
 import com.lonx.lyrico.ui.components.base.PillButton
@@ -145,9 +133,7 @@ fun SearchResultsScreen(
 
     val songSearchState = rememberTextFieldState(initialText = keyword ?: uiState.searchKeyword)
     val pagerState = rememberPagerState { uiState.availableSources.size + 1 }
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
-
+    val salt = false
     /**
      * 外部 keyword 触发搜索
      */
@@ -186,15 +172,7 @@ fun SearchResultsScreen(
                     viewModel.onKeywordChanged(songSearchState.text.toString())
                     viewModel.performSearch()
                 }
-                if (salt) {
-                    com.moriafly.salt.ui.Button(
-                        onClick = submit,
-                        text = stringResource(id = R.string.action_search),
-                        modifier = Modifier.heightIn(min = 32.dp),
-                        size = com.moriafly.salt.ui.ControlSize.Small,
-                        appearance = com.moriafly.salt.ui.ButtonAppearance.Plain,
-                    )
-                } else {
+                
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
@@ -202,8 +180,7 @@ fun SearchResultsScreen(
                             color = MiuixTheme.colorScheme.primary
                         )
                     }
-                }
-
+                
                 val selectedSourceSupportsLyrics = if (pagerState.currentPage == 0) {
                     uiState.availableSources.any { it.supportsLyrics }
                 } else {
@@ -211,13 +188,7 @@ fun SearchResultsScreen(
                         ?.supportsLyrics == true
                 }
                 if (selectedSourceSupportsLyrics) {
-                    if (salt) {
-                        com.lonx.lyrico.ui.components.salt.SaltIconButton(
-                            icon = LucideIcons.Settings,
-                            label = stringResource(R.string.search_settings),
-                            onClick = { showLyricRenderConfigBottomSheet.value = true }
-                        )
-                    } else IconButton(
+                    IconButton(
                         onClick = {
                             showLyricRenderConfigBottomSheet.value = true
                         }
@@ -233,50 +204,6 @@ fun SearchResultsScreen(
         )
     }
 
-    if (salt) {
-        // Salt 该页没有标题栏：固定搜索行为首屏。
-        androidx.compose.runtime.CompositionLocalProvider(
-            androidx.compose.foundation.LocalIndication provides
-                    com.moriafly.salt.ui.SaltTheme.configs.indication,
-            androidx.compose.foundation.LocalOverscrollFactory provides
-                    com.moriafly.salt.ui.gestures.cupertino.CupertinoOverscrollEffectFactory(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(com.moriafly.salt.ui.SaltTheme.colors.background)
-                    .windowInsetsPadding(
-                        com.lonx.lyrico.ui.components.scaffoldPageWindowInsets().only(
-                            androidx.compose.foundation.layout.WindowInsetsSides.Horizontal +
-                                androidx.compose.foundation.layout.WindowInsetsSides.Bottom
-                        )
-                    )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .windowInsetsPadding(
-                            androidx.compose.foundation.layout.WindowInsets.safeDrawing.only(
-                                androidx.compose.foundation.layout.WindowInsetsSides.Top
-                            )
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    searchField(Modifier.padding(horizontal = 12.dp))
-                }
-                SearchResultsContent(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    uiState = uiState,
-                    pagerState = pagerState,
-                    salt = true,
-                    onSongClick = { song ->
-                        pendingApplySong = song
-                        showApplyBottomSheet = true
-                    }
-                )
-            }
-        }
-    } else {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -303,9 +230,7 @@ fun SearchResultsScreen(
                 }
             )
         }
-    }
-
-
+    
     SearchResultApplyBottomSheet(
         show = showApplyBottomSheet,
         song = pendingApplySong,
@@ -355,7 +280,6 @@ fun SearchResultsScreen(
     )
 }
 
-/** 结果分页：来源胶囊、加载/错误/空状态与列表在两种引擎下共用同一套状态。 */
 @Composable
 private fun SearchResultsContent(
     modifier: Modifier,
@@ -375,7 +299,7 @@ private fun SearchResultsContent(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (salt) SaltResultsProgress() else CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
                 return@Column
             }
@@ -457,7 +381,7 @@ private fun SearchResultsContent(
                 when {
                     isPageSearching && results.isEmpty() -> {
                         Box(Modifier.fillMaxSize(), Alignment.Center) {
-                            if (salt) SaltResultsProgress() else CircularProgressIndicator()
+                            CircularProgressIndicator()
                         }
                     }
 
@@ -502,16 +426,6 @@ private fun SearchResultsContent(
     }
 }
 
-/** SaltUI 没有加载指示器，统一使用 Salt 配色的回退控件。 */
-@Composable
-private fun SaltResultsProgress(size: androidx.compose.ui.unit.Dp = 32.dp) {
-    androidx.compose.material3.CircularProgressIndicator(
-        modifier = Modifier.width(size).height(size),
-        color = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-        trackColor = com.moriafly.salt.ui.SaltTheme.colors.stroke,
-    )
-}
-
 @Composable
 private fun PaginatedSearchResultList(
     results: List<SongSearchResult>,
@@ -553,14 +467,9 @@ private fun PaginatedSearchResultList(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (salt) SaltResultsProgress(size = 20.dp)
-                        else CircularProgressIndicator(size = 20.dp)
+                        CircularProgressIndicator(size = 20.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = stringResource(R.string.search_loading_more),
-                            style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subText
-                        ) else Text(
+                        Text(
                             text = stringResource(R.string.search_loading_more),
                             fontSize = 14.sp,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary
@@ -577,12 +486,7 @@ private fun PaginatedSearchResultList(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (salt) PillButton(
-                            onClick = onLoadMore,
-                            text = stringResource(R.string.search_load_more_failed),
-                            style = PillButtonDefaults.style(PillButtonSize.Medium),
-                            colors = PillButtonDefaults.plainColors(),
-                        ) else TextButton(
+                        TextButton(
                             text = stringResource(R.string.search_load_more_failed),
                             onClick = onLoadMore,
                             colors = ButtonDefaults.textButtonColorsPrimary()
@@ -599,12 +503,7 @@ private fun PaginatedSearchResultList(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (salt) PillButton(
-                            onClick = onLoadMore,
-                            text = stringResource(R.string.search_load_more),
-                            style = PillButtonDefaults.style(PillButtonSize.Medium),
-                            colors = PillButtonDefaults.plainColors(),
-                        ) else TextButton(
+                        TextButton(
                             text = stringResource(R.string.search_load_more),
                             onClick = onLoadMore,
                             colors = ButtonDefaults.textButtonColorsPrimary()
@@ -616,7 +515,6 @@ private fun PaginatedSearchResultList(
     }
 }
 
-
 @Composable
 fun SearchResultItem(
     song: SongSearchResult,
@@ -625,8 +523,7 @@ fun SearchResultItem(
     onClick: () -> Unit
 ) {
 
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     var imageSize by remember(song.picUrl) { mutableStateOf<Pair<Int, Int>?>(null) }
 
     LaunchedEffect(song.picUrl) {
@@ -695,8 +592,7 @@ fun SearchResultItem(
                                         colors = listOf(
                                             Color.Transparent,
                                             // Salt 取卡片的前景色，浅色主题下压暗才衬得住白色尺寸文字。
-                                            if (salt) com.moriafly.salt.ui.SaltTheme.colors.text
-                                            else MiuixTheme.colorScheme.onSecondaryContainer
+                                            MiuixTheme.colorScheme.onSecondaryContainer
                                         ),
                                     )
                                 )
@@ -726,15 +622,7 @@ fun SearchResultItem(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = song.title,
-                            style = searchResultTitleStyle(),
-                            fontWeight = FontWeight.SemiBold,
-                            color = com.moriafly.salt.ui.SaltTheme.colors.text,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        ) else Text(
+                        Text(
                             text = song.title,
                             style = searchResultTitleStyle(),
                             fontWeight = FontWeight.Bold,
@@ -775,13 +663,7 @@ fun SearchResultItem(
                     }.joinToString(" • ")
 
                     if (artistAlbum.isNotEmpty()) {
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = artistAlbum,
-                            style = searchResultSecondaryStyle(),
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        ) else Text(
+                        Text(
                             text = artistAlbum,
                             style = searchResultSecondaryStyle(),
                             color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
@@ -824,17 +706,6 @@ fun SearchResultItem(
         }
     }
 
-    if (salt) {
-        // Salt 用原生 Card 承载，但内部排列与 Miuix 完全一致。
-        com.moriafly.salt.ui.Card(
-            modifier = Modifier
-                .padding(bottom = 6.dp)
-                .clip(RoundedCornerShape(12.dp)),
-        ) {
-            // 卡片底色在 modifier 之后绘制，点击涟漪必须画在 Card 内容里才看得见。
-            Box(Modifier.clickable(onClick = onClick)) { itemContent() }
-        }
-    } else {
         Card(
             modifier = Modifier
                 .padding(bottom = 6.dp)
@@ -843,7 +714,7 @@ fun SearchResultItem(
         ) {
             itemContent()
         }
-    }
+    
 }
 
 /**
@@ -852,18 +723,14 @@ fun SearchResultItem(
  */
 @Composable
 private fun searchResultTitleStyle(): TextStyle {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
-    return if (salt) com.moriafly.salt.ui.SaltTheme.textStyles.main.copy(fontSize = 15.sp)
-    else MiuixTheme.textStyles.body1
+    val salt = false
+    return MiuixTheme.textStyles.body1
 }
 
 @Composable
 private fun searchResultSecondaryStyle(): TextStyle {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
-    return if (salt) com.moriafly.salt.ui.SaltTheme.textStyles.sub.copy(fontSize = 11.sp)
-    else MiuixTheme.textStyles.footnote2
+    val salt = false
+    return MiuixTheme.textStyles.footnote2
 }
 
 @Composable
@@ -871,18 +738,7 @@ private fun SearchResultMetadataText(
     text: String,
     maxLines: Int = 1
 ) {
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-        com.lonx.lyrico.data.model.UiEngine.SALT
-    ) {
-        com.moriafly.salt.ui.Text(
-            text = text,
-            style = searchResultSecondaryStyle(),
-            color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-            maxLines = maxLines,
-            overflow = TextOverflow.Ellipsis
-        )
-        return
-    }
+
     Text(
         text = text,
         style = searchResultSecondaryStyle(),
@@ -913,26 +769,17 @@ private fun SearchResultBadge(
     text: String,
     modifier: Modifier = Modifier
 ) {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
             .background(
-                if (salt) com.moriafly.salt.ui.SaltTheme.colors.highlight.copy(alpha = 0.12f)
-                else MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
+                MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
             .padding(horizontal = 8.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center
     ) {
-        if (salt) com.moriafly.salt.ui.Text(
-            text = text,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        ) else Text(
+        Text(
             text = text,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
@@ -963,8 +810,7 @@ private fun SearchResultApplyBottomSheet(
     onDismissFinished: () -> Unit,
     onApply: (song: SongSearchResult, lyrics: String?, targets: Set<MetadataFieldTarget>) -> Unit
 ) {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-        com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     val clipboardManager = LocalClipboard.current
     val scope = rememberCoroutineScope()
     val applyPagerState = rememberPagerState { if (supportsLyrics) 2 else 1 }
@@ -1152,7 +998,7 @@ private fun SearchResultApplyBottomSheet(
         }
     }
     val actions: @Composable () -> Unit = {
-        val buttonStyle = PillButtonDefaults.style(if (salt) PillButtonSize.Medium else PillButtonSize.Large)
+        val buttonStyle = PillButtonDefaults.style(PillButtonSize.Large)
         SheetActionBar(
             leading = {
                 PillButton(
@@ -1170,8 +1016,7 @@ private fun SearchResultApplyBottomSheet(
                             {
                                 MaterialCircularProgressIndicator(
                                     modifier = Modifier.size(14.dp),
-                                    color = if (salt) com.moriafly.salt.ui.SaltTheme.colors.highlight
-                                        else MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                    color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                     strokeWidth = 2.dp,
                                 )
                             }
@@ -1200,7 +1045,7 @@ private fun SearchResultApplyBottomSheet(
         content = {
             Column(Modifier.fillMaxWidth()) {
                 if (supportsLyrics) {
-                    Box(if (salt) Modifier.padding(horizontal = 16.dp, vertical = 8.dp) else Modifier) {
+                    Box(Modifier) {
                         ApplySheetPillTabs(
                             selectedTabIndex = applyPagerState.targetPage,
                             onTabSelected = { index ->
@@ -1215,8 +1060,7 @@ private fun SearchResultApplyBottomSheet(
                     state = applyPagerState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(if (salt) Modifier.weight(1f, fill = false).heightIn(max = 420.dp)
-                        else Modifier.height(420.dp))
+                        .then(Modifier.height(420.dp))
                 ) { page ->
                     renderPage(page)
                     Spacer(modifier = Modifier.padding(vertical = 12.dp))
@@ -1235,9 +1079,7 @@ private fun ApplySheetPillTabs(
         stringResource(R.string.search_apply_tab_metadata),
         stringResource(R.string.label_lyrics)
     )
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
-
+    val salt = false
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1248,8 +1090,7 @@ private fun ApplySheetPillTabs(
                 text = label,
                 selected = selected,
                 onClick = { onTabSelected(index) },
-                style = if (salt) PillButtonDefaults.style(PillButtonSize.Medium)
-                else PillButtonDefaults.style(PillButtonSize.Medium).copy(
+                style = PillButtonDefaults.style(PillButtonSize.Medium).copy(
                     textStyle = MiuixTheme.textStyles.body2.copy(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
@@ -1270,12 +1111,12 @@ private fun SearchResultApplyDataPage(
     selectedTargets: Set<MetadataFieldTarget>,
     onSelectedTargetsChange: (Set<MetadataFieldTarget>) -> Unit
 ) {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     val listContent: @Composable () -> Unit = {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(if (salt) 0.dp else 8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (options.isEmpty()) {
                 item("empty") {
@@ -1305,8 +1146,7 @@ private fun SearchResultApplyDataPage(
             }
         }
     }
-    if (salt) com.moriafly.salt.ui.RoundedColumn(Modifier.fillMaxSize()) { listContent() }
-    else listContent()
+    listContent()
 
 }
 
@@ -1322,39 +1162,7 @@ private fun SearchResultApplyLyricsPage(
     onOpenLyricsConfig: () -> Unit,
     onCopyLyrics: () -> Unit
 ) {
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-        // 歌词选中行和歌词正文是同一个 Item：同一个 RoundedColumn，不再拆成两块。
-        com.moriafly.salt.ui.RoundedColumn(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                com.moriafly.salt.ui.ItemCheck(
-                    text = stringResource(R.string.label_lyrics), state = selected && option?.enabled == true,
-                    enabled = option?.enabled == true, onChange = onSelectedChange,
-                    modifier = Modifier.weight(1f),
-                )
-                com.lonx.lyrico.ui.components.salt.SaltIconButton(
-                    icon = LucideIcons.Copy, label = stringResource(R.string.action_copy_lyrics),
-                    onClick = onCopyLyrics, enabled = !lyricsText.isNullOrBlank(),
-                    size = 32.dp, iconSize = 18.dp,
-                )
-                Box(Modifier.padding(end = 8.dp)) {
-                    com.lonx.lyrico.ui.components.salt.SaltIconButton(
-                        icon = LucideIcons.Settings, label = stringResource(R.string.search_settings),
-                        onClick = onOpenLyricsConfig, size = 32.dp, iconSize = 18.dp,
-                    )
-                }
-            }
-            LyricsPreviewPane(
-                lyricsText = lyricsText, isLoading = lyricsState.isLoading, error = lyricsState.error,
-                loadingText = loadingText, failedText = failedText,
-                emptyText = stringResource(R.string.lyrics_empty), onCopyLyrics = onCopyLyrics,
-                // 与上方 ItemCheck 的文字左缘对齐；RoundedColumn 不提供内容内边距。
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                showCopyAction = false,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-            )
-        }
-        return
-    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -1365,24 +1173,9 @@ private fun SearchResultApplyLyricsPage(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-                    com.lonx.lyrico.data.model.UiEngine.SALT
+            val salt = false
             Column(modifier = Modifier.weight(1f)) {
-                if (salt) {
-                    com.moriafly.salt.ui.Text(
-                        text = stringResource(R.string.label_lyrics),
-                        style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                        fontWeight = FontWeight.SemiBold,
-                        color = com.moriafly.salt.ui.SaltTheme.colors.text
-                    )
-                    com.moriafly.salt.ui.Text(
-                        text = option?.value ?: stringResource(R.string.lyrics_empty),
-                        style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                        color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else {
+                
                     Text(
                         text = stringResource(R.string.label_lyrics),
                         style = MiuixTheme.textStyles.main,
@@ -1396,45 +1189,15 @@ private fun SearchResultApplyLyricsPage(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
+                
             }
-            if (salt) {
-                com.lonx.lyrico.ui.components.salt.SaltIconButton(
-                    icon = LucideIcons.Settings,
-                    label = "",
-                    onClick = onOpenLyricsConfig,
-                    size = 36.dp,
-                    iconSize = 20.dp
-                )
-            } else IconButton(onClick = onOpenLyricsConfig) {
+            IconButton(onClick = onOpenLyricsConfig) {
                 Icon(
                     imageVector = LucideIcons.Settings,
                     contentDescription = null
                 )
             }
-            if (salt) {
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .clickable(enabled = option?.enabled == true) {
-                            if (option?.enabled == true) {
-                                onSelectedChange(!selected)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    com.moriafly.salt.ui.Icon(
-                        painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(
-                            if (selected && option?.enabled == true) com.moriafly.salt.ui.icons.SaltIcons.Check
-                            else com.moriafly.salt.ui.icons.SaltIcons.Uncheck
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = com.moriafly.salt.ui.SaltTheme.colors.highlight
-                    )
-                }
-            } else Checkbox(
+            Checkbox(
                 state = if (selected && option?.enabled == true) ToggleableState.On else ToggleableState.Off,
                 onClick = {
                     if (option?.enabled == true) {
@@ -1464,49 +1227,7 @@ private fun SearchResultApplyOptionItem(
     onSelectedChange: (Boolean) -> Unit
 ) {
     val isCover = option.target == MetadataFieldTarget.COVER
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
-
-    if (salt) {
-        Row(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                .toggleable(value = selected, enabled = option.enabled, role = Role.Checkbox,
-                    onValueChange = onSelectedChange)
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (isCover) AsyncImage(
-                model = option.value, contentDescription = stringResource(R.string.cd_cover),
-                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(8.dp))
-                    .background(LyricoColors.coverPlaceholder), contentScale = ContentScale.Crop,
-                placeholder = rememberTintedPainter(painterResource(R.drawable.ic_album_24dp), LyricoColors.coverPlaceholderIcon),
-                error = rememberTintedPainter(painterResource(R.drawable.ic_album_24dp), LyricoColors.coverPlaceholderIcon),
-            )
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                com.moriafly.salt.ui.Text(stringResource(option.target.labelRes),
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                    color = if (option.enabled) com.moriafly.salt.ui.SaltTheme.colors.text
-                        else com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                val valueText = if (isCover && option.imageSize != null)
-                    "${option.imageSize.first}×${option.imageSize.second}" else option.value
-                com.moriafly.salt.ui.Text(valueText,
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                    color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    maxLines = if (isCover) 1 else 2, overflow = TextOverflow.Ellipsis)
-            }
-            com.moriafly.salt.ui.Icon(
-                painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(
-                    if (selected) SaltIcons.Check else SaltIcons.Uncheck),
-                contentDescription = null, modifier = Modifier.size(20.dp),
-                tint = if (option.enabled) com.moriafly.salt.ui.SaltTheme.colors.highlight
-                    else com.moriafly.salt.ui.SaltTheme.colors.subText,
-            )
-        }
-        return
-    }
-
+    val salt = false
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1550,8 +1271,7 @@ private fun SearchResultApplyOptionItem(
                                 Brush.verticalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        if (salt) com.moriafly.salt.ui.SaltTheme.colors.subBackground
-                                        else MiuixTheme.colorScheme.onSecondaryContainer
+                                        MiuixTheme.colorScheme.onSecondaryContainer
                                     )
                                 )
                             )
@@ -1572,22 +1292,7 @@ private fun SearchResultApplyOptionItem(
 
         Column(modifier = Modifier.weight(1f)) {
             val labelText = stringResource(option.target.labelRes)
-            if (salt) {
-                com.moriafly.salt.ui.Text(
-                    text = labelText,
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (option.enabled) com.moriafly.salt.ui.SaltTheme.colors.text
-                    else com.moriafly.salt.ui.SaltTheme.colors.subText
-                )
-                com.moriafly.salt.ui.Text(
-                    text = option.value,
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                    color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    maxLines = if (option.target == MetadataFieldTarget.LYRICS) 4 else 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            } else {
+            
                 Text(
                     text = labelText,
                     style = MiuixTheme.textStyles.main,
@@ -1605,33 +1310,10 @@ private fun SearchResultApplyOptionItem(
                     maxLines = if (option.target == MetadataFieldTarget.LYRICS) 4 else 2,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
+            
         }
 
-        if (salt) {
-            // SaltUI 没有独立 Checkbox；沿用官方 SaltIcons 勾选图标，语义与 Miuix 一致。
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(androidx.compose.foundation.shape.CircleShape)
-                    .clickable(enabled = option.enabled) {
-                        if (option.enabled) {
-                            onSelectedChange(!selected)
-                        }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                com.moriafly.salt.ui.Icon(
-                    painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(
-                        if (selected) com.moriafly.salt.ui.icons.SaltIcons.Check
-                        else com.moriafly.salt.ui.icons.SaltIcons.Uncheck
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = com.moriafly.salt.ui.SaltTheme.colors.highlight
-                )
-            }
-        } else Checkbox(
+        Checkbox(
             state = if (selected) ToggleableState.On else ToggleableState.Off,
             onClick = {
                 if (option.enabled) {
@@ -1707,8 +1389,7 @@ fun SourcePillTabRow(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     val scrollState = rememberScrollState()
     val bringIntoViewRequesters = remember(tabs.size) {
         List(tabs.size) { BringIntoViewRequester() }
@@ -1733,8 +1414,6 @@ fun SourcePillTabRow(
             val showText = tabStyle != SearchSourceTabStyle.ICON_ONLY || !showIcon
 
             val iconTint = when {
-                salt && selected -> com.moriafly.salt.ui.SaltTheme.colors.onHighlight
-                salt -> com.moriafly.salt.ui.SaltTheme.colors.text
                 selected -> MiuixTheme.colorScheme.onPrimary
                 else -> MiuixTheme.colorScheme.onSurface
             }
@@ -1747,9 +1426,7 @@ fun SourcePillTabRow(
                 modifier = Modifier.bringIntoViewRequester(
                     bringIntoViewRequesters[index]
                 ),
-                colors = if (salt) {
-                    PillButtonDefaults.colors()
-                } else PillButtonDefaults.colors(
+                colors = PillButtonDefaults.colors(
                     containerColor = MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
                 ),
                 onClick = {
@@ -1777,16 +1454,7 @@ private fun SourcePillTabIcon(
 ) {
     when {
         tab.imageVector != null -> {
-            if (com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-                com.lonx.lyrico.data.model.UiEngine.SALT
-            ) {
-                com.moriafly.salt.ui.Icon(
-                    painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(tab.imageVector),
-                    contentDescription = tab.label,
-                    modifier = Modifier.size(16.dp),
-                    tint = tint
-                )
-            } else Icon(
+            Icon(
                 imageVector = tab.imageVector,
                 contentDescription = tab.label,
                 modifier = Modifier.size(16.dp),

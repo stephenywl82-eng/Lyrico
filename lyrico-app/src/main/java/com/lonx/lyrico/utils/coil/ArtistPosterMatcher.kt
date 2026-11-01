@@ -12,21 +12,17 @@ import java.text.Normalizer
  * `1` after normalization, `2` suffixed variant (name followed by `_`), `null` not this artist.
  */
 internal object ArtistPosterMatcher {
-    /** File extensions that can be used as an artist poster. */
     val extensions = setOf("jpg", "jpeg", "png", "webp", "mp4")
 
-    /** Characters a file name cannot hold, from the rule the app uses when renaming files. */
     internal val invalidFileNameChars: Set<Char> =
         CharacterMappingDefaults.DEFAULT_INVALID_CHARS.charMappings.keys
             .mapNotNullTo(mutableSetOf()) { it.singleOrNull() }
 
-    /** Legal characters a file may use in place of an invalid one. */
     private const val FILE_NAME_SEPARATORS = "_- ."
 
     fun isPosterFile(fileName: String?): Boolean =
         fileName != null && fileName.substringAfterLast('.', "").lowercase() in extensions
 
-    /** A suffixed match must not delete a file that matches an unselected artist more closely. */
     fun ownedBySelection(fileName: String, selected: Set<String>, libraryArtists: List<String>): Boolean {
         val selectedRank = selected.mapNotNull { rank(fileName, it) }.minOrNull() ?: return false
         val selectedKeys = selected.map { it.normalizeName() }.toSet()
@@ -42,7 +38,6 @@ internal object ArtistPosterMatcher {
         return rankStem(fileName.substringBeforeLast('.').normalizeName(), artist)
     }
 
-    /** Counts [fileNames] that belong to at least one of [artistNames]. */
     fun countMatchedFiles(fileNames: List<String>, artistNames: List<String>): Int {
         if (fileNames.isEmpty() || artistNames.isEmpty()) return 0
         val artists = artistNames.map { it.normalizeName() }.filter { it.isNotEmpty() }.distinct()

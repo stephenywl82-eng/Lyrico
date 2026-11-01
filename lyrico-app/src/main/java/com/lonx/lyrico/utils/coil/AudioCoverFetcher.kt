@@ -45,7 +45,6 @@ class AudioCoverFetcher(
             return null
         }
 
-
         val buffer = Buffer().apply { write(pictureBytes) }
         val imageSource = ImageSource(buffer, options.fileSystem)
 

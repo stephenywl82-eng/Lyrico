@@ -1,19 +1,16 @@
 package com.lonx.lyrico.ui.components.song
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.data.song.scan.LibraryScanProgress
 import com.lonx.lyrico.data.song.scan.LibraryScanStage
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.SaltTheme
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun LibraryScanProgressText(
@@ -31,24 +28,12 @@ fun LibraryScanProgressText(
         LibraryScanStage.FINISHED -> stringResource(R.string.scan_progress_finished)
     }
 
-    // 两套引擎的 pageContent 共用此组件，Salt 下需用自身语义字体和颜色。
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.Text(
-            text = title,
-            modifier = modifier
-                .padding(horizontal = 24.dp),
-            style = SaltTheme.textStyles.main,
-            color = SaltTheme.colors.text,
-            textAlign = TextAlign.Center
-        )
-    } else {
-        Text(
-            text = title,
-            modifier = modifier
-                .padding(horizontal = 24.dp),
-            style = MiuixTheme.textStyles.title4,
-            color = MiuixTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
-        )
-    }
+    Text(
+        text = title,
+        modifier = modifier
+            .padding(horizontal = 24.dp),
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center
+    )
 }

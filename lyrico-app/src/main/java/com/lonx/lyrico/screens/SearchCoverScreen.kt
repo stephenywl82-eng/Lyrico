@@ -1,16 +1,11 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import android.annotation.SuppressLint
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.LocalOverscrollFactory
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,11 +14,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -37,16 +29,15 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton as MaterialTextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,24 +52,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.bar.SearchBar
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.theme.isDarkTheme
 import com.lonx.lyrico.utils.MusicMatchUtils
 import com.lonx.lyrico.viewmodel.CoverSearchResult
 import com.lonx.lyrico.viewmodel.CoverSearchUiState
 import com.lonx.lyrico.viewmodel.CoverSearchViewModel
-import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonAppearance
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.gestures.cupertino.CupertinoOverscrollEffectFactory
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
@@ -109,7 +94,7 @@ fun SearchCoverScreen(
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState { uiState.availableSources.size + 1 }
     val coverSearchState = rememberTextFieldState(initialText = keyword ?: uiState.searchKeyword)
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
 
     // 用于缓存图片尺寸的Map
     val imageSizeCache = remember { mutableStateOf<Map<String, Pair<Int, Int>>>(emptyMap()) }
@@ -164,13 +149,7 @@ fun SearchCoverScreen(
                     viewModel.onCoverKeywordChanged(coverSearchState.text.toString())
                     viewModel.performCoverSearch()
                 }
-                if (salt) {
-                    Button(
-                        onClick = submit,
-                        text = stringResource(id = R.string.action_search),
-                        appearance = ButtonAppearance.Plain,
-                    )
-                } else {
+                
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
@@ -178,51 +157,9 @@ fun SearchCoverScreen(
                             color = MiuixTheme.colorScheme.primary
                         )
                     }
-                }
+                
             }
         )
-    }
-
-    if (salt) {
-        // Salt 该页没有标题栏：固定搜索行为首屏，其余内容按 Salt 主题滚动到状态栏之下。
-        CompositionLocalProvider(
-            LocalIndication provides SaltTheme.configs.indication,
-            LocalOverscrollFactory provides CupertinoOverscrollEffectFactory(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SaltTheme.colors.background)
-                    .windowInsetsPadding(
-                        com.lonx.lyrico.ui.components.scaffoldPageWindowInsets().only(
-                            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-                        )
-                    )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Top
-                            )
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    searchField(Modifier.padding(horizontal = 12.dp))
-                }
-                SearchCoverContent(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    uiState = uiState,
-                    pagerState = pagerState,
-                    localSegments = localSegments,
-                    imageSizeCache = imageSizeCache,
-                    salt = true,
-                    onCoverClick = { cover -> resultNavigator.navigateBack(cover.url) }
-                )
-            }
-        }
-        return
     }
 
     Scaffold(
@@ -252,7 +189,6 @@ fun SearchCoverScreen(
     }
 }
 
-/** 结果区分页：来源胶囊、加载/错误/空状态与封面网格在两种引擎下共用同一套状态。 */
 @Composable
 private fun SearchCoverContent(
     modifier: Modifier,
@@ -271,7 +207,7 @@ private fun SearchCoverContent(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                if (salt) SaltCircularProgress() else CircularProgressIndicator()
+                CircularProgressIndicator()
             }
             return@Column
         }
@@ -351,7 +287,7 @@ private fun SearchCoverContent(
             when {
                 uiState.isSearching && (page == 0 || source == uiState.selectedSource) -> {
                     Box(Modifier.fillMaxSize(), Alignment.Center) {
-                        if (salt) SaltCircularProgress() else CircularProgressIndicator()
+                        CircularProgressIndicator()
                     }
                 }
 
@@ -414,14 +350,9 @@ private fun SearchCoverContent(
                                         horizontalArrangement = Arrangement.Center,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        if (salt) SaltCircularProgress(size = 20.dp)
-                                        else CircularProgressIndicator(size = 20.dp)
+                                        CircularProgressIndicator(size = 20.dp)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        if (salt) com.moriafly.salt.ui.Text(
-                                            text = stringResource(R.string.search_loading_more),
-                                            style = SaltTheme.textStyles.sub,
-                                            color = SaltTheme.colors.subText
-                                        ) else Text(
+                                        Text(
                                             text = stringResource(R.string.search_loading_more),
                                             fontSize = 14.sp,
                                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary
@@ -441,11 +372,7 @@ private fun SearchCoverContent(
                                             .padding(vertical = 8.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (salt) Button(
-                                            onClick = { viewModel.loadNextPage(loadMoreError.first) },
-                                            text = stringResource(R.string.search_load_more_failed),
-                                            appearance = ButtonAppearance.Plain,
-                                        ) else TextButton(
+                                        TextButton(
                                             text = stringResource(R.string.search_load_more_failed),
                                             onClick = {
                                                 viewModel.loadNextPage(
@@ -469,11 +396,7 @@ private fun SearchCoverContent(
                                             .padding(vertical = 8.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (salt) Button(
-                                            onClick = { viewModel.loadNextPage(source?.id) },
-                                            text = stringResource(R.string.search_load_more),
-                                            appearance = ButtonAppearance.Plain,
-                                        ) else TextButton(
+                                        TextButton(
                                             text = stringResource(R.string.search_load_more),
                                             onClick = {
                                                 viewModel.loadNextPage(source?.id)
@@ -491,16 +414,6 @@ private fun SearchCoverContent(
     }
 }
 
-/** SaltUI 没有加载指示器，统一使用 Salt 配色的回退控件。 */
-@Composable
-private fun SaltCircularProgress(size: androidx.compose.ui.unit.Dp = 32.dp) {
-    androidx.compose.material3.CircularProgressIndicator(
-        modifier = Modifier.width(size).aspectRatio(1f),
-        color = SaltTheme.colors.highlight,
-        trackColor = SaltTheme.colors.stroke,
-    )
-}
-
 @Composable
 fun CoverGridItem(
     cover: CoverSearchResult,
@@ -508,7 +421,7 @@ fun CoverGridItem(
     onImageSizeLoaded: (String, Pair<Int, Int>) -> Unit = { _, _ -> }
 ) {
     var imageSize by remember(cover.url) { mutableStateOf<Pair<Int, Int>?>(null) }
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
 
     LaunchedEffect(cover.url) {
         if (cover.url.isNotBlank()) {
@@ -537,7 +450,7 @@ fun CoverGridItem(
     val cardContent: @Composable () -> Unit = {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(if (salt) 12.dp else CardDefaults.CornerRadius))
+                .clip(RoundedCornerShape(CardDefaults.CornerRadius))
                 .clickable(onClick = onClick),
         ) {
             Box(
@@ -569,18 +482,12 @@ fun CoverGridItem(
                         .align(Alignment.TopStart)
                         .padding(4.dp)
                         .background(
-                            color = if (salt) SaltTheme.colors.highlight.copy(alpha = 0.8f)
-                            else MiuixTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            color = MiuixTheme.colorScheme.primary.copy(alpha = 0.8f),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
-                    if (salt) com.moriafly.salt.ui.Text(
-                        text = cover.source.labelRes?.let { stringResource(it) } ?: cover.source.name,
-                        color = textColor,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    ) else Text(
+                    Text(
                         text = cover.source.labelRes?.let { stringResource(it) } ?: cover.source.name,
                         color = textColor,
                         fontSize = 9.sp,
@@ -600,12 +507,7 @@ fun CoverGridItem(
                             )
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = "${it.first}×${it.second}",
-                            color = Color.White,
-                            fontSize = 9.sp,
-                            fontWeight = FontWeight.Bold
-                        ) else Text(
+                        Text(
                             text = "${it.first}×${it.second}",
                             color = Color.White,
                             fontSize = 9.sp,
@@ -625,37 +527,7 @@ fun CoverGridItem(
                 val artist = cover.artist.ifBlank { stringResource(R.string.unknown_artist) }
                 val album = cover.album.ifBlank { stringResource(R.string.unknown_album) }
                 val date = cover.date.ifBlank { stringResource(R.string.unknown_year) }
-                if (salt) {
-                    com.moriafly.salt.ui.Text(
-                        text = title,
-                        style = SaltTheme.textStyles.main,
-                        fontWeight = FontWeight.Medium,
-                        color = SaltTheme.colors.text,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    com.moriafly.salt.ui.Text(
-                        text = artist,
-                        style = SaltTheme.textStyles.sub,
-                        color = SaltTheme.colors.subText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    com.moriafly.salt.ui.Text(
-                        text = album,
-                        style = SaltTheme.textStyles.sub,
-                        color = SaltTheme.colors.subText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    com.moriafly.salt.ui.Text(
-                        text = date,
-                        style = SaltTheme.textStyles.sub,
-                        color = SaltTheme.colors.subText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else {
+                
                     Text(
                         text = title,
                         style = MiuixTheme.textStyles.body2,
@@ -684,19 +556,16 @@ fun CoverGridItem(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                }
+                
             }
         }
     }
 
-    if (salt) {
-        com.moriafly.salt.ui.Card(modifier = Modifier) { cardContent() }
-    } else {
         Card(
             modifier = Modifier,
             colors = CardDefaults.defaultColors(
                 color = MiuixTheme.colorScheme.secondaryContainer
             )
         ) { cardContent() }
-    }
+    
 }

@@ -10,4 +10,3 @@ fun normalizedAlbumKey(
     val artistKey = albumArtist?.normalizedArtistKey().orEmpty()
     return "$albumKey\u0000$artistKey"
 }
-

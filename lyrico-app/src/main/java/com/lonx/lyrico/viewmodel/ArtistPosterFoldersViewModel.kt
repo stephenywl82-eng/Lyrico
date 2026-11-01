@@ -37,7 +37,6 @@ data class ArtistPosterFolder(
     val uri: String,
     val path: String,
     val posters: List<ArtistPosterFile>?,
-    /** How many posters in this folder are named after an artist of the library. */
     val matchedPosterCount: Int = 0,
     val name: String = path.substringAfterLast('/').ifBlank { path }
 )

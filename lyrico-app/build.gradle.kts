@@ -51,7 +51,9 @@ android {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a", "armeabi-v7a")
+            // Only arm64-v8a is needed (per project owner). Dropping armeabi-v7a
+            // also halves the CMake native build time.
+            include("arm64-v8a")
             isUniversalApk = false
         }
     }
@@ -62,6 +64,11 @@ android {
         versionCode = baseVersionCode
         versionName = "$baseVersionName-${gitCommitHash().get()}"
 
+        // 只构建 64 位（项目要求）。注意：本模块已用 splits.abi 限定 arm64-v8a，
+        // 而 AGP 禁止 ndk.abiFilters 与 splits.abi 同时存在（会报
+        // "Conflicting configuration ... cannot be present when splits abi filters are set"），
+        // 因此这里不能再写 ndk { abiFilters }。splits.abi 本身已经会限制 CMake 只编 arm64-v8a
+        // （构建日志里只有 configureCMakeDebug[arm64-v8a]，已验证）。
         externalNativeBuild {
             cmake {
                 cppFlags += ""
@@ -136,7 +143,6 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 dependencies {
-    implementation(libs.salt.ui)
     // Project Modules
     implementation(project(":lyrico-audiotag"))
 

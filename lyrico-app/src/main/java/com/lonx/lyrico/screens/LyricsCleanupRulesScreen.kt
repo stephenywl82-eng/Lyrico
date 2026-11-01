@@ -1,14 +1,8 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-
-import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,16 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,23 +27,13 @@ import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.ChipGrid
 import com.lonx.lyrico.ui.components.ManagedChip
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.SettingsViewModel
-import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonAppearance
-import com.moriafly.salt.ui.ItemButton
-import com.moriafly.salt.ui.ItemOuterTitle
-import com.moriafly.salt.ui.RoundedColumn
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.Text as SaltText
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
-import com.moriafly.salt.ui.screen.ScreenCard
+
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -87,7 +69,7 @@ fun LyricsCleanupRulesScreen(
     var deletingRule by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     val invalidOrDuplicateRule = stringResource(R.string.invalid_or_duplicate_rule)
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
 
     val topBarBackdrop = rememberBarBlurBackdrop()
     LibraryDetailPage(
@@ -113,7 +95,7 @@ fun LyricsCleanupRulesScreen(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = (if (salt) Modifier else Modifier
+            modifier = (Modifier
                 .blurSource(topBarBackdrop)
                 .scrollEndHaptic()
                 .overScrollVertical()
@@ -123,46 +105,10 @@ fun LyricsCleanupRulesScreen(
                 paddingValues = paddingValues,
                 bottomExtra = 12.dp
             ),
-            overscrollEffect = if (salt) rememberOverscrollEffect() else null
+            overscrollEffect = null
         ) {
             item(key = "rules") {
-                if (salt) {
-                    ItemOuterTitle(text = stringResource(R.string.non_lyrics_cleanup_rules_section))
-                    ScreenCard {
-                        ChipGrid(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
-                        ) {
-                            uiState.lyricsTagLineKeywords.forEach { rule ->
-                                ManagedChip(
-                                    text = rule,
-                                    onClick = { editingRule = rule },
-                                    onDelete = { deletingRule = rule }
-                                )
-                            }
-                        }
-                        SaltText(
-                            text = stringResource(R.string.non_lyrics_cleanup_rules_hint),
-                            color = SaltTheme.colors.subText,
-                            style = SaltTheme.textStyles.sub,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                        )
-                        ItemButton(
-                            onClick = {
-                                errorMessage = null
-                                addingRule = true
-                            },
-                            text = stringResource(R.string.add_non_lyrics_cleanup_rule),
-                            iconPainter = rememberVectorPainter(LucideIcons.Plus),
-                            iconColor = PreferenceIconTone.Appearance.color(),
-                        )
-                        ItemButton(
-                            onClick = viewModel::resetNonLyricsContentRules,
-                            text = stringResource(R.string.reset_to_default),
-                            iconPainter = rememberVectorPainter(LucideIcons.RotateCcw),
-                            iconColor = SaltTheme.colors.subText
-                        )
-                    }
-                } else {
+                
                     SmallTitle(text = stringResource(R.string.non_lyrics_cleanup_rules_section))
                     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
                         ChipGrid(
@@ -212,7 +158,7 @@ fun LyricsCleanupRulesScreen(
                             }
                         }
                     }
-                }
+                
             }
         }
     }
@@ -256,22 +202,7 @@ fun LyricsCleanupRulesScreen(
         }
     )
 
-    if (salt) {
-        if (deletingRule != null) SaltConfirmDialog(
-            title = stringResource(R.string.non_lyrics_cleanup_delete_rule_title),
-            summary = stringResource(
-                R.string.non_lyrics_cleanup_delete_rule_message,
-                deletingRule.orEmpty()
-            ),
-            onDismissRequest = { deletingRule = null },
-            onConfirm = {
-                deletingRule?.let(viewModel::removeNonLyricsContentRule)
-                deletingRule = null
-            },
-            cancelText = stringResource(R.string.cancel),
-            confirmText = stringResource(R.string.common_delete),
-        )
-    } else WindowDialog(
+    WindowDialog(
         show = deletingRule != null,
         title = stringResource(R.string.non_lyrics_cleanup_delete_rule_title),
         onDismissRequest = { deletingRule = null }
@@ -317,27 +248,7 @@ private fun CleanupRuleInputDialog(
 ) {
     val inputState = remember(show, initialValue) { TextFieldState(initialValue) }
     val text = inputState.text.toString()
-    val salt = LocalUiEngine.current == UiEngine.SALT
-
-    if (salt) {
-        com.lonx.lyrico.ui.components.salt.SaltConfirmDialog(
-            show = show, title = title, onDismissRequest = onDismiss, onConfirm = { onSave(text) },
-            cancelText = stringResource(R.string.cancel), confirmText = stringResource(R.string.confirm),
-            dismissOnConfirm = false,
-        ) {
-            RoundedColumn(paddingValues = PaddingValues(0.dp)) {
-                SaltTextInput(state = inputState,
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            SaltText(
-                text = errorMessage ?: stringResource(R.string.non_lyrics_cleanup_rule_input_hint),
-                color = if (errorMessage == null) SaltTheme.colors.subText else SaltTheme.colors.error,
-                style = SaltTheme.textStyles.sub
-            )
-        }
-        return
-    }
+    val salt = false
 
     WindowDialog(
         show = show,

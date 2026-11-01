@@ -22,7 +22,6 @@ class AlbumLibraryViewModel(
     val sortInfo: StateFlow<AlbumSortInfo> = settingsRepository.albumSortInfo
         .stateIn(viewModelScope, SharingStarted.Eagerly, AlbumSortInfo())
 
-
     val gridColumns = settingsRepository.albumGridColumns
         .stateIn(viewModelScope, SharingStarted.Eagerly, 2)
 
@@ -72,7 +71,6 @@ class AlbumLibraryViewModel(
         }
     }
 
-
     fun setGridColumns(columns: Int) {
         viewModelScope.launch {
             settingsRepository.saveAlbumGridColumns(columns)
@@ -93,4 +91,3 @@ internal fun String?.sortableAlbumYear(): Int? {
     if (date.length > 4 && date[4] !in "-/.") return null
     return date.take(4).toIntOrNull()?.takeIf { it > 0 }
 }
-

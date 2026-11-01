@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.crop
 
@@ -8,17 +7,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -40,10 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.core.graphics.scale
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.salt.SaltDropdownRow
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.RoundedColumn
+
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -58,9 +53,7 @@ import kotlin.math.sqrt
 // 裁剪状态持有者 —— 供外部读取和触发裁剪
 // ============================================================
 class ImageCropperState internal constructor(
-    /** 原始全尺寸 Bitmap，用于最终裁剪 */
     internal val originalBitmap: Bitmap,
-    /** 缩小后的显示用 Bitmap，用于 Canvas 绘制 */
     internal val displayBitmap: Bitmap
 ) {
     internal var imageBounds by mutableStateOf(Rect.Zero)
@@ -188,7 +181,7 @@ fun ImageCropper(
     val aspectRatioRef = rememberUpdatedState(state.aspectRatio)
     var activeHandle by remember { mutableStateOf(DragHandle.NONE) }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val freeRatio = stringResource(id = R.string.option_free_ratio)
     Column(modifier = modifier.fillMaxWidth()) {
         if (showRatioBar) {
@@ -208,20 +201,6 @@ fun ImageCropper(
                 state.aspectRatio = ratioOptions[index].first
             }
 
-            if (salt) {
-                // 原生分组 + 原生下拉；画布已由调用方让开外壳边缘，这里不再叠一层水平外边距。
-                RoundedColumn(
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    paddingValues = PaddingValues(0.dp),
-                ) {
-                    SaltDropdownRow(
-                        title = stringResource(R.string.label_image_ratio),
-                        labels = ratioOptions.map { it.second },
-                        selectedIndex = selectedIndex,
-                        onSelectedIndexChange = onRatioSelected,
-                    )
-                }
-            } else {
                 val spinnerItems = remember {
                     ratioOptions.map { (_, label) ->
                         DropdownItem(title = label)
@@ -240,7 +219,7 @@ fun ImageCropper(
                         onSelectedIndexChange = onRatioSelected
                     )
                 }
-            }
+            
         }
 
         Box(
@@ -413,7 +392,6 @@ fun calculateNewRect(
     right = right.coerceIn(minOf(bounds.right, left + safeMinW), bounds.right)
     top = top.coerceIn(bounds.top, maxOf(bounds.top, bottom - safeMinH))
     bottom = bottom.coerceIn(minOf(bounds.bottom, top + safeMinH), bounds.bottom)
-
 
     if (aspectRatio != null) {
         var w = right - left

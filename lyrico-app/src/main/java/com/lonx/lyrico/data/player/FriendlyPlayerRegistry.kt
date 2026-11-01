@@ -3,27 +3,13 @@ package com.lonx.lyrico.data.player
 import com.lonx.lyrico.R
 
 object FriendlyPlayerRegistry {
+    // 仅保留 Moto Music 跳转链接（原 Cone Player / Halcyon / Salt Player 等外部播放器链接已移除）
     val players: List<FriendlyPlayer> = listOf(
         FriendlyPlayer(
-            id = "cone_player",
-            displayNameRes = R.string.friendly_player_cone_player,
-            packageNames = listOf(
-                "ink.trantor.coneplayer.gp",
-                "ink.trantor.coneplayer"
-            ),
-            websiteUrl = "https://coneplayer.trantor.ink/#/"
-        ),
-        FriendlyPlayer(
-            id = "halcyon",
-            displayNameRes = R.string.friendly_player_halcyon,
-            packageNames = listOf("com.ella.music"),
-            websiteUrl = "https://github.com/Kifranei/Halcyon"
-        ),
-        FriendlyPlayer(
-            id = "salt_player",
-            displayNameRes = R.string.friendly_player_salt_player,
-            packageNames = listOf("com.salt.music"),
-            websiteUrl = "https://github.com/Moriafly/SaltPlayerSource"
+            id = "moto_music",
+            displayNameRes = R.string.friendly_player_moto_music,
+            packageNames = listOf("com.sdw.music.player.cn"),
+            websiteUrl = ""
         )
     )
 }

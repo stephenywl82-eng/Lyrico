@@ -14,6 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,11 +27,6 @@ import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.utils.UiMessage
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun LyricsPreviewPane(
@@ -45,8 +45,6 @@ fun LyricsPreviewPane(
      */
     contentPadding: PaddingValues = PaddingValues(12.dp),
 ) {
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
     Box(modifier = modifier.fillMaxWidth()) {
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             when {
@@ -61,34 +59,26 @@ fun LyricsPreviewPane(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            if (salt) androidx.compose.material3.CircularProgressIndicator(
+                            CircularProgressIndicator(
                                 modifier = Modifier.size(32.dp),
-                                color = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-                                trackColor = com.moriafly.salt.ui.SaltTheme.colors.stroke,
-                            ) else CircularProgressIndicator(size = 32.dp)
-                            if (salt) com.moriafly.salt.ui.Text(
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.outline,
+                            )
+                            Text(
                                 text = loadingText,
-                                style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                                color = com.moriafly.salt.ui.SaltTheme.colors.subText
-                            ) else Text(
-                                text = loadingText,
-                                style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceContainerVariant
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
 
                 error != null -> item("error") {
-                    if (salt) com.moriafly.salt.ui.Text(
+                    Text(
                         modifier = Modifier.padding(contentPadding),
                         text = error.asString() ?: failedText,
-                        style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                        color = com.moriafly.salt.ui.SaltTheme.colors.text,
-                    ) else Text(
-                        modifier = Modifier.padding(contentPadding),
-                        text = error.asString() ?: failedText,
-                        style = MiuixTheme.textStyles.body2
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                 }
 
@@ -101,16 +91,11 @@ fun LyricsPreviewPane(
                 }
 
                 else -> item("lyrics") {
-                    if (salt) com.moriafly.salt.ui.Text(
+                    Text(
                         modifier = Modifier.padding(contentPadding),
                         text = lyricsText,
-                        style = saltLyricsReadingStyle(),
-                        color = com.moriafly.salt.ui.SaltTheme.colors.text,
-                        overflow = TextOverflow.Clip
-                    ) else Text(
-                        modifier = Modifier.padding(contentPadding),
-                        text = lyricsText,
-                        style = MiuixTheme.textStyles.body2,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
                         overflow = TextOverflow.Clip
                     )
                 }
@@ -118,38 +103,25 @@ fun LyricsPreviewPane(
         }
 
         if (showCopyAction && !lyricsText.isNullOrBlank()) {
-            if (salt) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .background(
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subBackground.copy(alpha = 0.7f),
-                            shape = CircleShape
-                        )
-                ) {
-                    com.lonx.lyrico.ui.components.salt.SaltIconButton(
-                        icon = LucideIcons.Copy,
-                        label = "",
-                        onClick = onCopyLyrics,
-                        size = 36.dp,
-                        iconSize = 20.dp
-                    )
-                }
-            } else IconButton(
-                onClick = onCopyLyrics,
+            Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
                     .background(
-                        color = MiuixTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                         shape = CircleShape
                     )
             ) {
-                Icon(
-                    imageVector = LucideIcons.Copy,
-                    contentDescription = null
-                )
+                IconButton(
+                    onClick = onCopyLyrics,
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        imageVector = LucideIcons.Copy,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
     }

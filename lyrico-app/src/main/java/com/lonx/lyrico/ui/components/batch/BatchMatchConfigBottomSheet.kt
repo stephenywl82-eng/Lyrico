@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.batch
 
@@ -8,19 +7,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,11 +30,6 @@ import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.ui.components.base.ConcurrencyDropdown
 import com.lonx.lyrico.viewmodel.BatchMatchType
-import com.moriafly.salt.ui.enabledAlpha
-import com.moriafly.salt.ui.icons.Check
-import com.moriafly.salt.ui.icons.SaltIcons
-import com.moriafly.salt.ui.icons.Uncheck
-import com.moriafly.salt.ui.innerPadding
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -105,90 +96,7 @@ fun BatchMatchConfigBottomSheet(
         enableNestedScroll = false,
         scrollContent = false,
         content = {
-            if (com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-                com.lonx.lyrico.data.model.UiEngine.SALT
-            ) {
-                // 配置整体滚动；字段列表在分组中限高后独立滚动。
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    if (singleTarget == null) {
-                        com.moriafly.salt.ui.RoundedColumn {
-                            LazyColumn(Modifier.heightIn(max = 250.dp)) {
-                                items(targets, key = { it.name }) { target ->
-                                    val mode = config.targetModes[target] ?: MetadataWriteMode.DISABLED
-                                    val isSelected = mode != MetadataWriteMode.DISABLED
-                                    val effectiveMode = if (isSelected) mode else MetadataWriteMode.SUPPLEMENT
-                                    BatchMatchTargetItem(
-                                        target = target,
-                                        isSelected = isSelected,
-                                        mode = effectiveMode,
-                                        onCheckedChange = { checked -> updateTarget(target, checked, effectiveMode) },
-                                        onModeToggle = {
-                                            updateTarget(
-                                                target = target,
-                                                isSelected = isSelected,
-                                                mode = if (effectiveMode == MetadataWriteMode.OVERWRITE) {
-                                                    MetadataWriteMode.SUPPLEMENT
-                                                } else {
-                                                    MetadataWriteMode.OVERWRITE
-                                                }
-                                            )
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    com.moriafly.salt.ui.RoundedColumn {
-                        if (singleTarget != null) {
-                            com.moriafly.salt.ui.ItemCheck(
-                                    state = config.targetModes[singleTarget] == MetadataWriteMode.OVERWRITE,
-                                    onChange = { checked ->
-                                        updateTarget(
-                                            target = singleTarget,
-                                            isSelected = true,
-                                            mode = if (checked) MetadataWriteMode.OVERWRITE
-                                            else MetadataWriteMode.SUPPLEMENT
-                                        )
-                                    },
-                                    text = stringResource(R.string.batch_match_overwrite_mode),
-                                    sub = stringResource(R.string.batch_match_overwrite_mode_summary),
-                                )
-                        }
-                        com.moriafly.salt.ui.ItemCheck(
-                                state = config.preferFileName,
-                                onChange = { checked ->
-                                    val updatedTargetModes = config.targetModes.toMutableMap()
-                                    if (checked) {
-                                        if (updatedTargetModes[MetadataFieldTarget.TITLE] != MetadataWriteMode.DISABLED) {
-                                            updatedTargetModes[MetadataFieldTarget.TITLE] = MetadataWriteMode.OVERWRITE
-                                        }
-                                        if (updatedTargetModes[MetadataFieldTarget.ARTIST] != MetadataWriteMode.DISABLED) {
-                                            updatedTargetModes[MetadataFieldTarget.ARTIST] = MetadataWriteMode.OVERWRITE
-                                        }
-                                    }
-                                    config = config.copy(preferFileName = checked, targetModes = updatedTargetModes)
-                                },
-                            text = stringResource(R.string.batch_match_prefer_filename),
-                            sub = stringResource(R.string.batch_match_prefer_filename_summary),
-                        )
-                    }
-                    com.moriafly.salt.ui.RoundedColumn {
-                        ConcurrencyDropdown(
-                            title = stringResource(R.string.batch_match_config_concurrency),
-                            value = config.concurrency,
-                            onChange = { config = config.copy(concurrency = it) },
-                        )
-                    }
-                    com.moriafly.salt.ui.ItemOuterTip(
-                        text = stringResource(R.string.search_limit_tip)
-                    )
-                }
-                return@YesNoBottomSheet
-            }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -310,64 +218,7 @@ private fun BatchMatchTargetItem(
     onCheckedChange: (Boolean) -> Unit,
     onModeToggle: () -> Unit
 ) {
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-        com.lonx.lyrico.data.model.UiEngine.SALT
-    ) {
-        // SaltUI 没有「带尾部开关的勾选行」，用官方勾选图标 + Switcher 组合出同一语义。
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = com.moriafly.salt.ui.SaltTheme.dimens.item)
-                .toggleable(value = isSelected, role = Role.Checkbox, onValueChange = onCheckedChange)
-                .innerPadding(vertical = false)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            com.moriafly.salt.ui.Icon(
-                painter = androidx.compose.ui.graphics.vector.rememberVectorPainter(
-                    if (isSelected) com.moriafly.salt.ui.icons.SaltIcons.Check
-                    else com.moriafly.salt.ui.icons.SaltIcons.Uncheck
-                ),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = com.moriafly.salt.ui.SaltTheme.colors.highlight
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
-            ) {
-                com.moriafly.salt.ui.Text(
-                    text = stringResource(target.labelRes),
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                    color = if (isSelected) com.moriafly.salt.ui.SaltTheme.colors.text
-                    else com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    maxLines = 1
-                )
-                if (isSelected) {
-                    com.moriafly.salt.ui.Text(
-                        text = stringResource(mode.labelRes),
-                        style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                        color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                        maxLines = 1
-                    )
-                }
-            }
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier.size(48.dp).toggleable(
-                    value = mode == MetadataWriteMode.OVERWRITE,
-                    enabled = isSelected, role = Role.Switch,
-                    onValueChange = { onModeToggle() },
-                ), contentAlignment = Alignment.Center,
-            ) {
-                com.moriafly.salt.ui.Switcher(
-                    state = mode == MetadataWriteMode.OVERWRITE,
-                    modifier = Modifier.enabledAlpha(isSelected)
-                )
-            }
-        }
-        return
-    }
+
     BasicComponent(
         insideMargin = PaddingValues(horizontal = 12.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -411,4 +262,3 @@ private fun BatchMatchTargetItem(
         )
     }
 }
-

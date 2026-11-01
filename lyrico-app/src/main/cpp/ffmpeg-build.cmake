@@ -5,11 +5,18 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/configure")
 endif()
 if(CMAKE_HOST_WIN32)
     get_filename_component(git_dir "${GIT_EXECUTABLE}" DIRECTORY)
-    find_program(FFMPEG_BASH bash PATHS "${git_dir}/../bin" "${git_dir}/../usr/bin" NO_DEFAULT_PATH REQUIRED)
+    find_program(FFMPEG_BASH bash PATHS "${git_dir}/../bin" "${git_dir}/../usr/bin" REQUIRED)
 else()
     find_program(FFMPEG_BASH bash REQUIRED)
 endif()
-find_program(FFMPEG_MAKE NAMES gmake make REQUIRED)
+if(CMAKE_HOST_WIN32)
+    # AGP sanitizes PATH for native builds, so resolve make from the NDK prebuilt toolchain explicitly.
+    find_program(FFMPEG_MAKE NAMES gmake make
+        PATHS "${CMAKE_ANDROID_NDK}/prebuilt/windows-x86_64/bin"
+        REQUIRED)
+else()
+    find_program(FFMPEG_MAKE NAMES gmake make REQUIRED)
+endif()
 execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg"
     OUTPUT_VARIABLE ffmpeg_revision OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)

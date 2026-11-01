@@ -2,7 +2,6 @@ package com.lonx.lyrico.viewmodel
 
 import android.net.Uri
 import android.util.Log
-import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lonx.audiotag.model.CustomTagField
@@ -81,7 +80,6 @@ data class BatchEditUiState(
     val saveResultMessage: UiMessage? = null,
     val errorMessage: UiMessage? = null,
 
-    /** 各字段当前编辑值（"<keep>"表示不修改） */
     val title: String = "<keep>",
     val artist: String = "<keep>",
     val albumArtist: String = "<keep>",
@@ -99,24 +97,19 @@ data class BatchEditUiState(
     val rating: Int = 0,
     val ratingModified: Boolean = false,
 
-    /** 封面相关 */
     val coverUri: Any? = null,
     val removeCover: Boolean = false,
 
-    /** 歌词偏移（毫秒），0 表示不偏移 */
     val lyricsOffset: Long = 0L,
 
-    /** 回放增益（"<keep>"表示不修改，""表示清除） */
     val replayGainTrackGain: String = "<keep>",
     val replayGainTrackPeak: String = "<keep>",
     val replayGainAlbumGain: String = "<keep>",
     val replayGainAlbumPeak: String = "<keep>",
     val replayGainReferenceLoudness: String = "<keep>",
 
-    /** 自定义标签 */
     val customFields: List<CustomTagField> = emptyList(),
 
-    /** 保存进度显示相关字段 */
     val saveProgressBottomSheet: Boolean = false,  // 是否显示保存进度对话框
     val currentFile: String = "",  // 当前处理的文件名
     val successCount: Int = 0,  // 成功计数
@@ -126,7 +119,6 @@ data class BatchEditUiState(
     val selectedSongsVersion: Int = 0,
     val customTagPreviewVersion: Int = 0
 ) {
-    /** 传给批处理任务的偏移值：0 表示不偏移（空串），任务配置沿用字符串以兼容历史任务。 */
     val lyricsOffsetForTask: String
         get() = lyricsOffset.takeIf { it != 0L }?.toString().orEmpty()
 }
@@ -178,7 +170,6 @@ class BatchEditViewModel(
     private val _uiState = MutableStateFlow(BatchEditUiState())
     val uiState: StateFlow<BatchEditUiState> = _uiState.asStateFlow()
 
-    /** 批量编辑页按配置排序后的可见字段。 */
     val visibleFields: StateFlow<List<EditFieldDefinition>> =
         editFieldConfigRepository.configFlow
             .map { config ->
@@ -190,7 +181,6 @@ class BatchEditViewModel(
                 initialValue = emptyList(),
             )
 
-    /** 保存选中的文件uri */
     private var selectedUris: List<String> = emptyList()
     private var selectedSongs: List<SongEntity> = emptyList()
 
@@ -211,7 +201,6 @@ class BatchEditViewModel(
             }
         }
     }
-
 
     // ── 标签值更新 ──────────────────────────────────────────
 

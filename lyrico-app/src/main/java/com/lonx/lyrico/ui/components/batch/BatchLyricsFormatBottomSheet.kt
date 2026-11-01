@@ -17,13 +17,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.BatchLyricsFormatUiState
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -36,7 +33,7 @@ fun BatchLyricsFormatBottomSheet(
     onDismissFinished: () -> Unit,
     onAbort: () -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     ActionBottomSheet(
         saltFooter = {
             com.lonx.lyrico.ui.components.base.SheetProgressAction(
@@ -69,11 +66,7 @@ fun BatchLyricsFormatBottomSheet(
                             R.string.current_target_format,
                             batchLyricsFormatUiState.targetFormat?.let { stringResource(it.labelRes) }.orEmpty()
                         )
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = targetFormatText,
-                            style = SaltTheme.textStyles.sub,
-                            color = SaltTheme.colors.subText
-                        ) else Text(
+                        Text(
                             text = targetFormatText,
                             style = MiuixTheme.textStyles.footnote1,
                             color = MiuixTheme.colorScheme.onSurfaceContainerVariant
@@ -89,21 +82,7 @@ fun BatchLyricsFormatBottomSheet(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = if (batchLyricsFormatUiState.isRunning) {
-                                    stringResource(R.string.batch_edit_processing)
-                                } else {
-                                    stringResource(
-                                        R.string.batch_replay_gain_total_time,
-                                        batchLyricsFormatUiState.totalTimeMillis / 1000.0
-                                    )
-                                },
-                                style = SaltTheme.textStyles.sub,
-                                color = SaltTheme.colors.subText,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            ) else Text(
+                            Text(
                                 text = if (batchLyricsFormatUiState.isRunning) {
                                     stringResource(R.string.batch_edit_processing)
                                 } else {
@@ -120,12 +99,7 @@ fun BatchLyricsFormatBottomSheet(
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = "$current / $total",
-                                style = SaltTheme.textStyles.main,
-                                color = SaltTheme.colors.text,
-                                textAlign = TextAlign.End
-                            ) else Text(
+                            Text(
                                 text = "$current / $total",
                                 style = MiuixTheme.textStyles.main,
                                 textAlign = TextAlign.End
@@ -142,32 +116,7 @@ fun BatchLyricsFormatBottomSheet(
                 SheetStatisticsRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (salt) {
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_success,
-                                batchLyricsFormatUiState.successCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_skipped,
-                                batchLyricsFormatUiState.skippedCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_failure,
-                                batchLyricsFormatUiState.failureCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                    } else {
+                    
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_success,
@@ -189,7 +138,7 @@ fun BatchLyricsFormatBottomSheet(
                             ),
                             style = MiuixTheme.textStyles.main
                         )
-                    }
+                    
                 }
             }
         },

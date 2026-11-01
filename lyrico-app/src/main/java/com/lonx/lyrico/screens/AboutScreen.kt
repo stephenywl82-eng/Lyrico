@@ -1,18 +1,15 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,14 +20,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,17 +41,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.App.Companion.OWNER_ID
 import com.lonx.lyrico.App.Companion.REPO_NAME
 import com.lonx.lyrico.App.Companion.TELEGRAM_GROUP_LINK
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.screen.ScreenCard
 import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
@@ -134,7 +125,7 @@ fun AboutScreen(
     }
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     LibraryDetailPage(
         title = stringResource(R.string.about_title),
         onBack = { navigator.popBackStack() },
@@ -159,7 +150,7 @@ fun AboutScreen(
             }
         }
     ) { paddingValues ->
-        val outerMargin = if (salt) SaltTheme.dimens.padding else 12.dp
+        val outerMargin = 12.dp
         val pagePadding = scaffoldContentPadding(paddingValues = paddingValues, bottomExtra = 12.dp)
         val layoutDirection = LocalLayoutDirection.current
         BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -169,31 +160,17 @@ fun AboutScreen(
             val columnCount = ((availableWidth + 8.dp) / (minCellWidth + 8.dp)).toInt().coerceAtLeast(1)
             val contributorRows = remember(contributors, columnCount) { contributors.chunked(columnCount) }
             LazyColumn(
-                modifier = (if (salt) Modifier else Modifier
+                modifier = (Modifier
                     .blurSource(topBarBackdrop)
                     .scrollEndHaptic()
                     .overScrollVertical()
                     .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
                     .fillMaxHeight(),
                 contentPadding = pagePadding,
-                overscrollEffect = if (salt) rememberOverscrollEffect() else null,
+                overscrollEffect = null,
             ) {
                 item {
-                    if (salt) {
-                        SaltAboutAppInfo(
-                            proActivated = proActivated,
-                            onPro = { navigator.navigate(ProDestination()) },
-                            version = version,
-                            onVersionClick = onVersionClick,
-                            checkUpdateEnabled = checkUpdateEnabled,
-                            updateSummary = stringResource(updateEffect.messageRes, *updateEffect.formatArgs.toTypedArray()),
-                            onProject = { viewModel.openBrowser(context, "https://github.com/$OWNER_ID/$REPO_NAME") },
-                            onTelegram = { viewModel.openBrowser(context, TELEGRAM_GROUP_LINK) },
-                            onLicences = { navigator.navigate(OpensourceLicenceDestination()) },
-                            onCheckUpdateEnabled = viewModel::setCheckUpdateEnabled,
-                            onCheckUpdate = viewModel::checkUpdate
-                        )
-                    } else {
+                    
                         SmallTitle(text = stringResource(R.string.about_app_info))
                         Card(
                             modifier = Modifier.padding(horizontal = 12.dp)
@@ -250,12 +227,11 @@ fun AboutScreen(
                                 onClick = viewModel::checkUpdate
                             )
                         }
-                    }
+                    
                 }
 
                 item {
-                    if (salt) com.moriafly.salt.ui.ItemOuterTitle(stringResource(R.string.about_contributors))
-                    else SmallTitle(text = stringResource(R.string.about_contributors))
+                    SmallTitle(text = stringResource(R.string.about_contributors))
                 }
 
                 when {
@@ -267,11 +243,7 @@ fun AboutScreen(
                                     .padding(vertical = 32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (salt) androidx.compose.material3.CircularProgressIndicator(
-                                    modifier = Modifier.size(32.dp),
-                                    color = SaltTheme.colors.highlight,
-                                    trackColor = SaltTheme.colors.stroke
-                                ) else CircularProgressIndicator(size = 32.dp)
+                                CircularProgressIndicator(size = 32.dp)
                             }
                         }
                     }
@@ -332,10 +304,10 @@ fun AboutScreen(
 
 @Composable
 private fun ContributorGridItem(name: String, avatarUrl: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
-    val style = if (salt) SaltTheme.textStyles.main.copy(fontSize = 14.sp) else MiuixTheme.textStyles.body2
-    val color = if (salt) SaltTheme.colors.text else MiuixTheme.colorScheme.onSurface
-    val background = if (salt) SaltTheme.colors.subBackground else MiuixTheme.colorScheme.surfaceContainer
+    val salt = false
+    val style = MiuixTheme.textStyles.body2
+    val color = MiuixTheme.colorScheme.onSurface
+    val background = MiuixTheme.colorScheme.surfaceContainer
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
@@ -360,69 +332,6 @@ private fun ContributorGridItem(name: String, avatarUrl: String, onClick: () -> 
             textAlign = TextAlign.Center,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun SaltAboutAppInfo(
-    proActivated: Boolean,
-    onPro: () -> Unit,
-    version: String,
-    onVersionClick: () -> Unit,
-    checkUpdateEnabled: Boolean,
-    updateSummary: String,
-    onProject: () -> Unit,
-    onTelegram: () -> Unit,
-    onLicences: () -> Unit,
-    onCheckUpdateEnabled: (Boolean) -> Unit,
-    onCheckUpdate: () -> Unit,
-) {
-    val versionLabel = stringResource(R.string.about_app_version)
-    ScreenCard(header = stringResource(R.string.about_app_info)) {
-        com.moriafly.salt.ui.Item(
-            text = versionLabel,
-            sub = version,
-            iconPainter = rememberVectorPainter(LucideIcons.Info),
-            iconColor = PreferenceIconTone.Appearance.color(),
-            arrowType = com.moriafly.salt.ui.ItemArrowType.None,
-            onClick = onVersionClick,
-        )
-        if (proActivated) AboutProEntry(onClick = onPro)
-        com.moriafly.salt.ui.Item(
-            text = stringResource(R.string.about_project_url),
-            sub = stringResource(R.string.about_project_url_sub),
-            iconPainter = rememberVectorPainter(LucideIcons.CodeXml),
-            iconColor = PreferenceIconTone.Tools.color(),
-            onClick = onProject
-        )
-        com.moriafly.salt.ui.Item(
-            text = "Telegram",
-            sub = TELEGRAM_GROUP_LINK,
-            iconPainter = rememberVectorPainter(LucideIcons.Send),
-            iconColor = PreferenceIconTone.Library.color(),
-            onClick = onTelegram
-        )
-        com.moriafly.salt.ui.Item(
-            text = stringResource(R.string.title_opensource_licence),
-            iconPainter = rememberVectorPainter(LucideIcons.Scale),
-            iconColor = PreferenceIconTone.Lyrics.color(),
-            onClick = onLicences
-        )
-        com.moriafly.salt.ui.ItemSwitcher(
-            text = stringResource(R.string.about_auto_check_update),
-            sub = stringResource(R.string.about_auto_check_update_sub),
-            iconPainter = rememberVectorPainter(LucideIcons.CloudDownload),
-            iconColor = PreferenceIconTone.Pink.color(),
-            state = checkUpdateEnabled,
-            onChange = onCheckUpdateEnabled
-        )
-        com.moriafly.salt.ui.Item(
-            text = stringResource(R.string.about_check_update),
-            sub = updateSummary,
-            iconPainter = rememberVectorPainter(LucideIcons.Download),
-            iconColor = PreferenceIconTone.Teal.color(),
-            onClick = onCheckUpdate
         )
     }
 }

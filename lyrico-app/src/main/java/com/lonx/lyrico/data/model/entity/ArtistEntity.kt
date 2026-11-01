@@ -24,4 +24,3 @@ data class ArtistEntity(
     val coverSongLastModified: Long = 0,
     val updatedAt: Long = System.currentTimeMillis()
 )
-

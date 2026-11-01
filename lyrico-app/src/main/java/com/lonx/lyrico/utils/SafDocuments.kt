@@ -6,7 +6,6 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.util.Log
 
-/** One child of a SAF tree, as returned by [SafDocuments.children]. */
 data class SafDocumentRow(
     val documentId: String,
     val displayName: String,

@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,12 +14,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.AlbumActionsUiState
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -34,7 +29,7 @@ fun AlbumReplayGainProgressBottomSheet(
     onDismissFinished: () -> Unit,
     onAbort: () -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     ActionBottomSheet(
         saltFooter = {
             com.lonx.lyrico.ui.components.base.SheetProgressAction(
@@ -65,14 +60,7 @@ fun AlbumReplayGainProgressBottomSheet(
                             uiState.albumReplayGainTotalTimeMillis / 1000.0
                         )
                     }
-                    if (salt) com.moriafly.salt.ui.Text(
-                        text = statusText,
-                        style = SaltTheme.textStyles.sub,
-                        color = SaltTheme.colors.subText,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    ) else Text(
+                    Text(
                         text = statusText,
                         style = MiuixTheme.textStyles.subtitle,
                         maxLines = 1,
@@ -82,12 +70,7 @@ fun AlbumReplayGainProgressBottomSheet(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    if (salt) com.moriafly.salt.ui.Text(
-                        text = "${(progress * 100).toInt()}%",
-                        style = SaltTheme.textStyles.main,
-                        color = SaltTheme.colors.text,
-                        textAlign = TextAlign.End
-                    ) else Text(
+                    Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MiuixTheme.textStyles.main,
                         textAlign = TextAlign.End
@@ -110,34 +93,20 @@ fun AlbumReplayGainProgressBottomSheet(
                                 .fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = stringResource(
-                                    R.string.batch_replay_gain_success,
-                                    uiState.albumReplayGainWrittenCount
-                                ),
-                                style = SaltTheme.textStyles.main,
-                                color = SaltTheme.colors.text
-                            ) else Text(
+                            Text(
                                 text = stringResource(
                                     R.string.batch_replay_gain_success,
                                     uiState.albumReplayGainWrittenCount
                                 ),
                                 style = MiuixTheme.textStyles.main
                             )
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = "${uiState.albumReplayGainWrittenCount} / ${uiState.albumReplayGainSongCount}",
-                                style = SaltTheme.textStyles.main,
-                                color = SaltTheme.colors.text,
-                                textAlign = TextAlign.End
-                            ) else Text(
+                            Text(
                                 text = "${uiState.albumReplayGainWrittenCount} / ${uiState.albumReplayGainSongCount}",
                                 style = MiuixTheme.textStyles.main,
                                 textAlign = TextAlign.End
                             )
                         }
                     }
-
-
 
             }
         },

@@ -17,8 +17,6 @@ import com.lonx.audiotag.model.AudioPicture
 import com.lonx.audiotag.model.AudioPictureType
 import com.lonx.audiotag.model.AudioTagData
 import com.lonx.audiotag.model.CustomTagField
-import com.lonx.audiotag.model.addPicture
-import com.lonx.audiotag.model.artistPictureTypes
 import com.lonx.audiotag.model.frontCoverOrFallback
 import com.lonx.audiotag.model.pictureOfType
 import com.lonx.audiotag.model.removePictureType
@@ -54,7 +52,6 @@ import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.song.library.SongLibraryRepository
 import com.lonx.lyrico.data.utils.ArtistNameSplitter
 import com.lonx.lyrico.domain.poster.ArtistPosterEdits
-import com.lonx.lyrico.domain.poster.ArtistPosterGrouping
 import com.lonx.lyrico.domain.song.usecase.OverwriteSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.ReadAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
@@ -178,7 +175,6 @@ class EditMetadataViewModel(
     private val _uiState = MutableStateFlow(EditMetadataUiState())
     val uiState: StateFlow<EditMetadataUiState> = _uiState.asStateFlow()
 
-    /** 单曲编辑页按配置排序后的可见字段。 */
     val visibleFields: StateFlow<List<EditFieldDefinition>> =
         editFieldConfigRepository.configFlow
             .map { config ->
@@ -503,7 +499,6 @@ class EditMetadataViewModel(
         }
     }
 
-    /** Folder saves apply immediately and never change the song's metadata draft. */
     fun saveArtistImageToFolder(context: Context, uri: Uri, artistName: String, onResult: (UiMessage) -> Unit) {
         if (_uiState.value.isSavingArtistPoster) return
         _uiState.update { it.copy(isSavingArtistPoster = true) }
@@ -546,12 +541,10 @@ class EditMetadataViewModel(
         }
     }
 
-    /** 移除某一张艺术家图片（标签里若残留多张，只删这一张）。 */
     fun removeArtistImage(target: AudioPicture) {
         updateArtistPictures { pictures, _ -> ArtistPosterEdits.remove(pictures, target) }
     }
 
-    /** 裁剪结果：替换某一张艺术家图片的数据，保留它的归属描述。 */
     fun replaceArtistImage(bitmap: Bitmap, target: AudioPicture) {
         val bytes = bitmap.toJpegBytes()
         updateArtistPictures { pictures, _ ->
@@ -574,7 +567,6 @@ class EditMetadataViewModel(
         }
     }
 
-    /** [target] 与 [artistName] 原有的海报**交换归属**，两张图都留着。 */
     fun swapArtistImages(target: AudioPicture, artistName: String) {
         updateArtistPictures { pictures, _ ->
             ArtistPosterEdits.swapOwners(
@@ -586,7 +578,6 @@ class EditMetadataViewModel(
         }
     }
 
-    /** 导出某张艺术家海报到系统相册。 */
     fun exportArtistImage(context: Context, target: AudioPicture) = exportArtistImage(context, target.data)
 
     fun exportArtistImage(context: Context, bytes: ByteArray) {
@@ -611,13 +602,11 @@ class EditMetadataViewModel(
         pictureType = AudioPictureType.Artist.tagLibName
     )
 
-    /** 当前编辑态的艺术家名（艺术家字段按配置拆分）。 */
     private fun currentArtistNames(): List<String> =
         _uiState.value.editingTagData?.let {
             ArtistNameSplitter.splitArtists(it.artist, artistSplitConfig.value)
         }.orEmpty()
 
-    /** 用 [transform] 生成新的图片列表；结果没变时不动状态。 */
     private fun updateArtistPictures(
         transform: (pictures: List<AudioPicture>, original: AudioTagData?) -> List<AudioPicture>
     ) {
@@ -632,7 +621,6 @@ class EditMetadataViewModel(
         }
     }
 
-    /** 读取本地图片字节；失败时记录日志并以 `null` 回调。 */
     private fun readPictureBytes(
         context: Context,
         uri: Uri,
@@ -1365,7 +1353,6 @@ class EditMetadataViewModel(
         _uiState.update { it.copy(replayGainScanMessage = null) }
     }
 
-
     /**
      * UI层在成功发起弹窗或处理完权限请求后调用此方法清理状态
      */
@@ -1383,7 +1370,6 @@ class EditMetadataViewModel(
         }
     }
 
-    /** 检测歌词格式，返回 "lrc" 或 "ttml"。 */
     private fun getLyricsMimeType(lyrics: String?): String {
         if (lyrics.isNullOrBlank()) return "lrc"
         
@@ -1399,7 +1385,6 @@ class EditMetadataViewModel(
         return "lrc"
     }
 
-
     /**
      * 获取导出歌词的默认文件名
      */
@@ -1410,7 +1395,6 @@ class EditMetadataViewModel(
         val fileName = _uiState.value.fileName ?:""
         return "$fileName$fileExtension"
     }
-
 
     /**
      * 导出歌词
@@ -1585,7 +1569,6 @@ class EditMetadataViewModel(
         updateTag { copy(lyrics = convertedLyrics) }
     }
 
-    /** 把歌词转换为 [targetFormat]。 */
     fun convertLyricsFormat(targetFormat: LyricFormat) {
         processLyrics(
             LyricsProcessingOptions(
@@ -1696,7 +1679,6 @@ class EditMetadataViewModel(
         playbackRepository.play(context, uriStr.toUri())
     }
 
-    /** 获取同专辑歌曲封面，优先同专辑且同歌手的结果。 */
     suspend fun getSameAlbumCovers(): List<Pair<String, Any?>> {
         val currentAlbum = _uiState.value.editingTagData?.album ?: return emptyList()
         val currentArtist = _uiState.value.editingTagData?.artist ?: ""

@@ -1,0 +1,11 @@
+// Redirect all module build dirs to a brand-new location on C: (writable,
+// modifiable). The E: source drive is "append-only" under the sandbox, so
+// Gradle's normal "delete-then-rewrite" of build outputs fails there.
+def FRESH_BASE = new File("C:/Users/Administrator/AppData/Local/Temp/lyrico_fresh_build_17")
+FRESH_BASE.mkdirs()
+println "FRESH_BUILD_BASE=${FRESH_BASE.absolutePath}"
+gradle.projectsLoaded {
+    gradle.rootProject.allprojects { p ->
+        p.buildDir = new File(FRESH_BASE, p.path.replace(File.separator, "_").replace(":", "_"))
+    }
+}

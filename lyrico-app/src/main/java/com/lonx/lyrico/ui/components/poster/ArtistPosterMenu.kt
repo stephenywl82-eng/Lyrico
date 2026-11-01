@@ -6,13 +6,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.lonx.audiotag.model.AudioPicture
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
@@ -22,7 +21,7 @@ import com.lonx.lyrico.ui.components.base.ItemMenuBottomSheet
 import com.lonx.lyrico.ui.components.base.ItemMenuAction
 import com.lonx.lyrico.domain.poster.ArtistPictureEntry
 import com.lonx.lyrico.domain.poster.ArtistPosterGrouping
-import com.lonx.lyrico.ui.components.miuix.MiuixBottomSheet
+import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -40,11 +39,9 @@ class ArtistPosterMenuState {
     var showOptions by mutableStateOf(false)
         private set
 
-    /** 非 null 时显示选择面板，并记录这次选择是为了什么。 */
     internal var pickerRequest by mutableStateOf<PosterPickerRequest?>(null)
         private set
 
-    /** 直接点某张海报打开菜单时记住它，省得再让用户选一次。 */
     private var activePicture by mutableStateOf<AudioPicture?>(null)
 
     /**
@@ -83,20 +80,15 @@ class ArtistPosterMenuState {
 @Composable
 fun rememberArtistPosterMenuState(): ArtistPosterMenuState = remember { ArtistPosterMenuState() }
 
-/** 打开操作菜单后要做的事，都需要先确定作用目标。 */
 internal sealed interface PosterPickerRequest {
-    /** 「从本地选择艺术家海报」：先确定属于哪个艺术家，再选图片。 */
     data object SetPoster : PosterPickerRequest
 
-    /** 在已有图片里挑一张。 */
     data object Remove : PosterPickerRequest
     data object Export : PosterPickerRequest
     data object Crop : PosterPickerRequest
 
-    /** 描述对不上的海报重新指定归属。 */
     data class Reassign(val target: AudioPicture) : PosterPickerRequest
 
-    /** 需要用户选艺术家（而不是选已有图片）。 */
     val picksArtist: Boolean get() = this is SetPoster || this is Reassign
 }
 
@@ -246,31 +238,9 @@ fun ArtistPosterMenu(
         }
     }
 
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-        val request = state.pickerRequest
-        com.lonx.lyrico.ui.components.base.ItemMenuBottomSheet(
-            show = request != null,
-            label = stringResource(if (request?.picksArtist == true) R.string.label_select_artist
-                else R.string.label_select_artist_image),
-            onDismissRequest = state::dismissPicker,
-        ) {
-            if (request?.picksArtist == true) artists.forEach { name ->
-                val count = ArtistPosterGrouping.countFor(entries, name)
-                com.lonx.lyrico.ui.components.base.ItemMenuAction(
-                    title = name, icon = LucideIcons.UserSwitch,
-                    summary = when {
-                        count > 1 -> stringResource(R.string.label_artist_image_count, count)
-                        count == 1 -> stringResource(R.string.label_artist_image_exists)
-                        else -> null
-                    }, onClick = { onArtistPicked(name) })
-            } else ArtistPicturePickerItems(entries, untaggedLabel, ::onEntryPicked)
-        }
-        return
-    }
-
     // 选择目标：选艺术家（设置/重挂）或选具体某张图片（移除/保存/裁剪）
     val pickerRequest = state.pickerRequest
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = pickerRequest != null,
         enableNestedScroll = false,
         title = stringResource(
@@ -342,10 +312,7 @@ private fun ArtistPicturePickerItems(
             } else {
                 name
             }
-        if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-            com.lonx.lyrico.ui.components.base.ItemMenuAction(
-                title = title, icon = LucideIcons.Image, onClick = { onPick(entry) })
-        } else ArrowPreference(
+        ArrowPreference(
             title = title,
             onClick = { onPick(entry) }
         )

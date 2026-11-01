@@ -34,7 +34,6 @@ import com.lonx.lyrico.data.model.SearchSourceTabStyle
 import com.lonx.lyrico.data.model.SettingsBackup
 import com.lonx.lyrico.data.model.SourceSettingsStore
 import com.lonx.lyrico.data.model.ThemeConfig
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.data.model.AlbumSortBy
 import com.lonx.lyrico.data.model.AlbumSortInfo
@@ -61,7 +60,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.collections.first
 
-
 internal val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
 internal fun decodeArtistPosterFolder(value: String?): String? =
@@ -73,7 +71,6 @@ internal fun encodeArtistPosterFolder(uri: String?): String =
     Json.encodeToString(listOfNotNull(uri))
 
 object SettingsDefaults {
-    const val MONET_ENABLE: Boolean = false
     const val FLOATING_BOTTOM_BAR_ENABLED: Boolean = true
     const val BAR_BLUR_ENABLED: Boolean = false
     val FLOATING_BAR_EFFECT = FloatingBarEffect.NONE
@@ -186,13 +183,10 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val SEARCH_SOURCE_TAB_STYLE = stringPreferencesKey("search_source_tab_style")
         val SHOW_ALL_SEARCH_RESULT_FIELDS = booleanPreferencesKey("show_all_search_result_fields")
         val THEME_MODE = stringPreferencesKey("theme_mode")
-        val UI_ENGINE = stringPreferencesKey("ui_engine")
-        val MONET_ENABLE = booleanPreferencesKey("monet_enable")
         val FLOATING_BOTTOM_BAR_ENABLED = booleanPreferencesKey("floating_bottom_bar_enabled")
         val BAR_BLUR_ENABLED = booleanPreferencesKey("bar_blur_enabled")
         val FLOATING_BAR_EFFECT = stringPreferencesKey("floating_bar_effect")
 
-        /** 旧版把“毛玻璃”和“液态玻璃”存成两个互斥开关，仅用于读取旧值。 */
         val FLOATING_BAR_BLUR_ENABLED_LEGACY = booleanPreferencesKey("floating_bar_blur_enabled")
         val LIQUID_GLASS_ENABLED_LEGACY = booleanPreferencesKey("liquid_glass_enabled")
         val KEY_THEME_COLOR = intPreferencesKey("theme_color_argb")
@@ -366,15 +360,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 ?: SettingsDefaults.SHOW_ALL_SEARCH_RESULT_FIELDS
         }
 
-    override val uiEngine: Flow<UiEngine>
-        get() = context.settingsDataStore.data.map { preferences ->
-            UiEngine.fromValue(preferences[PreferencesKeys.UI_ENGINE])
-        }
-
-    override suspend fun saveUiEngine(engine: UiEngine) {
-        context.settingsDataStore.edit { it[PreferencesKeys.UI_ENGINE] = engine.value }
-    }
-
     override val themeMode: Flow<ThemeMode>
         get() = context.settingsDataStore.data.map { preferences ->
             val modeName = preferences[PreferencesKeys.THEME_MODE]
@@ -398,10 +383,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 // 如果没有保存过，说明是“系统默认”
                 KeyColors.first()
             }
-        }
-    override val monetEnable: Flow<Boolean>
-        get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.MONET_ENABLE] ?: false
         }
     override val floatingBottomBarEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
@@ -473,7 +454,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             }
         }
 
-
     override val renameFormat: Flow<String>
         get() = context.settingsDataStore.data.map { preferences ->
             preferences[PreferencesKeys.RENAME_FORMAT] ?: SettingsDefaults.RENAME_FORMAT
@@ -483,7 +463,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             preferences[PreferencesKeys.LAST_SCAN_TIME] ?: 0L
         }.first()
     }
-
 
     private val baseConfigFlow =
         combine(
@@ -544,10 +523,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
 
     override val themeConfigFlow: Flow<ThemeConfig> =
-        combine(themeMode, monetEnable, keyColor) { theme, monet, keyColor ->
+        combine(themeMode, keyColor) { theme, keyColor ->
             ThemeConfig(
                 themeMode = theme,
-                monetEnable = monet,
                 keyColor = keyColor
             )
         }
@@ -705,11 +683,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             preferences[PreferencesKeys.THEME_MODE] = mode.name
         }
     }
-    override suspend fun saveMonetEnable(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.MONET_ENABLE] = enabled
-        }
-    }
 
     override suspend fun saveFloatingBottomBarEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
@@ -863,11 +836,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             showAllSearchResultFields = prefs[PreferencesKeys.SHOW_ALL_SEARCH_RESULT_FIELDS]
                 ?: SettingsDefaults.SHOW_ALL_SEARCH_RESULT_FIELDS,
 
-            uiEngine = UiEngine.fromValue(prefs[PreferencesKeys.UI_ENGINE]).value,
             themeMode = prefs[PreferencesKeys.THEME_MODE]
                 ?: SettingsDefaults.THEME_MODE.name,
-            monetEnable = prefs[PreferencesKeys.MONET_ENABLE]
-                ?: SettingsDefaults.MONET_ENABLE,
             floatingBottomBarEnabled = prefs[PreferencesKeys.FLOATING_BOTTOM_BAR_ENABLED]
                 ?: SettingsDefaults.FLOATING_BOTTOM_BAR_ENABLED,
             barBlurEnabled = prefs[PreferencesKeys.BAR_BLUR_ENABLED]
@@ -877,7 +847,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
             onlyTranslationIfAvailable = prefs[PreferencesKeys.ONLY_TRANSLATION_IF_AVAILABLE]
                 ?: SettingsDefaults.ONLY_TRANSLATION_IF_AVAILABLE,
-
 
             limitLyricsInputLines = prefs[PreferencesKeys.LIMIT_LYRICS_INPUT_LINES]
                 ?: SettingsDefaults.LIMIT_LYRICS_INPUT_LINES,
@@ -897,7 +866,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
         return jsonFormatter.encodeToString(backup)
     }
-
 
     override suspend fun importSettings(jsonString: String): Boolean {
         return try {
@@ -961,9 +929,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 backup.showAllSearchResultFields?.let {
                     prefs[PreferencesKeys.SHOW_ALL_SEARCH_RESULT_FIELDS] = it
                 }
-                backup.uiEngine?.let { prefs[PreferencesKeys.UI_ENGINE] = UiEngine.fromValue(it).value }
                 backup.themeMode?.let { prefs[PreferencesKeys.THEME_MODE] = it }
-                backup.monetEnable?.let { prefs[PreferencesKeys.MONET_ENABLE] = it }
                 backup.floatingBottomBarEnabled?.let {
                     prefs[PreferencesKeys.FLOATING_BOTTOM_BAR_ENABLED] = it
                 }
@@ -1019,7 +985,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             false
         }
     }
-
 
     override val characterMappingConfig: Flow<CharacterMappingConfig>
         get() = context.settingsDataStore.data.map { preferences ->

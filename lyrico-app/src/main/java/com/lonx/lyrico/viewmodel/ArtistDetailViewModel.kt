@@ -19,7 +19,6 @@ import com.lonx.lyrico.data.repository.LibraryIndexRepository
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.data.utils.ArtistNameSplitter
-import com.lonx.lyrico.domain.poster.ArtistPosterEmbedding
 import com.lonx.lyrico.domain.song.usecase.OverwriteSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
 import com.lonx.lyrico.utils.ArtistPosterFileWriter
@@ -52,17 +51,13 @@ data class ArtistPosterEmbedUiState(
     val total: Int = 0,
     val done: Int = 0,
     val skipped: Int = 0,
-    /** 正在写的那首歌，进行中给用户一个「确实在动」的凭据。 */
     val activeSong: String? = null,
     val failures: List<String> = emptyList(),
-    /** 写盘需要用户授权；带着授权入口保持可见，授权后原样重跑一遍即可补完。 */
     val permissionIntentSender: IntentSender? = null,
-    /** 已经取好文案的结果（成功/失败/中止），界面直接拿去提示即可。 */
     val message: String? = null
 ) {
     val progress: Float get() = if (total <= 0) 0f else done.toFloat() / total
 
-    /** 有内容可展示（进行中、待授权、或刚出结果）时才需要占用底部面板。 */
     val hasContent: Boolean
         get() = isRunning || permissionIntentSender != null || message != null
 }
@@ -105,7 +100,6 @@ class ArtistDetailViewModel(
             emptyList()
         )
 
-    /** 已配置的艺术家海报文件夹；界面用它决定「存进文件夹」是否已有去处。 */
     val artistPosterFolder: StateFlow<String?> = settingsRepository.artistPosterFolder
         .stateIn(
             viewModelScope,
@@ -113,7 +107,6 @@ class ArtistDetailViewModel(
             null
         )
 
-    /** 海报描述要与艺术家字段的拆分规则对齐，所以读同一份配置。 */
     private val artistSplitConfig = settingsRepository.artistSplitConfigFlow
         .stateIn(
             viewModelScope,
@@ -349,12 +342,10 @@ class ArtistDetailViewModel(
         }
     }
 
-    /** 授权界面已经拉起，把这次请求消费掉，避免重组时反复弹窗。 */
     fun consumeArtistPosterPermissionRequest() {
         _artistPosterEmbedState.update { it.copy(permissionIntentSender = null) }
     }
 
-    /** 关掉进度面板：丢掉这一轮的结果，下次打开重新开始。 */
     fun clearArtistPosterStatus() {
         if (_artistPosterEmbedState.value.isRunning) return
         _artistPosterEmbedState.value = ArtistPosterEmbedUiState()
@@ -364,7 +355,6 @@ class ArtistDetailViewModel(
         _artistPosterEmbedState.update { it.copy(message = null) }
     }
 
-    /** 把文案在 ViewModel 里就取好，界面不必再持有 Context 或消息模型。 */
     private fun resolvedMessage(@StringRes resId: Int, vararg args: Any): String =
         application.getString(resId, *args)
 

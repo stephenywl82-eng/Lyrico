@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 data class UpdateState(
     val isChecking: Boolean = false,
     val showUpdateDialog: Boolean = false,

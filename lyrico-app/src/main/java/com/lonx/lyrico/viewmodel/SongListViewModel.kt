@@ -51,7 +51,6 @@ data class SongListUiState(
     val isSearching: Boolean = false
 )
 
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class SongListViewModel(
     private val songLibraryRepository: SongLibraryRepository,
@@ -66,10 +65,8 @@ class SongListViewModel(
     private val folderDao = database.folderDao()
     private var batchMatchJob: Job? = null
 
-
     val sortInfo: StateFlow<SortInfo> = settingsRepository.sortInfo
         .stateIn(viewModelScope, SharingStarted.Eagerly, SortInfo())
-
 
     val hasFolders: StateFlow<Boolean> = folderDao.getAllFolders()
         .map { it.isNotEmpty() }

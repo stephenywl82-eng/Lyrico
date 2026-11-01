@@ -1,8 +1,6 @@
 package com.lonx.lyrico.screens.library
 
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.data.model.UiEngine
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +15,13 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -53,7 +50,6 @@ import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
 import com.lonx.lyrico.viewmodel.AlbumActionsViewModel
 import com.lonx.lyrico.viewmodel.AlbumLibraryViewModel
 import com.lonx.lyrico.viewmodel.SortOrder
-import com.moriafly.salt.ui.SaltTheme
 import com.ramcosta.composedestinations.generated.destinations.AlbumDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
@@ -62,20 +58,15 @@ import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -95,8 +86,7 @@ fun AlbumsPage(
     val albumGridColumns by viewModel.gridColumns.collectAsStateWithLifecycle()
     val albumTextStyle = rememberAlbumGridTextStyle(albumGridColumns)
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val isSaltEngine = LocalUiEngine.current == UiEngine.SALT
-    val topBarBackdrop = rememberBarBlurBackdrop(enabled = LocalUiEngine.current == UiEngine.MIUIX && com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
+    val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
     val gridState = rememberLazyGridState()
     val alphabetScrollController = rememberAlphabetSideBarScrollController(gridState)
     val context = LocalContext.current
@@ -141,7 +131,7 @@ fun AlbumsPage(
             modifier = Modifier
                 .fillMaxSize()
                 // Salt 顶栏用 BasicScreen 自带的 backdrop，这里不再叠第二层模糊
-                .then(if (isSaltEngine) Modifier else Modifier.blurSource(topBarBackdrop))
+                .then(Modifier.blurSource(topBarBackdrop))
         ) {
             if (albums.isEmpty()) {
                 Box(
@@ -227,16 +217,12 @@ fun AlbumsPage(
                         settings = ScrollbarSettings.Default.copy(
                             alwaysShowScrollbar = true,
                             selectionMode = ScrollbarSelectionMode.Full,
-                            thumbUnselectedColor = if (isSaltEngine) {
-                                SaltTheme.colors.subText
-                            } else {
+                            thumbUnselectedColor = 
                                 MiuixTheme.colorScheme.onSurfaceVariantActions
-                            },
-                            thumbSelectedColor = if (isSaltEngine) {
-                                SaltTheme.colors.subText
-                            } else {
+                            ,
+                            thumbSelectedColor = 
                                 MiuixTheme.colorScheme.onSurfaceVariantActions
-                            },
+                            ,
                         ),
                     )
                 }
@@ -260,25 +246,7 @@ fun AlbumsPage(
         }
 
     }
-    if (LocalUiEngine.current == UiEngine.SALT) SaltLibraryPage(
-        title = stringResource(R.string.album_list_title, albums.size),
-        onSettings = { navigator.navigate(SettingsDestination()) },
-        onSearch = { navigator.navigate(LocalSearchDestination) },
-        menu = listOf(2, 3, 4).map { count ->
-            LibraryMenuAction(stringResource(R.string.album_grid_columns_format, count), albumGridColumns == count) { viewModel.setGridColumns(count) }
-        } + AlbumSortBy.entries.map { sortBy ->
-            val selected = sortInfo.sortBy == sortBy
-            LibraryMenuAction(
-                title = stringResource(sortBy.labelRes),
-                selected = selected,
-                summary = if (selected) stringResource(
-                    if (sortInfo.order == SortOrder.ASC) R.string.sort_ascending else R.string.sort_descending
-                ) else null,
-            ) {
-                viewModel.onSortChange(AlbumSortInfo(sortBy, if (selected && sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC))
-            }
-        }, content = pageContent,
-    ) else Scaffold(
+    Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
@@ -322,7 +290,6 @@ fun AlbumsPage(
             }
         }
     ) { paddingValues -> pageContent(paddingValues) }
-
 
     selectedAlbum?.let { album ->
         AlbumActionBottomSheet(

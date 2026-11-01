@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -17,9 +16,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberOverscrollEffect
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -49,12 +45,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -64,20 +59,10 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.base.PillButton
-import com.lonx.lyrico.ui.components.base.PillButtonDefaults
-import com.lonx.lyrico.ui.components.base.PillButtonSize
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.screens.library.LibrarySelectionState
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.popup.PopupMenuItem
-import com.moriafly.salt.ui.popup.rememberPopupState
+
 import com.lonx.lyrico.data.model.entity.FolderEntity
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.ui.components.bar.SongBatchSelectionActions
@@ -89,9 +74,6 @@ import com.lonx.lyrico.ui.components.song.SongListItemActions
 import com.lonx.lyrico.utils.UriUtils
 import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.lonx.lyrico.viewmodel.SongSelectionViewModel
-import com.lonx.lyrico.viewmodel.SortBy
-import com.lonx.lyrico.viewmodel.SortInfo
-import com.lonx.lyrico.viewmodel.SortOrder
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
@@ -107,17 +89,29 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.window.WindowDialog
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.lonx.lyrico.ui.components.base.PillButton
+import com.lonx.lyrico.ui.components.base.PillButtonDefaults
+import com.lonx.lyrico.ui.components.base.PillButtonSize
+import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
+import com.lonx.lyrico.screens.library.LibrarySelectionState
+import com.lonx.lyrico.viewmodel.SortBy
+import com.lonx.lyrico.viewmodel.SortInfo
+import com.lonx.lyrico.viewmodel.SortOrder
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import top.yukonga.miuix.kmp.window.WindowDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -259,7 +253,7 @@ fun FolderManagerScreen(
         }
     }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val folderTitle = if (currentFolderId == ROOT_FOLDER_ID) {
         stringResource(R.string.folder_manager_title)
     } else {
@@ -277,70 +271,13 @@ fun FolderManagerScreen(
     }
     val allCurrentSongsSelected =
         currentSongs.isNotEmpty() && selectedSongUris.containsAll(currentSongs.map { it.uri })
-    val saltSelectionState = if (salt && isSelectionMode) {
-        LibrarySelectionState(
-            title = stringResource(R.string.selection_mode_selected_count, selectedSongUris.size),
-            allSelected = allCurrentSongsSelected,
-            onClose = { selectionViewModel.exitSelectionMode() },
-            onToggleAll = {
-                if (allCurrentSongsSelected) selectionViewModel.deselectAll()
-                else selectionViewModel.selectAll(currentSongs)
-            },
-        )
-    } else null
-    val sortPopupState = rememberPopupState()
+    val saltSelectionState = null
 
     Box(modifier = Modifier.fillMaxSize()) {
         LibraryDetailPage(
             title = folderTitle,
             onBack = navigateUpAction,
             selection = saltSelectionState,
-            actions = {
-                if (currentFolderId == ROOT_FOLDER_ID) {
-                    SaltIconButton(
-                        icon = LucideIcons.FolderPlus,
-                        label = stringResource(R.string.folder_manager_title),
-                        onClick = { folderPickerLauncher.launch(null) }
-                    )
-                }
-                if (currentFolder != null && pagerState.currentPage == 1 && currentSongs.isNotEmpty()) {
-                    val sortTypes = SortBy.entries.toList()
-                    SaltIconButton(
-                        icon = LucideIcons.Sort,
-                        label = stringResource(R.string.cd_sort),
-                        onClick = { sortPopupState.expend() }
-                    )
-                    com.moriafly.salt.ui.popup.PopupMenu(
-                        expanded = sortPopupState.expend,
-                        onDismissRequest = sortPopupState::dismiss
-                    ) {
-                        sortTypes.forEach { sortType ->
-                            val isSelected = sortInfo.sortBy == sortType
-                            val newOrder = if (isSelected) {
-                                if (sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC
-                            } else {
-                                SortOrder.ASC
-                            }
-                            PopupMenuItem(
-                                text = stringResource(sortType.labelRes),
-                                selected = isSelected,
-                                sub = if (isSelected) {
-                                    stringResource(
-                                        when (sortInfo.order) {
-                                            SortOrder.ASC -> R.string.sort_ascending
-                                            SortOrder.DESC -> R.string.sort_descending
-                                        }
-                                    )
-                                } else null,
-                                onClick = {
-                                    sortPopupState.dismiss()
-                                    viewModel.onSortChange(SortInfo(sortBy = sortType, order = newOrder))
-                                }
-                            )
-                        }
-                    }
-                }
-            },
             miuixTopBar = {
                 AnimatedContent(
                     targetState = isSelectionMode,
@@ -471,19 +408,7 @@ fun FolderManagerScreen(
             }
         ) { paddingValues ->
             selectedFolder?.let { folder ->
-                if (salt) com.lonx.lyrico.ui.components.base.YesNoDialog(
-                    show = showConfirmDialog.value,
-                    title = stringResource(R.string.dialog_remove_folder_title),
-                    summary = folder.path + "\n\n" + stringResource(R.string.dialog_remove_folder_content_tip),
-                    onDismissRequest = { showConfirmDialog.value = false },
-                    onConfirm = {
-                        viewModel.deleteFolder(folder)
-                        selectedFolderId = ROOT_FOLDER_ID
-                        if (folder.id == currentFolderId) {
-                            navigateToFolder(parentFolder?.id ?: ROOT_FOLDER_ID, forward = false)
-                        }
-                    },
-                ) else WindowDialog(
+                WindowDialog(
                     title = stringResource(R.string.dialog_remove_folder_title),
                     show = showConfirmDialog.value,
                     onDismissRequest = { showConfirmDialog.value = false }
@@ -542,8 +467,7 @@ fun FolderManagerScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(if (salt) com.lonx.lyrico.ui.components.scaffoldContentPadding(paddingValues)
-                        else scaffoldTopHorizontalPadding(paddingValues))
+                    .padding(scaffoldTopHorizontalPadding(paddingValues))
             ) {
                 FolderPathHeader(
                     breadcrumbs = currentBreadcrumbs,
@@ -555,9 +479,7 @@ fun FolderManagerScreen(
                 )
 
                 uiState.error?.let { error ->
-                    if (salt) com.moriafly.salt.ui.ItemTip(
-                        stringResource(R.string.folder_scan_failed, error)
-                    ) else Text(
+                    Text(
                         text = stringResource(R.string.folder_scan_failed, error),
                         fontSize = MiuixTheme.textStyles.footnote1.fontSize,
                         color = MiuixTheme.colorScheme.error,
@@ -565,13 +487,7 @@ fun FolderManagerScreen(
                     )
                 }
 
-                if (salt) LibraryDetailTabs(
-                    tabs = listOf(
-                        "${stringResource(R.string.folder_tab_folders)} (${currentChildFolders.size})",
-                        "${stringResource(R.string.folder_tab_songs)} (${currentSongs.size})",
-                    ), selectedIndex = pagerState.currentPage,
-                    onSelected = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
-                ) else Card(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
@@ -1049,7 +965,7 @@ private fun FolderChildrenPage(
             .libraryDetailScroll(topAppBarScrollBehavior)
             .fillMaxHeight(),
         contentPadding = PaddingValues(bottom = 12.dp),
-        overscrollEffect = if (LocalUiEngine.current == UiEngine.SALT) rememberOverscrollEffect() else null
+        overscrollEffect = null
     ) {
         if (folders.isEmpty()) {
             item("empty") {
@@ -1112,7 +1028,7 @@ private fun FolderCurrentSongsPage(
             .fillMaxHeight(),
         state = listState,
         contentPadding = PaddingValues(bottom = 12.dp),
-        overscrollEffect = if (LocalUiEngine.current == UiEngine.SALT) rememberOverscrollEffect() else null
+        overscrollEffect = null
     ) {
         if (songs.isEmpty()) {
             item("empty") {
@@ -1175,31 +1091,7 @@ private fun FolderPathHeader(
     songCount: Int,
     onBreadcrumbClick: (Long) -> Unit
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.RoundedColumn {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp)) {
-                breadcrumbs.forEachIndexed { index, breadcrumb ->
-                    // 面包屑是紧凑的行内链接：Salt 原生 Plain 按钮最小 48dp，会撑高整条面包屑。
-                    PillButton(
-                        text = breadcrumb.label,
-                        style = PillButtonDefaults.style(PillButtonSize.Medium),
-                        colors = PillButtonDefaults.plainColors(),
-                        onClick = { if (index != breadcrumbs.lastIndex) onBreadcrumbClick(breadcrumb.folderId) },
-                    )
-                    if (index != breadcrumbs.lastIndex) com.moriafly.salt.ui.Text(
-                        "›", modifier = Modifier.align(androidx.compose.ui.Alignment.CenterVertically),
-                        color = SaltTheme.colors.subText,
-                    )
-                }
-            }
-            com.moriafly.salt.ui.Text(
-                stringResource(R.string.folder_browser_count_format, folderCount, songCount),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                style = SaltTheme.textStyles.sub, color = SaltTheme.colors.subText,
-            )
-        }
-        return
-    }
+
     Card(
         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
     ) {

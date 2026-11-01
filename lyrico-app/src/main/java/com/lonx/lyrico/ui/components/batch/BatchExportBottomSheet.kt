@@ -18,13 +18,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.BatchTaskType
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.BatchExportUiState
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
@@ -37,7 +34,7 @@ fun BatchExportBottomSheet(
     onDismissFinished: () -> Unit,
     onAbort: () -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val title = when (batchExportUiState.taskType) {
         BatchTaskType.EXPORT_COVER -> stringResource(R.string.action_batch_export_cover)
         else -> stringResource(R.string.action_batch_export_lyrics)
@@ -75,21 +72,7 @@ fun BatchExportBottomSheet(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = if (batchExportUiState.isRunning) {
-                                    stringResource(R.string.batch_export_running)
-                                } else {
-                                    stringResource(
-                                        R.string.batch_replay_gain_total_time,
-                                        batchExportUiState.totalTimeMillis / 1000.0
-                                    )
-                                },
-                                style = SaltTheme.textStyles.sub,
-                                color = SaltTheme.colors.subText,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            ) else Text(
+                            Text(
                                 text = if (batchExportUiState.isRunning) {
                                     stringResource(R.string.batch_export_running)
                                 } else {
@@ -106,12 +89,7 @@ fun BatchExportBottomSheet(
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            if (salt) com.moriafly.salt.ui.Text(
-                                text = "$current / $total",
-                                style = SaltTheme.textStyles.main,
-                                color = SaltTheme.colors.text,
-                                textAlign = TextAlign.End
-                            ) else Text(
+                            Text(
                                 text = "$current / $total",
                                 style = MiuixTheme.textStyles.main,
                                 textAlign = TextAlign.End
@@ -128,32 +106,7 @@ fun BatchExportBottomSheet(
                 SheetStatisticsRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (salt) {
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_success,
-                                batchExportUiState.successCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_skipped,
-                                batchExportUiState.skippedCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                        com.moriafly.salt.ui.Text(
-                            text = stringResource(
-                                R.string.batch_replay_gain_failure,
-                                batchExportUiState.failureCount
-                            ),
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text
-                        )
-                    } else {
+                    
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_success,
@@ -175,7 +128,7 @@ fun BatchExportBottomSheet(
                             ),
                             style = MiuixTheme.textStyles.main
                         )
-                    }
+                    
                 }
             }
         },

@@ -9,6 +9,5 @@ import com.lonx.lyrico.ui.theme.KeyColors
  */
 data class ThemeConfig(
     val themeMode: ThemeMode = SettingsDefaults.THEME_MODE,
-    val monetEnable: Boolean = SettingsDefaults.MONET_ENABLE,
     val keyColor: KeyColor = KeyColors.first()
 )

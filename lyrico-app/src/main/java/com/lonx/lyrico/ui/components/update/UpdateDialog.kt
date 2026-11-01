@@ -1,9 +1,6 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.update
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -41,17 +38,7 @@ fun UpdateDialog(
         ),
         confirmText = stringResource(R.string.dialog_action_go_update),
         content = {
-            if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-                com.moriafly.salt.ui.Card {
-                    MarkdownText(
-                        modifier = Modifier.padding(12.dp).heightIn(max = 300.dp).verticalScroll(scrollState),
-                        markdown = releaseNote,
-                        style = com.moriafly.salt.ui.SaltTheme.textStyles.main.copy(
-                            color = com.moriafly.salt.ui.SaltTheme.colors.text),
-                        linkColor = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-                    )
-                }
-            } else Card(
+            Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
                     color = MiuixTheme.colorScheme.secondaryContainer

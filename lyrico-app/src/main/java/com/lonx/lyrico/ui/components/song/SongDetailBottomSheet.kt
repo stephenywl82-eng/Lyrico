@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,23 +26,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.entity.getUri
 import com.lonx.lyrico.ui.components.CoverRequest
-import com.lonx.lyrico.ui.components.salt.SaltBottomSheet
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.ui.components.miuix.MiuixBottomSheet
-import com.moriafly.salt.ui.ItemValue
-import com.moriafly.salt.ui.RoundedColumn
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.innerPadding
+import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
+
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -67,7 +58,7 @@ fun SongDetailBottomSheet(
     val dateFormat = remember {
         SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     }
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val copiedMessage = stringResource(R.string.msg_copied_to_clipboard)
     val copyToClipboard: (String) -> Unit = { text ->
         coroutineScope.launch {
@@ -119,58 +110,7 @@ fun SongDetailBottomSheet(
     val title = song.title.takeIf { !it.isNullOrBlank() } ?: song.fileName
     val artist = song.artist.takeIf { !it.isNullOrBlank() } ?: stringResource(R.string.unknown_artist)
 
-    if (salt) {
-        SaltBottomSheet(
-            show = show,
-            onDismissRequest = onDismissRequest,
-            onDismissFinished = {},
-            scrollContent = true,
-        ) {
-            RoundedColumn {
-                Row(
-                    modifier = Modifier.fillMaxWidth().innerPadding(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    AsyncImage(
-                        model = CoverRequest(song.getUri, song.fileLastModified),
-                        contentDescription = stringResource(R.string.cd_cover),
-                        modifier = Modifier
-                            .size(104.dp)
-                            .clip(RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Crop,
-                        placeholder = painterResource(R.drawable.ic_album_24dp),
-                        error = painterResource(R.drawable.ic_album_24dp)
-                    )
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        com.moriafly.salt.ui.Text(
-                            text = title,
-                            style = SaltTheme.textStyles.main,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        com.moriafly.salt.ui.Text(
-                            text = artist,
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.highlight,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-            }
-            RoundedColumn {
-                rows.forEach { (label, value) ->
-                    SaltSongDetailItem(label = label, value = value, onCopy = copyToClipboard)
-                }
-            }
-        }
-        return
-    }
-
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = show,
         enableNestedScroll = false,
         onDismissRequest = {
@@ -217,7 +157,6 @@ fun SongDetailBottomSheet(
                 }
             }
 
-
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
@@ -228,34 +167,6 @@ fun SongDetailBottomSheet(
                     SongDetailItem(label = label, value = value, onCopy = copyToClipboard)
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SaltSongDetailItem(
-    label: String,
-    value: String?,
-    onCopy: ((String) -> Unit)? = null
-) {
-    if (value.isNullOrBlank()) return
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(end = SaltTheme.dimens.padding),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(Modifier.weight(1f)) {
-            ItemValue(text = label, sub = value)
-        }
-        if (onCopy != null) {
-            SaltIconButton(
-                icon = LucideIcons.Copy,
-                label = stringResource(R.string.msg_copied_to_clipboard),
-                onClick = { onCopy(value) },
-                size = 32.dp,
-                iconSize = 16.dp
-            )
         }
     }
 }

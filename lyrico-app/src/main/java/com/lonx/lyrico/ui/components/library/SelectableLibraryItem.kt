@@ -52,9 +52,9 @@ fun SelectableLibraryItem(
     val displayedSwipeOffsetX = if (isSwipeDragging) swipeOffsetX else animatedSwipeOffsetX
     val revealWidth = with(density) { abs(displayedSwipeOffsetX).toDp() }
 
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT
-    val selectionColor = if (salt) com.moriafly.salt.ui.SaltTheme.colors.highlight else MiuixTheme.colorScheme.primary
-    val surfaceColor = if (salt) com.moriafly.salt.ui.SaltTheme.colors.background else MiuixTheme.colorScheme.surface
+    val salt = false
+    val selectionColor = MiuixTheme.colorScheme.primary
+    val surfaceColor = MiuixTheme.colorScheme.surface
     val backgroundColor =
         if (isSelected) {
             selectionColor.copy(alpha = 0.1f)
@@ -93,27 +93,7 @@ fun SelectableLibraryItem(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        if (salt) {
-                            com.moriafly.salt.ui.Text(
-                                text = swipeSelectionLabel,
-                                color = selectionColor,
-                                style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Clip
-                            )
-
-                            swipeSelectionSecondaryLabel?.let { secondaryLabel ->
-                                com.moriafly.salt.ui.Text(
-                                    text = secondaryLabel,
-                                    color = selectionColor,
-                                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                                    fontWeight = FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Clip
-                                )
-                            }
-                        } else {
+                        
                             Text(
                                 text = swipeSelectionLabel,
                                 color = selectionColor,
@@ -133,7 +113,7 @@ fun SelectableLibraryItem(
                                     overflow = TextOverflow.Clip
                                 )
                             }
-                        }
+                        
                     }
                 }
             }

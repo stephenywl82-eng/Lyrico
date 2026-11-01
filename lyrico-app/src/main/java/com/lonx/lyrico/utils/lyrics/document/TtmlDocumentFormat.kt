@@ -689,7 +689,6 @@ object TtmlWriter : LyricsFormatWriter {
         builder.append("  </head>\n")
     }
 
-    /** sidecar 音译文本：词级（带 begin/end 的词）输出 <span>，否则整行纯文本 */
     private fun appendSidecarRomanText(builder: StringBuilder, line: LyricsDocumentLine) {
         val timedWords = line.words.filter { it.startMs != null }
         if (timedWords.isNotEmpty()) {
@@ -969,7 +968,6 @@ private fun Element.attributesAsExtensions(): ExtensionMap {
     return ExtensionMap(attributes = attributes)
 }
 
-/** 向上找最近的 <div> 祖先并读取其 itunes:songPart 属性（嵌套 div 取最近一层；AMLL 规范 7.1 段落标注） */
 private fun Element.ancestorDivSongPart(): String? {
     var node: Node? = parentNode
     while (node != null) {
@@ -1006,7 +1004,6 @@ private fun Element.firstPInAncestorDiv(): Pair<Long?, Long?>? {
     return null
 }
 
-/** 行扩展追加/覆盖 itunes:songPart 属性（值为 null 时原样返回，不修改） */
 private fun ExtensionMap.withSongPart(value: String?): ExtensionMap {
     if (value == null) return this
     return copy(
@@ -1038,14 +1035,12 @@ private fun ExtensionMap.withDivTiming(divTiming: Pair<Long?, Long?>?): Extensio
     return copy(attributes = merged)
 }
 
-/** 读取行扩展中的 itunes:songPart 值（TtmlWriter 分组重建 div 用）；有 <p> 上遗留的同名属性时同样取出 */
 private fun LyricsDocumentLine.songPartExtensionValue(): String? {
     return extensions.attributes.entries
         .firstOrNull { it.key.localName == SONG_PART || it.key.localName == SONG_PART_LEGACY }
         ?.value?.takeIf { it.isNotBlank() }
 }
 
-/** 读取行扩展中的段落时间窗值（divBegin/divEnd 毫秒字符串，TtmlWriter 重建 <div> 时消费）；无值返回 null */
 private fun LyricsDocumentLine.divTimingExtensionValue(localName: String): Long? {
     return extensions.attributes.entries
         .firstOrNull { it.key.localName == localName }
@@ -1184,7 +1179,7 @@ private fun String?.isRomanizationRole(): Boolean {
 }
 
 private fun needsRomanizationSeparator(previous: String, current: String): Boolean {
-    return previous.lastOrNull()?.isWhitespace() != true && current.firstOrNull()?.isWhitespace() != true
+    return previous.lastOrNull()?.isWhitespace() != current.firstOrNull()?.isWhitespace() != true
 }
 
 private fun Element.directTextContent(): String {

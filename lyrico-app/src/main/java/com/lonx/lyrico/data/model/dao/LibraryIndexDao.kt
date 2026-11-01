@@ -312,4 +312,3 @@ interface LibraryIndexDao {
     """)
     fun searchAlbums(query: String): Flow<List<AlbumEntity>>
 }
-

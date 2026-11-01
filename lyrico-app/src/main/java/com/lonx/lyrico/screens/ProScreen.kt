@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -8,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -20,16 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
@@ -39,10 +34,7 @@ import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.library.*
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.theme.isDarkTheme
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.screen.ScreenCard
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -56,22 +48,14 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 internal fun AboutProEntry(onClick: () -> Unit) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.Item(
-            text = "Lyrico Pro",
-            sub = stringResource(R.string.pro_about_summary),
-            iconPainter = rememberVectorPainter(LucideIcons.Crown),
-            iconColor = PreferenceIconTone.Gold.color(),
-            onClick = onClick,
-        )
-    } else {
+    
         ArrowPreference(
             title = "Lyrico Pro",
             summary = stringResource(R.string.pro_about_summary),
             startAction = { PreferenceIcon(LucideIcons.Crown, PreferenceIconTone.Gold) },
             onClick = onClick,
         )
-    }
+    
 }
 
 @Composable
@@ -83,7 +67,7 @@ fun ProScreen(navigator: DestinationsNavigator) {
     val activated by settings.proActivated.collectAsStateWithLifecycle(initialValue = false)
     var selectedMethod by rememberSaveable { mutableIntStateOf(0) }
     var showQrCode by rememberSaveable { mutableStateOf(false) }
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val behavior = MiuixScrollBehavior()
     val backdrop = rememberBarBlurBackdrop()
     LibraryDetailPage(
@@ -107,11 +91,11 @@ fun ProScreen(navigator: DestinationsNavigator) {
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().then(
-                if (salt) Modifier else Modifier.blurSource(backdrop).libraryDetailScroll(behavior)
+                Modifier.blurSource(backdrop).libraryDetailScroll(behavior)
             ),
             contentPadding = scaffoldContentPadding(padding, bottomExtra = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(if (salt) 0.dp else 16.dp),
-            overscrollEffect = if (salt) rememberOverscrollEffect() else null,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            overscrollEffect = null,
         ) {
             if (activated) {
                 item(key = "pro_identity") { ProIdentity() }
@@ -122,40 +106,22 @@ fun ProScreen(navigator: DestinationsNavigator) {
                                 selectedMethod = index
                                 showQrCode = true
                             }
-                            if (salt) {
-                                com.moriafly.salt.ui.Item(
-                                    text = stringResource(method.titleRes),
-                                    iconPainter = rememberVectorPainter(method.icon),
-                                    iconColor = method.iconTone.color(),
-                                    onClick = onClick,
-                                )
-                            } else {
+                            
                                 ArrowPreference(
                                     title = stringResource(method.titleRes),
                                     startAction = { PreferenceIcon(method.icon, method.iconTone) },
                                     onClick = onClick,
                                 )
-                            }
+                            
                         }
                     }
-                    if (salt) ScreenCard(header = stringResource(R.string.sponsor_title), content = methods)
-                    else Column {
+                    Column {
                         SmallTitle(stringResource(R.string.sponsor_title))
                         Card(Modifier.padding(horizontal = 12.dp), content = methods)
                     }
                 }
                 item(key = "pro_settings") {
-                    if (salt) {
-                        ScreenCard(header = stringResource(R.string.pro_settings)) {
-                            com.moriafly.salt.ui.Item(
-                                text = stringResource(R.string.pro_disable),
-                                iconPainter = rememberVectorPainter(LucideIcons.Power),
-                                iconColor = PreferenceIconTone.Danger.color(),
-                                arrowType = com.moriafly.salt.ui.ItemArrowType.None,
-                                onClick = onDisable,
-                            )
-                        }
-                    } else {
+                    
                         Column {
                             SmallTitle(stringResource(R.string.pro_settings))
                             Card(Modifier.padding(horizontal = 12.dp)) {
@@ -166,7 +132,7 @@ fun ProScreen(navigator: DestinationsNavigator) {
                                 )
                             }
                         }
-                    }
+                    
                 }
             }
         }
@@ -185,23 +151,21 @@ fun ProScreen(navigator: DestinationsNavigator) {
 
 @Composable
 private fun ProIdentity() {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        ScreenCard(color = Color.Unspecified, border = null) { ProIdentityContent() }
-    } else {
+    
         Card(Modifier.padding(horizontal = 12.dp)) { ProIdentityContent() }
-    }
+    
 }
 
 @Composable
 private fun ProIdentityContent() {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val dark = isDarkTheme
     val goldText = if (dark) Color(0xFFF7E5B9) else Color(0xFF4D3917)
     val goldSecondary = if (dark) Color(0xFFD9C69E) else Color(0xFF705C38)
     val goldStops = if (dark) listOf(Color(0xFF493E2B), Color(0xFF302B23), Color(0xFF3D3528))
         else listOf(Color(0xFFE4C689), Color(0xFFF5E5BF), Color(0xFFEDD7A7))
-    val titleStyle = if (salt) SaltTheme.textStyles.largeTitle else MiuixTheme.textStyles.title3
-    val bodyStyle = if (salt) SaltTheme.textStyles.main else MiuixTheme.textStyles.body1
+    val titleStyle = MiuixTheme.textStyles.title3
+    val bodyStyle = MiuixTheme.textStyles.body1
     Box(
         Modifier.fillMaxWidth().background(Brush.linearGradient(goldStops)),
     ) {

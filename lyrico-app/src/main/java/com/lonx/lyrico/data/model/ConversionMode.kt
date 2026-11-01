@@ -3,7 +3,6 @@ package com.lonx.lyrico.data.model
 import androidx.annotation.StringRes
 import com.lonx.lyrico.R
 
-
 enum class ConversionMode(
     @field:StringRes val labelRes: Int
 ) {

@@ -2,9 +2,7 @@ package com.lonx.lyrico.utils
 
 import com.lonx.lyrico.data.model.CharacterMappingRule
 
-/** 按映射规则清理文件名中的非法字符。 */
 object FileNameSanitizer {
-
 
     /**
      * 按 [rules]（优先级从高到低）清理文件名。

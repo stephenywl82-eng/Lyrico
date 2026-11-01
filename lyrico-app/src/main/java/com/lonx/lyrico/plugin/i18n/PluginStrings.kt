@@ -6,7 +6,6 @@ import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.Locale
 
-/** Deliberately small, portable subset of Android's positional format syntax. */
 object PluginStringFormat {
     private val token = Regex("%(?:([1-9][0-9]*)\\$)?([sd%])")
     fun hasArguments(text: String): Boolean = Regex("%(?:[1-9][0-9]*\\$)?[sd]").containsMatchIn(text)

@@ -21,7 +21,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.launch
 
-
 sealed interface UiError {
     data object LoadFailed : UiError
     data class Message(val text: String) : UiError

@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.overscroll
 import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.InputTransformation
@@ -25,10 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,9 +43,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
@@ -56,21 +51,12 @@ import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
 import com.lonx.lyrico.data.model.plugin.PluginConfigField
 import com.lonx.lyrico.data.model.plugin.PluginConfigFieldType
 import com.lonx.lyrico.data.model.plugin.PluginSourceType
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.utils.isSatisfied
 import com.lonx.lyrico.viewmodel.SearchSourceConfigViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.moriafly.salt.ui.ItemDropdown
-import com.moriafly.salt.ui.ItemOuterTip
-import com.moriafly.salt.ui.ItemOuterTitle
-import com.moriafly.salt.ui.ItemSwitcher
-import com.moriafly.salt.ui.ItemValue
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.innerPadding
-import com.moriafly.salt.ui.popup.PopupMenuItem
-import com.moriafly.salt.ui.screen.ScreenCard
+
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.koin.androidx.compose.koinViewModel
 import top.yukonga.miuix.kmp.basic.Card
@@ -89,7 +75,7 @@ import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-
+import androidx.compose.foundation.overscroll
 @Composable
 @Destination<RootGraph>(route = "plugin_config")
 fun PluginConfigScreen(
@@ -101,8 +87,8 @@ fun PluginConfigScreen(
     val context = LocalContext.current
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val salt = LocalUiEngine.current == UiEngine.SALT
-    val barBackdrop = rememberBarBlurBackdrop(enabled = !salt && rememberBarBlurEnabled())
+    val salt = false
+    val barBackdrop = rememberBarBlurBackdrop(enabled = rememberBarBlurEnabled())
 
     val requiredMessage = stringResource(R.string.source_config_required_error)
 
@@ -131,10 +117,6 @@ fun PluginConfigScreen(
     LibraryDetailPage(
         title = title,
         onBack = { navigator.navigateUp() },
-        actions = {
-            SaltIconButton(LucideIcons.Check, stringResource(R.string.source_config_save),
-                onClick = { viewModel.save(requiredMessage) })
-        },
         miuixTopBar = {
             BlurredTopBar(barBackdrop) {
                 SmallTopAppBar(
@@ -169,28 +151,19 @@ fun PluginConfigScreen(
         // Salt 的 verticalScroll 默认没有过度滚动，短内容时拖不动；挂上 Cupertino 效果对齐列表页。
         val overscrollEffect = rememberOverscrollEffect()
         Column(
-            modifier = (if (salt) Modifier else Modifier
+            modifier = (Modifier
                 .scrollEndHaptic()
                 .overScrollVertical()
                 .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
-                .then(if (salt && overscrollEffect != null) Modifier.overscroll(overscrollEffect) else Modifier)
+                .then(Modifier)
                 .fillMaxSize()
                 .blurSource(barBackdrop)
-                .then(if (salt) Modifier else Modifier.imePadding())
+                .then(Modifier.imePadding())
                 .verticalScroll(rememberScrollState())
                 .padding(com.lonx.lyrico.ui.components.scaffoldContentPadding(paddingValues, bottomExtra = 12.dp))
         ) {
             if (uiState.errorMessage != null) {
-                if (salt) com.moriafly.salt.ui.Text(
-                    text = stringResource(R.string.source_config_invalid_source),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    textAlign = TextAlign.Center,
-                    style = SaltTheme.textStyles.main,
-                    color = SaltTheme.colors.subText
-                )
-                else Text(
+                Text(
                     text = stringResource(R.string.source_config_invalid_source),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -213,11 +186,6 @@ fun PluginConfigScreen(
                 uiState.minHostApiVersion
             )
 
-            if (salt) {
-                ScreenCard {
-                    ItemValue(text = typeText, sub = apiText)
-                }
-            } else {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -246,8 +214,7 @@ fun PluginConfigScreen(
                         )
                     }
                 }
-            }
-
+            
             if (!hasConfigContent) {
                 IllustratedEmptyState(
                     kind = EmptyStateKind.Plugins,
@@ -259,8 +226,7 @@ fun PluginConfigScreen(
 
             if (!uiState.pluginEnabled) {
                 val hint = stringResource(R.string.source_config_plugin_disabled_hint)
-                if (salt) ItemOuterTip(text = hint)
-                else Card(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
@@ -299,7 +265,7 @@ private fun PluginConfigFormItems(
 ) {
     if (fields.isEmpty()) return
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val grouped = fields.groupBy { field ->
         field.group.ifBlank { DEFAULT_CONFIG_GROUP }
     }
@@ -319,28 +285,6 @@ private fun PluginConfigFormItems(
             groupFields.first().groupTitle ?: group
         }
 
-        if (salt) {
-            ItemOuterTitle(text = groupTitle)
-            // ScreenCard 自带外边距，不再叠加，否则分组标题离上一组内容的距离会翻倍。
-            ScreenCard {
-                Column(modifier = Modifier.animateContentSize()) {
-                    groupFields.forEach { field ->
-                        val visible = field.dependency.isSatisfied(values)
-
-                        AnimatedVisibility(visible = visible) {
-                            PluginConfigFormItem(
-                                field = field,
-                                value = values[field.key].orEmpty(),
-                                error = validationErrors[field.key],
-                                onValueChange = { value ->
-                                    onValueChange(field.key, value)
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        } else {
             SmallTitle(text = groupTitle)
 
             Card(
@@ -367,7 +311,7 @@ private fun PluginConfigFormItems(
                     }
                 }
             }
-        }
+        
     }
 }
 
@@ -378,17 +322,10 @@ private fun PluginConfigFormItem(
     error: String?,
     onValueChange: (String) -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     when (field.type) {
         PluginConfigFieldType.SWITCH -> {
-            if (salt) {
-                ItemSwitcher(
-                    state = value.toBooleanStrictOrNull() ?: false,
-                    onChange = { checked -> onValueChange(checked.toString()) },
-                    text = field.title,
-                    sub = error ?: field.summary
-                )
-            } else SwitchPreference(
+            SwitchPreference(
                 title = field.title,
                 summary = error ?: field.summary,
                 checked = value.toBooleanStrictOrNull() ?: false,
@@ -402,26 +339,7 @@ private fun PluginConfigFormItem(
             val selectedIndex = field.options
                 .indexOfFirst { it.value == value }
                 .coerceAtLeast(0)
-            if (salt) {
-                ItemDropdown(
-                    text = field.title,
-                    sub = error ?: field.summary,
-                    value = field.options.getOrNull(selectedIndex)?.label.orEmpty(),
-                    enabled = field.options.isNotEmpty()
-                ) {
-                    field.options.forEachIndexed { index, option ->
-                        PopupMenuItem(
-                            text = option.label,
-                            sub = option.summary.takeIf { it.isNotBlank() },
-                            selected = index == selectedIndex,
-                            onClick = {
-                                state.dismiss()
-                                onValueChange(option.value)
-                            }
-                        )
-                    }
-                }
-            } else {
+            
                 val entry = remember(field.options, selectedIndex, onValueChange) {
                     DropdownEntry(
                         items = field.options.mapIndexed { index, option ->
@@ -444,7 +362,7 @@ private fun PluginConfigFormItem(
                     enabled = field.options.isNotEmpty(),
                     collapseOnSelection = true
                 )
-            }
+            
         }
 
         PluginConfigFieldType.TEXT,
@@ -472,31 +390,6 @@ private fun PluginConfigFormItem(
                 }
             } else null
 
-            if (salt) {
-                SaltTextInput(
-                    state = inputState,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    backgroundColor = com.moriafly.salt.ui.SaltTheme.colors.background,
-                    label = field.title,
-                    summary = field.summary,
-                    error = error,
-                    keyboardOptions = keyboardOptions,
-                    lineLimits = lineLimits,
-                    secure = isPassword,
-                    passwordVisible = passwordVisible,
-                    inputTransformation = numberInputTransformation,
-                    actionContent = if (isPassword) {
-                        {
-                            SaltIconButton(
-                                icon = if (passwordVisible) LucideIcons.EyeOff else LucideIcons.Eye,
-                                label = stringResource(if (passwordVisible) R.string.password_hide else R.string.password_show),
-                                onClick = { passwordVisible = !passwordVisible },
-                                size = 32.dp, iconSize = 18.dp,
-                            )
-                        }
-                    } else null,
-                )
-            } else {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -558,7 +451,7 @@ private fun PluginConfigFormItem(
                         )
                     }
                 }
-            }
+            
         }
 
         PluginConfigFieldType.MARKDOWN -> {
@@ -568,32 +461,18 @@ private fun PluginConfigFormItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (salt) Modifier.innerPadding()
-                            else Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                         ),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     field.title.takeIf { it.isNotBlank() }?.let { markdownTitle ->
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = markdownTitle,
-                            style = SaltTheme.textStyles.main,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        else Text(
+                        Text(
                             text = markdownTitle,
                             style = MiuixTheme.textStyles.body2,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
-                    if (salt) MarkdownText(
-                        modifier = Modifier.fillMaxWidth(),
-                        markdown = markdown,
-                        linkColor = SaltTheme.colors.highlight,
-                        style = SaltTheme.textStyles.main.copy(
-                            color = SaltTheme.colors.text
-                        )
-                    )
-                    else MarkdownText(
+                    MarkdownText(
                         modifier = Modifier.fillMaxWidth(),
                         markdown = markdown,
                         linkColor = MiuixTheme.colorScheme.primary,
@@ -606,7 +485,6 @@ private fun PluginConfigFormItem(
         }
     }
 }
-
 
 private const val DEFAULT_CONFIG_GROUP = "__basic__"
 

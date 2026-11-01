@@ -1,7 +1,6 @@
 package com.lonx.lyrico.worker.processor
 
 import com.lonx.audiotag.model.AudioTagData
-import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig

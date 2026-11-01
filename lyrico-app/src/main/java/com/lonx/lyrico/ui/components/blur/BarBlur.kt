@@ -3,8 +3,8 @@ package com.lonx.lyrico.ui.components.blur
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,17 +26,14 @@ internal val LocalBarBlurEnabled = staticCompositionLocalOf<Boolean?> { null }
 private const val BarBlurRadius = 32f
 private const val BarSurfaceAlpha = 0.68f
 
-/** Standard bars follow the application preference; floating effects opt in separately. */
 @Composable
 internal fun rememberBarBlurBackdrop(
     enabled: Boolean = rememberBarBlurEnabled(),
 ): LayerBackdrop? = rememberBlurBackdrop(enableBlur = enabled)
 
-/** Apply to the scrolling content, before content insets, never to the bar itself. */
 internal fun Modifier.blurSource(backdrop: LayerBackdrop?): Modifier =
     if (backdrop != null) layerBackdrop(backdrop) else this
 
-/** Owns the surface and safe-area padding. Child app bars must be transparent and omit insets. */
 @Composable
 internal fun BlurredTopBar(
     backdrop: LayerBackdrop?,

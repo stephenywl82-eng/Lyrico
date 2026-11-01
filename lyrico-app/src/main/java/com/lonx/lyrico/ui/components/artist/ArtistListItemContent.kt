@@ -1,6 +1,5 @@
 package com.lonx.lyrico.ui.components.artist
 
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +53,6 @@ fun ArtistListItemContent(
             candidates = coverCandidates,
             artistName = artist.name
         )
-
 
         Column(
             modifier = Modifier.weight(1f),

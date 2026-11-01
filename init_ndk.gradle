@@ -1,0 +1,5 @@
+// NOTE: AGP 9.2.1 no longer exposes `android.ndkDirectory` as a settable
+// property, so NDK is now wired via the ANDROID_NDK_HOME env var
+// (D:/Android/Sdk/ndk/29.0.14206865, a complete install) passed on the
+// build command line. This file is kept only as documentation.
+

@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.library
 
@@ -25,13 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -65,13 +60,6 @@ fun IllustratedEmptyState(
             if (illustration != null) illustration() else EmptyStateAnimation(kind, compact)
             Spacer(Modifier.height(if (compact) 12.dp else 24.dp))
 
-            if (LocalUiEngine.current == UiEngine.SALT) {
-                com.moriafly.salt.ui.Text(title, textAlign = TextAlign.Center)
-                if (!summary.isNullOrBlank()) com.moriafly.salt.ui.Text(
-                    summary, color = SaltTheme.colors.subText,
-                    style = SaltTheme.textStyles.sub,
-                    modifier = Modifier.padding(top = 8.dp), textAlign = TextAlign.Center)
-            } else {
                 Text(
                     text = title,
                     style = MiuixTheme.textStyles.title4,
@@ -88,10 +76,8 @@ fun IllustratedEmptyState(
                     )
                 }
 
-            }
-
-            val salt = LocalUiEngine.current == UiEngine.SALT
-            val actionColor = if (salt) SaltTheme.colors.highlight else MiuixTheme.colorScheme.primary
+            val salt = false
+            val actionColor = MiuixTheme.colorScheme.primary
             if (!actionText.isNullOrBlank()) {
                 Spacer(Modifier.height(if (compact) 10.dp else 16.dp))
                 Row(
@@ -106,32 +92,16 @@ fun IllustratedEmptyState(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                 ) {
-                    if (salt) {
-                        com.moriafly.salt.ui.Text(
-                            text = actionText,
-                            style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                            color = actionColor,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    } else {
+                    
                         Text(
                             text = actionText,
                             style = MiuixTheme.textStyles.body2,
                             color = actionColor,
                             fontWeight = FontWeight.Medium,
                         )
-                    }
+                    
                     // Salt 原生 Icon 只接受 Painter，用矢量画笔保持同一图标与尺寸。
-                    if (salt) {
-                        com.moriafly.salt.ui.Icon(
-                            painter = rememberVectorPainter(icon),
-                            contentDescription = null,
-                            tint = actionColor,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .padding(start = 2.dp)
-                        )
-                    } else {
+                    
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
@@ -140,7 +110,7 @@ fun IllustratedEmptyState(
                                 .size(16.dp)
                                 .padding(start = 2.dp)
                         )
-                    }
+                    
                 }
             }
         }

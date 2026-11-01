@@ -4,7 +4,6 @@ import android.net.Uri
 import com.lonx.audiotag.model.AudioPicture
 import com.lonx.audiotag.model.AudioPictureType
 import com.lonx.audiotag.model.AudioTagData
-import com.lonx.audiotag.model.CustomTagField
 
 object AudioTagMutationFactory {
     /**

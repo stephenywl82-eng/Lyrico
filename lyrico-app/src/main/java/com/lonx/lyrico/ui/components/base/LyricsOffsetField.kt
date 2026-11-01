@@ -1,10 +1,4 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
-
 package com.lonx.lyrico.ui.components.base
-
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.spring
@@ -27,15 +21,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,67 +40,29 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.ButtonAppearance
-import com.moriafly.salt.ui.ControlSize
-import com.moriafly.salt.ui.SaltTheme
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.lonx.lyrico.ui.components.sdw.SdwConfirmDialog
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
+import com.lonx.lyrico.ui.theme.sdw.SDWShapes
 
-/** 歌词偏移单次调整步长（毫秒）。 */
 const val LYRICS_OFFSET_STEP_MS: Long = 100L
 
-/** 歌词偏移允许的下限（毫秒）。 */
 const val LYRICS_OFFSET_MIN_MS: Long = -10_000L
 
-/** 歌词偏移允许的上限（毫秒）。 */
 const val LYRICS_OFFSET_MAX_MS: Long = 10_000L
 
-/** 步进器高度。 */
 private val STEPPER_HEIGHT = 40.dp
 
-/** 步进器左右按钮宽度。 */
 private val STEPPER_BUTTON_WIDTH = 74.dp
 
-/** 中间数值胶囊宽度：固定宽度，避免位数变化导致整个控件抖动。 */
 private val STEPPER_VALUE_WIDTH = 86.dp
 
 /**
- * 禁用态底色的不透明度（相对主题主色）。
- *
- * Miuix 自带的禁用色不可用：浅色主题 `OnSecondaryContainer`(#A9A9A9) 配 `SecondaryContainer`(#F0F0F0)
- * 只有 2.06:1，启用态就已经发灰；主题的 `DisabledPrimary`(#C2D9FF) 与 `DisabledOnPrimary`(#F3F8FF)
- * 更是只有 1.34:1。因此禁用态只把主色压到 [DISABLED_FILL_ALPHA] 不透明度，文字保持实心 `onPrimary`。
- */
-private const val DISABLED_FILL_ALPHA = 0.75f
-
-/**
- * 歌词偏移调整控件。
- *
- * 采用「步进器 + 数值锚点」布局，而不是多个等重按钮平铺：
- * - 第一行是一个整体分段步进器：`−100ms` | 大号偏移值 | `+100ms`，两侧按钮触碰区域独立、视觉同属一个控件；
- * - 第二行是两个弱化的文字按钮：重置、手动输入，不参与主视觉竞争。
- *
- * 偏移值本身也可点击，直接打开手动输入弹窗。
- *
- * @param offset 当前偏移值（毫秒），正数表示歌词整体延后。
- * @param onOffsetChange 偏移值变化回调，传入的是调整后的绝对值。
- * @param modifier 外层修饰符。
- * @param minOffset 允许的最小偏移值。
- * @param maxOffset 允许的最大偏移值。
- * @param step 单次增减步长（毫秒）。
- * @param enabled 是否允许交互。
- * @param animated 数值变化时是否播放滚动动画。
+ * 歌词偏移调整控件。[B] 统一到 SDW：原 Salt / MIUIX 两套步进器合并为单一 Material3 实现，
+ * 取色与形状全部走 MaterialTheme / SDW 契约。
  */
 @Composable
 fun LyricsOffsetField(
@@ -133,75 +88,28 @@ fun LyricsOffsetField(
         onOffsetChange(next)
     }
 
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                com.moriafly.salt.ui.Button(
-                    text = "−${step}ms", onClick = { stepBy(-step) },
-                    enabled = canDecrease, modifier = Modifier.weight(1f),
-                    size = ControlSize.Small, appearance = ButtonAppearance.Subtle,
-                )
-                com.moriafly.salt.ui.Button(
-                    onClick = { showInputDialog = true }, enabled = enabled,
-                    modifier = Modifier.weight(1.2f), size = ControlSize.Small,
-                    appearance = ButtonAppearance.Plain,
-                ) {
-                    AnimatedContent(
-                        targetState = safeOffset,
-                        contentAlignment = Alignment.Center,
-                        transitionSpec = {
-                            val forward = targetState > initialState
-                            if (animated) ((slideInVertically { if (forward) it else -it } + fadeIn()) togetherWith
-                                (slideOutVertically { if (forward) -it else it } + fadeOut())).using(null)
-                            else (fadeIn() togetherWith fadeOut()).using(null)
-                        }, label = "saltLyricsOffsetValue",
-                    ) { value ->
-                        com.moriafly.salt.ui.Text(formatLyricsOffset(value),
-                            style = SaltTheme.textStyles.main, maxLines = 1)
-                    }
-                }
-                com.moriafly.salt.ui.Button(
-                    text = "+${step}ms", onClick = { stepBy(step) },
-                    enabled = canIncrease, modifier = Modifier.weight(1f),
-                    size = ControlSize.Small, appearance = ButtonAppearance.Subtle,
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                com.moriafly.salt.ui.Button(
-                    text = stringResource(R.string.action_reset), onClick = { onOffsetChange(0L) },
-                    enabled = enabled && safeOffset != 0L, modifier = Modifier.weight(1f),
-                    size = ControlSize.Small, appearance = ButtonAppearance.Plain,
-                )
-                com.moriafly.salt.ui.Button(
-                    text = stringResource(R.string.action_manual_input), onClick = { showInputDialog = true },
-                    enabled = enabled, modifier = Modifier.weight(1f),
-                    size = ControlSize.Small, appearance = ButtonAppearance.Plain,
-                )
-            }
-        }
-    } else Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         // 分段步进器：一个容器里放两侧按钮与中间数值，避免三个控件各自为政。
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(STEPPER_HEIGHT)
-                .clip(RoundedCornerShape(STEPPER_HEIGHT / 2))
-                .background(MiuixTheme.colorScheme.secondaryContainer)
+                .clip(SDWShapes.Pill)
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
                 .semantics { contentDescription = formatLyricsOffset(safeOffset) },
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             StepperSideButton(
                 label = "-${step}ms",
                 enabled = canDecrease,
-                onClick = { stepBy(-step) }
+                onClick = { stepBy(-step) },
             )
 
             VerticalDivider(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 8.dp),
-                color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
             )
 
             Box(
@@ -209,17 +117,16 @@ fun LyricsOffsetField(
                     .weight(1f)
                     .fillMaxHeight()
                     .clickable(enabled = enabled) { showInputDialog = true },
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 // 数值是控件的信息锚点：比正文重一档、但不压过页面标题，胶囊底暗示可点击手动输入。
-                // clip 必须打开：数值位数变化时靠裁剪保证只在胶囊内左右滚动，不会溢出。
                 Box(
                     modifier = Modifier
                         .width(STEPPER_VALUE_WIDTH)
-                        .clip(RoundedCornerShape(percent = 50))
-                        .background(MiuixTheme.colorScheme.surface)
+                        .clip(SDWShapes.Pill)
+                        .background(androidx.compose.material3.MaterialTheme.colorScheme.surface)
                         .padding(vertical = 4.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     AnimatedContent(
                         targetState = safeOffset,
@@ -227,9 +134,6 @@ fun LyricsOffsetField(
                             if (!animated) {
                                 fadeIn() togetherWith fadeOut()
                             } else {
-                                // 上下滚动：增大时向上滚出、新值从下进；减小时反向。
-                                // 胶囊是固定宽度，纯垂直位移不会再出现横向漂移；
-                                // 再叠一个很短的 fade 收掉连点时的重影。
                                 val forward = targetState > initialState
                                 val slide = spring<IntOffset>(dampingRatio = 0.85f, stiffness = 900f)
                                 val enter = slideInVertically(animationSpec = slide) { height ->
@@ -241,15 +145,15 @@ fun LyricsOffsetField(
                                 enter togetherWith exit
                             }
                         },
-                        label = "lyricsOffsetValue"
+                        label = "lyricsOffsetValue",
                     ) { value ->
                         Text(
                             text = formatLyricsOffset(value),
-                            style = MiuixTheme.textStyles.body1.copy(
+                            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
                             ),
-                            color = MiuixTheme.colorScheme.onSurface,
+                            color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                         )
                     }
@@ -260,32 +164,50 @@ fun LyricsOffsetField(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 8.dp),
-                color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
             )
 
             StepperSideButton(
                 label = "+${step}ms",
                 enabled = canIncrease,
-                onClick = { stepBy(step) }
+                onClick = { stepBy(step) },
             )
         }
 
         // 次要动作弱化为文字按钮，不再和步进器抢视觉。
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            TextButton(
+            Text(
                 text = stringResource(R.string.action_reset),
-                onClick = { onOffsetChange(0L) },
-                modifier = Modifier.weight(1f),
-                enabled = enabled && safeOffset != 0L
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(SDWShapes.Row)
+                    .clickable(enabled = enabled && safeOffset != 0L) { onOffsetChange(0L) }
+                    .padding(vertical = 8.dp),
+                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                color = if (enabled && safeOffset != 0L) {
+                    androidx.compose.material3.MaterialTheme.colorScheme.primary
+                } else {
+                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                },
+                maxLines = 1,
             )
-            TextButton(
+            Text(
                 text = stringResource(R.string.action_manual_input),
-                onClick = { showInputDialog = true },
-                modifier = Modifier.weight(1f),
-                enabled = enabled
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(SDWShapes.Row)
+                    .clickable(enabled = enabled) { showInputDialog = true }
+                    .padding(vertical = 8.dp),
+                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                color = if (enabled) {
+                    androidx.compose.material3.MaterialTheme.colorScheme.primary
+                } else {
+                    androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                },
+                maxLines = 1,
             )
         }
     }
@@ -299,11 +221,10 @@ fun LyricsOffsetField(
         onConfirm = { value ->
             showInputDialog = false
             onOffsetChange(value)
-        }
+        },
     )
 }
 
-/** 步进器两侧的增减按钮。 */
 @Composable
 private fun StepperSideButton(
     label: String,
@@ -315,18 +236,18 @@ private fun StepperSideButton(
             .width(STEPPER_BUTTON_WIDTH)
             .fillMaxHeight()
             .clickable(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            style = MiuixTheme.textStyles.body2.copy(
+            style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
                 fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             ),
             color = if (enabled) {
-                MiuixTheme.colorScheme.primary
+                androidx.compose.material3.MaterialTheme.colorScheme.primary
             } else {
-                MiuixTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
             },
             maxLines = 1,
         )
@@ -334,9 +255,8 @@ private fun StepperSideButton(
 }
 
 /**
- * 手动输入歌词偏移值的对话框。
- *
- * 数字键盘多数不提供负号，因此输入框只接受绝对值，正负号由左侧的符号按钮切换。
+ * 手动输入歌词偏移值的对话框。数字键盘多数不提供负号，因此输入框只接受绝对值，
+ * 正负号由左侧的符号按钮切换。
  */
 @Composable
 fun LyricsOffsetInputDialog(
@@ -348,7 +268,6 @@ fun LyricsOffsetInputDialog(
     minOffset: Long = LYRICS_OFFSET_MIN_MS,
     maxOffset: Long = LYRICS_OFFSET_MAX_MS,
 ) {
-    // 每次打开都使用当前偏移值作为初始输入，关闭后输入态不残留。
     var negative by remember(show, initialValue) { mutableStateOf(initialValue < 0L) }
     val magnitudeState = remember(show, initialValue) {
         TextFieldState(kotlin.math.abs(initialValue).toString())
@@ -359,104 +278,58 @@ fun LyricsOffsetInputDialog(
     val isValid = value != null && value in minOffset..maxOffset
     val rangeHint = stringResource(R.string.lyrics_offset_input_hint, minOffset, maxOffset)
 
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-        SaltConfirmDialog(
-            show = show, title = stringResource(R.string.label_lyrics_offset),
-            onDismissRequest = onDismiss, onConfirm = { value?.let(onConfirm) },
-            cancelText = stringResource(R.string.cancel), confirmText = stringResource(R.string.confirm),
-            confirmEnabled = isValid, dismissOnConfirm = false,
-        ) {
-            com.moriafly.salt.ui.RoundedColumn(paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    com.moriafly.salt.ui.Button(
-                        text = if (negative) "−" else "+", onClick = { negative = !negative },
-                        appearance = com.moriafly.salt.ui.ButtonAppearance.Plain,
-                    )
-                    SaltTextInput(
-                        state = magnitudeState,
-                        modifier = Modifier.weight(1f),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    )
-                }
-            }
-            com.moriafly.salt.ui.Text(
-                text = when {
-                    magnitude == null -> stringResource(R.string.lyrics_offset_input_invalid)
-                    !isValid -> stringResource(R.string.lyrics_offset_input_out_of_range, rangeHint)
-                    else -> rangeHint
-                },
-                style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                color = if (isValid) com.moriafly.salt.ui.SaltTheme.colors.subText
-                    else com.moriafly.salt.ui.SaltTheme.colors.error,
-            )
-        }
-        return
-    }
-
-    WindowDialog(
+    SdwConfirmDialog(
         show = show,
         title = stringResource(R.string.label_lyrics_offset),
-        onDismissRequest = onDismiss
+        onDismissRequest = onDismiss,
+        onConfirm = { value?.let(onConfirm) },
+        cancelText = stringResource(R.string.cancel),
+        confirmText = stringResource(R.string.confirm),
+        confirmEnabled = isValid,
+        dismissOnConfirm = false,
     ) {
-        Column(modifier = modifier.fillMaxWidth()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MiuixTheme.colorScheme.secondaryContainer)
-                        .clickable { negative = !negative },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (negative) "−" else "+",
-                        style = MiuixTheme.textStyles.body1.copy(
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        color = MiuixTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                TextField(
-                    state = magnitudeState,
-                    modifier = Modifier.weight(1f),
-                    label = stringResource(R.string.label_lyrics_offset),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    lineLimits = TextFieldLineLimits.SingleLine,
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(SDWShapes.Media)
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
+                    .clickable { negative = !negative },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = if (negative) "−" else "+",
+                    style = androidx.compose.material3.MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = when {
-                    magnitude == null -> stringResource(R.string.lyrics_offset_input_invalid)
-                    !isValid -> stringResource(R.string.lyrics_offset_input_out_of_range, rangeHint)
-                    else -> rangeHint
-                },
-                style = MiuixTheme.textStyles.footnote1,
-                color = if (isValid) {
-                    MiuixTheme.colorScheme.onSurfaceVariantSummary
-                } else {
-                    MiuixTheme.colorScheme.error
-                }
+            Spacer(modifier = Modifier.width(10.dp))
+            SdwTextInput(
+                state = magnitudeState,
+                modifier = Modifier.weight(1f),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(
-                    text = stringResource(R.string.cancel),
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                TextButton(
-                    text = stringResource(R.string.confirm),
-                    onClick = { value?.let(onConfirm) },
-                    modifier = Modifier.weight(1f),
-                    enabled = isValid,
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
-            }
         }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = when {
+                magnitude == null -> stringResource(R.string.lyrics_offset_input_invalid)
+                !isValid -> stringResource(R.string.lyrics_offset_input_out_of_range, rangeHint)
+                else -> rangeHint
+            },
+            style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+            color = if (isValid) {
+                androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+            } else {
+                androidx.compose.material3.MaterialTheme.colorScheme.error
+            },
+        )
     }
 }
 

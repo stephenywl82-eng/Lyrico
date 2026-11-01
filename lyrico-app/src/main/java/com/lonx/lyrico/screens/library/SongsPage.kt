@@ -1,8 +1,6 @@
 package com.lonx.lyrico.screens.library
 
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.data.model.UiEngine
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -28,14 +26,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -64,7 +61,6 @@ import com.lonx.lyrico.ui.components.song.SongActionSheets
 import com.lonx.lyrico.ui.components.song.SongListItemContent
 import com.lonx.lyrico.ui.components.song.SongListItemActions
 import com.lonx.lyrico.utils.UriUtils
-import com.moriafly.salt.ui.SaltTheme
 import com.lonx.lyrico.viewmodel.SongListViewModel
 import com.lonx.lyrico.viewmodel.SongSelectionViewModel
 import com.lonx.lyrico.viewmodel.SortBy
@@ -79,20 +75,15 @@ import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun SongsPage(
@@ -179,8 +170,7 @@ fun SongsPage(
     val enableIndex = sections.isNotEmpty() && sortInfo.sortBy.supportsIndex
 
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val isSaltEngine = LocalUiEngine.current == UiEngine.SALT
-    val topBarBackdrop = rememberBarBlurBackdrop(enabled = LocalUiEngine.current == UiEngine.MIUIX && com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
+    val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
     val refreshTexts = listOf(
         stringResource(R.string.pull_to_refresh),
         stringResource(R.string.release_to_refresh),
@@ -192,7 +182,7 @@ fun SongsPage(
             modifier = Modifier
                 .fillMaxSize()
                 // Salt 顶栏用 BasicScreen 自带的 backdrop，这里不再叠第二层模糊
-                .then(if (isSaltEngine) Modifier else Modifier.blurSource(topBarBackdrop))
+                .then(Modifier.blurSource(topBarBackdrop))
         ) {
             if (songs.isEmpty()) {
                 val scanProgress = scanState.progress
@@ -304,16 +294,12 @@ fun SongsPage(
                     settings = ScrollbarSettings.Default.copy(
                         alwaysShowScrollbar = true,
                         selectionMode = ScrollbarSelectionMode.Full,
-                        thumbUnselectedColor = if (isSaltEngine) {
-                            SaltTheme.colors.subText
-                        } else {
+                        thumbUnselectedColor = 
                             MiuixTheme.colorScheme.onSurfaceVariantActions
-                        },
-                        thumbSelectedColor = if (isSaltEngine) {
-                            SaltTheme.colors.subText
-                        } else {
+                        ,
+                        thumbSelectedColor = 
                             MiuixTheme.colorScheme.onSurfaceVariantActions
-                        },
+                        ,
                     ),
                 )
             }
@@ -334,35 +320,10 @@ fun SongsPage(
                 )
             }
 
-
         }
 
     }
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltLibraryPage(
-            selection = if (isSelectionMode) LibrarySelectionState(
-            allSelected = allSongsSelected,
-            title = stringResource(R.string.selection_mode_selected_count, selectedSongUris.size),
-            onClose = selectionViewModel::exitSelectionMode,
-            onToggleAll = { if (allSongsSelected) selectionViewModel.deselectAll() else selectionViewModel.selectAll(songs) },
-            ) else null,
-            title = stringResource(R.string.song_list_title, songs.size),
-            onSettings = { navigator.navigate(SettingsDestination()) },
-            onSearch = { navigator.navigate(LocalSearchDestination) },
-            menu = SortBy.entries.map { sortBy ->
-                val selected = sortInfo.sortBy == sortBy
-                LibraryMenuAction(
-                    title = stringResource(sortBy.labelRes),
-                    selected = selected,
-                    summary = if (selected) stringResource(
-                        if (sortInfo.order == SortOrder.ASC) R.string.sort_ascending else R.string.sort_descending
-                    ) else null,
-                ) {
-                    viewModel.onSortChange(SortInfo(sortBy, if (selected && sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC))
-                }
-            }, content = pageContent,
-        )
-    } else Scaffold(
+    Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {

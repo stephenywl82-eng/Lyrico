@@ -1,8 +1,5 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
-
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,17 +12,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
@@ -34,7 +26,6 @@ import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.ArtistPosterFoldersViewModel
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
@@ -43,7 +34,6 @@ import com.ramcosta.composedestinations.generated.destinations.ArtistDetailDesti
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.koin.androidx.compose.koinViewModel
 import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import com.lonx.lyrico.ui.components.base.ItemMenuAction
@@ -52,6 +42,9 @@ import com.lonx.lyrico.ui.components.base.YesNoDialog
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import com.lonx.lyrico.ui.components.icons.PreferenceIcon
+import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 
 @Composable
 @Destination<RootGraph>(route = "artist_poster_folders")
@@ -87,58 +80,14 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
         state.operationMessage?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
         viewModel.clearOperationMessage()
     }
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val scrollBehavior = MiuixScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
-    val topMenu = com.moriafly.salt.ui.popup.rememberPopupState()
     val menuEnabled = !state.isLoading && !state.isEditing
 
     LibraryDetailPage(
         title = stringResource(R.string.artist_poster_folders),
         onBack = { navigator.navigateUp() },
-        actions = {
-            Box {
-                SaltIconButton(LucideIcons.EllipsisVertical, stringResource(R.string.cd_more_actions),
-                    enabled = menuEnabled, onClick = { topMenu.expend() })
-                com.moriafly.salt.ui.popup.PopupMenu(
-                    expanded = topMenu.expend,
-                    onDismissRequest = topMenu::dismiss
-                ) {
-                    com.moriafly.salt.ui.popup.PopupMenuItem(
-                        text = stringResource(R.string.artist_poster_naming),
-                        iconPainter = rememberVectorPainter(LucideIcons.Info),
-                        iconColor = PreferenceIconTone.Appearance.color(),
-                        onClick = { topMenu.dismiss(); showHelp = true }
-                    )
-                    if (state.folder != null) {
-                        com.moriafly.salt.ui.popup.PopupMenuItem(
-                            text = stringResource(R.string.artist_poster_folder_details),
-                            iconPainter = rememberVectorPainter(LucideIcons.Info),
-                            iconColor = PreferenceIconTone.Appearance.color(),
-                            onClick = { topMenu.dismiss(); showFolderDetails = true }
-                        )
-                        com.moriafly.salt.ui.popup.PopupMenuItem(
-                            text = stringResource(R.string.action_refresh_folder),
-                            iconPainter = rememberVectorPainter(LucideIcons.RefreshCw),
-                            iconColor = PreferenceIconTone.Library.color(),
-                            onClick = { topMenu.dismiss(); viewModel.refresh() }
-                        )
-                        com.moriafly.salt.ui.popup.PopupMenuItem(
-                            text = stringResource(R.string.artist_poster_folder_change),
-                            iconPainter = rememberVectorPainter(LucideIcons.FolderPlus),
-                            iconColor = PreferenceIconTone.Lyrics.color(),
-                            onClick = { topMenu.dismiss(); picker.launch(null) }
-                        )
-                        com.moriafly.salt.ui.popup.PopupMenuItem(
-                            text = stringResource(R.string.folder_action_remove),
-                            iconPainter = rememberVectorPainter(LucideIcons.Folder),
-                            iconColor = PreferenceIconTone.Pink.color(),
-                            onClick = { topMenu.dismiss(); showRemoveDialog = true }
-                        )
-                    }
-                }
-            }
-        },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
                 SmallTopAppBar(
@@ -193,7 +142,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
             }
         }
     ) { padding ->
-        Box(Modifier.fillMaxSize().then(if (salt) Modifier else Modifier.blurSource(topBarBackdrop))) {
+        Box(Modifier.fillMaxSize().then(Modifier.blurSource(topBarBackdrop))) {
             val folder = state.folder
             if (folder != null) {
                 ArtistPosterFolderContents(
@@ -223,10 +172,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
             } else {
                 if (state.isLoading) {
                     Box(Modifier.fillMaxSize().padding(scaffoldContentPadding(padding)), contentAlignment = Alignment.Center) {
-                        if (salt) androidx.compose.material3.CircularProgressIndicator(
-                            color = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-                            trackColor = com.moriafly.salt.ui.SaltTheme.colors.stroke)
-                        else CircularProgressIndicator()
+                        CircularProgressIndicator()
                     }
                 } else {
                     IllustratedEmptyState(
@@ -289,108 +235,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                 state.folder?.posters.orEmpty().filter { it.uri != target.uri }.map { it.name })
         }
         val fileExtension = file?.name?.substringAfterLast('.')?.takeIf { it.isNotEmpty() && it != file.name }.orEmpty()
-        if (salt) {
-            // Salt 原生弹窗：保留取消、点击外部、关闭完成与校验失败不关窗的语义。
-            val folder = state.folder
-            if (showDeleteFile && file != null) {
-                com.lonx.lyrico.ui.components.salt.SaltConfirmDialog(
-                    title = stringResource(R.string.dialog_delete_file_title),
-                    summary = stringResource(R.string.dialog_delete_file_content, file.name),
-                    onDismissRequest = { showDeleteFile = false },
-                    onConfirm = { file.let(viewModel::deleteFile); showDeleteFile = false },
-                    cancelText = stringResource(R.string.cancel),
-                    confirmText = stringResource(R.string.confirm),
-                )
-            }
-            // 重命名需要固定扩展名、校验提示与禁用确认，Salt 的 InputDialog 没有这些槽位，走共享扩展弹窗。
-            SaltConfirmDialog(
-                show = showRenameFile && file != null,
-                title = stringResource(R.string.dialog_rename_title),
-                confirmEnabled = proposedName != null && proposedName != file.name && !state.isEditing,
-                onDismissRequest = { showRenameFile = false },
-                onConfirm = {
-                    file?.let { target ->
-                        viewModel.renameFile(target, renameStem) { renamed ->
-                            actionFile = renamed
-                            if (previewUri == target.uri) previewUri = renamed.uri
-                        }
-                    }
-                },
-                cancelText = stringResource(R.string.cancel),
-                confirmText = stringResource(R.string.confirm),
-            ) {
-                com.moriafly.salt.ui.RoundedColumn(paddingValues = PaddingValues(0.dp)) {
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) {
-                            SaltTextInput(state = renameState)
-                        }
-                        if (fileExtension.isNotEmpty()) com.moriafly.salt.ui.Text(
-                            "." + fileExtension, style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                            modifier = Modifier.padding(start = 8.dp))
-                    }
-                }
-                com.moriafly.salt.ui.Text(
-                    stringResource(R.string.poster_rename_hint),
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                    color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    modifier = Modifier.padding(top = 8.dp))
-                if (proposedName == null) com.moriafly.salt.ui.Text(
-                    stringResource(R.string.poster_rename_invalid),
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                    color = com.moriafly.salt.ui.SaltTheme.colors.error,
-                    modifier = Modifier.padding(top = 8.dp))
-            }
-            if (showHelp) {
-                com.lonx.lyrico.ui.components.salt.SaltBasicDialog(onDismissRequest = { showHelp = false }) {
-                    com.lonx.lyrico.ui.components.salt.SaltDialogTitle(stringResource(R.string.artist_poster_naming))
-                    Column(Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
-                        com.moriafly.salt.ui.Text(
-                            stringResource(R.string.artist_poster_folders_summary),
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                            style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
-                        MarkdownText(
-                            modifier = Modifier.fillMaxWidth(),
-                            markdown = stringResource(R.string.artist_poster_folders_help),
-                            linkColor = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-                            style = com.moriafly.salt.ui.SaltTheme.textStyles.main.copy(
-                                color = com.moriafly.salt.ui.SaltTheme.colors.text
-                            )
-                        )
-                    }
-                }
-            }
-            if (folder != null && showFolderDetails) {
-                com.lonx.lyrico.ui.components.salt.SaltBasicDialog(onDismissRequest = { showFolderDetails = false }) {
-                    com.lonx.lyrico.ui.components.salt.SaltDialogTitle(stringResource(R.string.artist_poster_folder_details))
-                    Column(Modifier.verticalScroll(rememberScrollState())) {
-                        com.moriafly.salt.ui.Text(folder.name, style = com.moriafly.salt.ui.SaltTheme.textStyles.main)
-                        com.moriafly.salt.ui.Text(
-                            folder.path,
-                            color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                        com.moriafly.salt.ui.Text(
-                            stringResource(R.string.artist_poster_folder_status, folder.posters.orEmpty().size, folder.matchedPosterCount),
-                            style = com.moriafly.salt.ui.SaltTheme.textStyles.main,
-                            modifier = Modifier.padding(top = 16.dp)
-                        )
-                    }
-                }
-            }
-            if (showRemoveDialog && folder != null) {
-                com.lonx.lyrico.ui.components.salt.SaltConfirmDialog(
-                    title = stringResource(R.string.dialog_remove_folder_title),
-                    summary = folder.path + "\n\n" + stringResource(R.string.artist_poster_folder_remove_tip),
-                    onDismissRequest = { showRemoveDialog = false },
-                    onConfirm = { viewModel.removeFolder(); showRemoveDialog = false },
-                    cancelText = stringResource(R.string.cancel),
-                    confirmText = stringResource(R.string.confirm),
-                )
-            }
-        } else {
+        
             val folder = state.folder
             YesNoDialog(
                 show = showDeleteFile && file != null, title = stringResource(R.string.dialog_delete_file_title),
@@ -499,7 +344,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                     }
                 }
             }
-        }
+        
         com.lonx.lyrico.ui.components.crop.ImageCropperSheet(
             show = showCrop, bitmap = cropBitmap, title = stringResource(R.string.label_crop_artist_image),
             onCrop = { bitmap -> cropFile?.let { viewModel.cropFile(it, bitmap) } },

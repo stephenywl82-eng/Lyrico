@@ -1,14 +1,7 @@
 package com.lonx.lyrico.ui.components.poster
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.icons.LucideIcons
@@ -42,19 +35,9 @@ fun ArtistPosterActionsSheet(
         )
         // SaltUI 3.0.0-beta02 无进度控件，用 Material3 回退并取 Salt 颜色。
         if (posterLoading) {
-            if (com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-                com.lonx.lyrico.data.model.UiEngine.SALT
-            ) {
-                Box(Modifier.fillMaxWidth().padding(vertical = 8.dp), contentAlignment = Alignment.Center) {
-                androidx.compose.material3.CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = com.moriafly.salt.ui.SaltTheme.colors.highlight,
-                    trackColor = com.moriafly.salt.ui.SaltTheme.colors.stroke,
-                )
-                }
-            } else {
+            
                 top.yukonga.miuix.kmp.basic.CircularProgressIndicator()
-            }
+            
         }
         ItemMenuAction(
             icon = LucideIcons.ImageAdd, tone = PreferenceIconTone.Tools,

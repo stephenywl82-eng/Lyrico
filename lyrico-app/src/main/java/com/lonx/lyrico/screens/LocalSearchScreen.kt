@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,17 +30,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.Alignment
@@ -51,11 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.SelectableLibraryItem
-import com.lonx.lyrico.screens.library.LibrarySelectionState
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
@@ -86,14 +80,11 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.AlbumDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.ArtistDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
-import com.moriafly.salt.ui.SaltTheme
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -147,7 +138,7 @@ fun LocalSearchScreen(
     var showDetailSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val currentTab = searchTabs.getOrElse(pagerState.targetPage) { LocalSearchTab.All }
     val visibleSongs = visibleSongsForTab(
         tab = currentTab,
@@ -178,66 +169,10 @@ fun LocalSearchScreen(
 
     val allVisibleSongsSelected =
         visibleSongs.isNotEmpty() && selectedSongUris.containsAll(visibleSongs.map { it.uri })
-    val saltSelectionState = if (salt && isSelectionMode) {
-        LibrarySelectionState(
-            title = stringResource(R.string.selection_mode_selected_count, selectedSongUris.size),
-            allSelected = allVisibleSongsSelected,
-            onClose = { selectionViewModel.exitSelectionMode() },
-            onToggleAll = {
-                if (allVisibleSongsSelected) selectionViewModel.deselectAll()
-                else selectionViewModel.selectAll(visibleSongs)
-            },
-        )
-    } else null
+    val saltSelectionState = null
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (salt) {
-            LocalSearchSaltShell(
-                title = stringResource(R.string.local_search_title),
-                selection = saltSelectionState,
-                onBack = { navigator.popBackStack() },
-                isSelectionMode = isSelectionMode,
-                searchState = searchState,
-                onSearch = { keyword -> viewModel.onQueryChange(keyword) },
-                searchTabs = searchTabs,
-                tabsReady = lyricSearchEnabled != null,
-                pagerState = pagerState,
-                onTabSelected = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
-                pages = {
-                    LocalSearchPages(
-                        pagerState = pagerState,
-                        searchTabs = searchTabs,
-                        uiState = uiState,
-                        searchQuery = searchQuery,
-                        isSelectionMode = isSelectionMode,
-                        selectedSongUris = selectedSongUris,
-                        swipeSelectionLabel = swipeSelectionLabel,
-                        swipeSelectionSecondaryLabel = swipeSelectionSecondaryLabel,
-                        topAppBarScrollBehavior = topAppBarScrollBehavior,
-                        contentPaddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp),
-                        salt = true,
-                        onArtistClick = { artist ->
-                            selectionViewModel.exitSelectionMode()
-                            navigator.navigate(ArtistDetailDestination(artistId = artist.id))
-                        },
-                        onAlbumClick = { album ->
-                            selectionViewModel.exitSelectionMode()
-                            navigator.navigate(AlbumDetailDestination(albumId = album.id))
-                        },
-                        onSongClick = { song ->
-                            selectionViewModel.exitSelectionMode()
-                            navigator.navigate(EditMetadataDestination(songFileUri = song.uri))
-                        },
-                        onToggleSelection = { song -> selectionViewModel.toggleSelection(song.uri) },
-                        onSwipeSelection = { song, pageSongs -> selectionViewModel.swipeSelect(song, pageSongs) },
-                        onShowSongMenu = { song ->
-                            selectedSong = song
-                            showMenuSheet = true
-                        }
-                    )
-                }
-            )
-        } else Scaffold(
+        Scaffold(
             topBar = {
                 Column(
                     modifier = Modifier
@@ -465,14 +400,14 @@ private fun LocalSearchPillTabRow(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val salt = LocalUiEngine.current == UiEngine.SALT
+        val salt = false
         tabs.forEachIndexed { index, tab ->
             PillButton(
                 text = stringResource(tab.labelRes),
                 selected = index == selectedTabIndex,
                 enabled = ready,
                 style = PillButtonDefaults.style(PillButtonSize.Medium),
-                colors = if (salt) PillButtonDefaults.colors() else PillButtonDefaults.colors(
+                colors = PillButtonDefaults.colors(
                     containerColor = MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
                 ),
                 onClick = { onTabSelected(index) }
@@ -505,7 +440,7 @@ private fun LocalSearchResultsPage(
     val hasResults = hasResultsForTab(tab, uiState, searchQuery)
 
     LazyColumn(
-        modifier = (if (salt) Modifier else Modifier
+        modifier = (Modifier
             .scrollEndHaptic()
             .overScrollVertical()
             .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
@@ -515,7 +450,7 @@ private fun LocalSearchResultsPage(
             paddingValues = contentPaddingValues,
             bottomExtra = 12.dp
         ),
-        overscrollEffect = if (salt) rememberOverscrollEffect() else null
+        overscrollEffect = null
     ) {
         if (searchQuery.isNotBlank() && !hasResults) {
             item {
@@ -835,59 +770,9 @@ private fun LocalSearchSongItem(
     }
 }
 
-
 private fun localSearchSongKey(song: SongEntity): String {
     val stableId = song.uri.takeIf { it.isNotBlank() && it != "0" } ?: song.id.toString()
     return "local-search-song-$stableId"
-}
-
-/** Salt 外壳：原生顶栏（含选择态槽位）、固定搜索与标签行，内容由 [pages] 提供。 */
-@Composable
-private fun LocalSearchSaltShell(
-    title: String,
-    selection: LibrarySelectionState?,
-    onBack: () -> Unit,
-    isSelectionMode: Boolean,
-    searchState: androidx.compose.foundation.text.input.TextFieldState,
-    onSearch: (String) -> Unit,
-    searchTabs: List<LocalSearchTab>,
-    tabsReady: Boolean,
-    pagerState: androidx.compose.foundation.pager.PagerState,
-    onTabSelected: (Int) -> Unit,
-    pages: @Composable () -> Unit,
-) {
-    LibraryDetailPage(
-        title = title,
-        onBack = onBack,
-        selection = selection,
-        miuixTopBar = {},
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            if (!isSelectionMode) {
-                SearchBar(
-                    state = searchState,
-                    placeholder = stringResource(R.string.local_search_hint),
-                    onSearch = onSearch,
-                    autoFocus = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                )
-                LocalSearchPillTabRow(
-                    tabs = searchTabs,
-                    ready = tabsReady,
-                    selectedTabIndex = pagerState.targetPage,
-                    onTabSelected = onTabSelected,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-            pages()
-        }
-    }
 }
 
 /** 结果分页：两引擎共用同一套分页与分组逻辑。 */

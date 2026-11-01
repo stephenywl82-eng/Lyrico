@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -13,33 +12,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.entity.BatchTaskItemEntity
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.BatchTaskDetailViewModel
-import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.ItemValue
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.screen.ScreenCard
+
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
@@ -55,9 +45,12 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.ui.res.painterResource
+import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 enum class TaskDetailTab(val labelRes: Int) {
     SUCCEEDED(R.string.batch_task_status_succeeded),
@@ -76,7 +69,7 @@ fun BatchTaskDetailScreen(
     val items by viewModel.items.collectAsState()
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val scope = rememberCoroutineScope()
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
 
     val tabs = remember { TaskDetailTab.entries }
     val pagerState = rememberPagerState(pageCount = { tabs.size })
@@ -85,17 +78,6 @@ fun BatchTaskDetailScreen(
     LibraryDetailPage(
         title = stringResource(R.string.batch_task_detail_title),
         onBack = { navigator.popBackStack() },
-        actions = {
-            val t = task
-            if (t != null && (t.status == BatchTaskStatus.RUNNING || t.status == BatchTaskStatus.QUEUED)) {
-                SaltIconButton(
-                    icon = LucideIcons.Close,
-                    label = stringResource(R.string.action_close),
-                    onClick = { viewModel.cancelTask() },
-                    tint = SaltTheme.colors.error
-                )
-            }
-        },
         miuixTopBar = {
             SmallTopAppBar(
                 title = stringResource(R.string.batch_task_detail_title),
@@ -130,8 +112,7 @@ fun BatchTaskDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(if (salt) com.lonx.lyrico.ui.components.scaffoldContentPadding(paddingValues)
-                    else scaffoldTopHorizontalPadding(paddingValues))
+                .padding(scaffoldTopHorizontalPadding(paddingValues))
         ) {
             val t = task
             if (t != null) {
@@ -168,11 +149,6 @@ fun BatchTaskDetailScreen(
                 }
                 val progressTitle = stringResource(R.string.batch_task_detail_progress, t.current, t.total)
 
-                if (salt) {
-                    ScreenCard(modifier = Modifier.padding(bottom = 12.dp)) {
-                        ItemValue(text = progressTitle, sub = summary)
-                    }
-                } else {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -184,18 +160,9 @@ fun BatchTaskDetailScreen(
                             summary = summary
                         )
                     }
-                }
+                
             }
 
-            if (salt) {
-                LibraryDetailTabs(
-                    tabs = tabLabels,
-                    selectedIndex = pagerState.currentPage,
-                    onSelected = { index ->
-                        scope.launch { pagerState.animateScrollToPage(index) }
-                    }
-                )
-            } else {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -210,8 +177,7 @@ fun BatchTaskDetailScreen(
                         }
                     )
                 }
-            }
-
+            
             HorizontalPager(
                 state = pagerState,
                 beyondViewportPageCount = 1,
@@ -228,13 +194,13 @@ fun BatchTaskDetailScreen(
                 }
 
                 LazyColumn(
-                    modifier = (if (salt) Modifier else Modifier
+                    modifier = (Modifier
                         .scrollEndHaptic()
                         .overScrollVertical()
                         .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
                         .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    overscrollEffect = if (salt) rememberOverscrollEffect() else null,
+                    overscrollEffect = null,
                 ) {
                     if (filteredItems.isEmpty()) {
                         item {
@@ -275,16 +241,7 @@ private fun BatchTaskItemCard(
             append(item.errorMessage)
         }
     }
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-            Item(
-                onClick = onClick,
-                text = item.fileName,
-                sub = summary,
-            )
-        }
-        return
-    }
+
     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
         ArrowPreference(
             title = item.fileName,

@@ -16,17 +16,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /** Neutral list illustration for pages without a domain-specific illustration. */
 @Composable
 internal fun EmptyStateIllustration(compact: Boolean) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
-    val accent = if (salt) SaltTheme.colors.highlight else MiuixTheme.colorScheme.primary
-    val surface = if (salt) SaltTheme.colors.subBackground else MiuixTheme.colorScheme.surfaceContainer
+    val salt = false
+    val accent = MiuixTheme.colorScheme.primary
+    val surface = MiuixTheme.colorScheme.surfaceContainer
     val scale = if (compact) 0.45f else 1f
     val shape = RoundedCornerShape((16 * scale).dp)
     Box(Modifier.size((188 * scale).dp, (152 * scale).dp), contentAlignment = Alignment.Center) {

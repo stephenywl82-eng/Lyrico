@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.poster
 
@@ -9,12 +8,10 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,11 +20,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -35,19 +29,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.crop.ImageCropperSheet
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.*
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.enabledAlpha
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -152,12 +142,12 @@ internal fun ArtistPosterPreview(
             )
             val progress = infoProgress.value
             // 压在图片上的黑底/白字渐变与海报合成，不随引擎取色。
-            val salt = LocalUiEngine.current == UiEngine.SALT
-            val panelColor = if (salt) SaltTheme.colors.background else MiuixTheme.colorScheme.surface
+            val salt = false
+            val panelColor = MiuixTheme.colorScheme.surface
             val actionBackground = lerp(Color(0xFF202020),
-                if (salt) SaltTheme.colors.subBackground else MiuixTheme.colorScheme.surfaceVariant, progress)
+                MiuixTheme.colorScheme.surfaceVariant, progress)
             val actionTint = lerp(Color.White.copy(alpha = 0.9f),
-                if (salt) SaltTheme.colors.text else MiuixTheme.colorScheme.onSurface, progress)
+                MiuixTheme.colorScheme.onSurface, progress)
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxWidth().weight(1f).clipToBounds().then(verticalGesture)) {
                     HorizontalPager(pager, modifier = Modifier.fillMaxSize(), key = { items[it].key },
@@ -200,42 +190,14 @@ internal fun ArtistPosterPreview(
                     }
                     Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                         Text(title(currentPage), color = Color.White,
-                            fontSize = if (salt) SaltTheme.textStyles.main.fontSize else MiuixTheme.textStyles.body1.fontSize,
+                            fontSize = MiuixTheme.textStyles.body1.fontSize,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (items.size > 1) Text("${currentPage + 1} / ${items.size}", color = Color.White.copy(alpha = 0.6f),
-                            fontSize = if (salt) SaltTheme.textStyles.sub.fontSize else MiuixTheme.textStyles.footnote1.fontSize,
+                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
                             modifier = Modifier.padding(top = 2.dp))
                     }
                     menuActions?.let { provideActions ->
-                        if (LocalUiEngine.current == UiEngine.SALT) {
-                            val actions = provideActions(currentPage)
-                            Box {
-                                Box(Modifier.size(48.dp).clip(CircleShape)
-                                    .clickable(enabled = !busy && editingEnabled, role = Role.Button,
-                                        onClick = { previewMenuExpanded = true }),
-                                    contentAlignment = Alignment.Center) {
-                                    com.moriafly.salt.ui.Icon(rememberVectorPainter(LucideIcons.EllipsisVertical),
-                                        stringResource(R.string.cd_more_actions),
-                                        modifier = Modifier.size(24.dp), tint = Color.White)
-                                }
-                                com.moriafly.salt.ui.popup.PopupMenu(
-                                    expanded = previewMenuExpanded,
-                                    onDismissRequest = { previewMenuExpanded = false }) {
-                                    actions.forEachIndexed { index, action ->
-                                        Box(Modifier.enabledAlpha(action.enabled)) {
-                                            com.moriafly.salt.ui.popup.PopupMenuItem(
-                                                text = action.title, sub = action.summary,
-                                                iconPainter = rememberVectorPainter(action.icon),
-                                                iconColor = action.tone.forItem(index).color(),
-                                                onClick = {
-                                                    previewMenuExpanded = false
-                                                    if (action.enabled) action.onClick()
-                                                })
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
+                        
                             val actions = provideActions(currentPage)
                             val entry = DropdownEntry(items = actions.mapIndexed { index, action ->
                                 DropdownItem(
@@ -249,7 +211,7 @@ internal fun ArtistPosterPreview(
                                 minWidth = 48.dp, minHeight = 48.dp) {
                                 Icon(LucideIcons.EllipsisVertical, stringResource(R.string.cd_more_actions), tint = Color.White)
                             }
-                        }
+                        
                     }
                 }
             }
@@ -281,7 +243,7 @@ internal fun ArtistPosterPreview(
                         }
                         PreviewAction(LucideIcons.Info, stringResource(R.string.poster_preview_info), !busy,
                             if (infoOpen) lerp(Color(0xFF202020),
-                                if (salt) SaltTheme.colors.text else MiuixTheme.colorScheme.onSurface,
+                                MiuixTheme.colorScheme.onSurface,
                                 progress) else actionBackground,
                             if (infoOpen) lerp(Color.White, panelColor, progress) else actionTint) { setInfo(!infoOpen) }
                     }

@@ -1,8 +1,5 @@
 package com.lonx.lyrico.screens.library
 
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.data.model.UiEngine
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -15,8 +12,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,6 +34,8 @@ import com.lonx.lyrico.viewmodel.ArtistPosterEditViewModel
 import com.lonx.lyrico.ui.components.poster.ArtistPosterRemovalHost
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.key
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import com.lonx.lyrico.ui.components.poster.previewMedia
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -75,7 +72,6 @@ import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
 import com.lonx.lyrico.viewmodel.ArtistLibraryViewModel
 import com.lonx.lyrico.viewmodel.SortOrder
-import com.moriafly.salt.ui.SaltTheme
 import com.ramcosta.composedestinations.generated.destinations.ArtistDetailDestination
 import com.ramcosta.composedestinations.generated.destinations.LocalSearchDestination
 import com.ramcosta.composedestinations.generated.destinations.SettingsDestination
@@ -148,8 +144,7 @@ fun ArtistsPage(
     }
     val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val isSaltEngine = LocalUiEngine.current == UiEngine.SALT
-    val topBarBackdrop = rememberBarBlurBackdrop(enabled = LocalUiEngine.current == UiEngine.MIUIX && com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
+    val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
     val gridState = rememberLazyGridState()
     val alphabetScrollController = rememberAlphabetSideBarScrollController(gridState)
 
@@ -182,7 +177,7 @@ fun ArtistsPage(
             modifier = Modifier
                 .fillMaxSize()
                 // Salt 顶栏用 BasicScreen 自带的 backdrop，这里不再叠第二层模糊
-                .then(if (isSaltEngine) Modifier else Modifier.blurSource(topBarBackdrop))
+                .then(Modifier.blurSource(topBarBackdrop))
         ) {
             if (artists.isEmpty()) {
                 Box(
@@ -272,16 +267,12 @@ fun ArtistsPage(
                         settings = ScrollbarSettings.Default.copy(
                             alwaysShowScrollbar = true,
                             selectionMode = ScrollbarSelectionMode.Full,
-                            thumbUnselectedColor = if (isSaltEngine) {
-                                SaltTheme.colors.subText
-                            } else {
+                            thumbUnselectedColor = 
                                 MiuixTheme.colorScheme.onSurfaceVariantActions
-                            },
-                            thumbSelectedColor = if (isSaltEngine) {
-                                SaltTheme.colors.subText
-                            } else {
+                            ,
+                            thumbSelectedColor = 
                                 MiuixTheme.colorScheme.onSurfaceVariantActions
-                            },
+                            ,
                         ),
                     )
                 }
@@ -306,31 +297,7 @@ fun ArtistsPage(
         }
 
     }
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltLibraryPage(
-            selection = if (selecting) LibrarySelectionState(
-            allSelected = artists.isNotEmpty() && selectedIds.size == artists.size,
-            title = stringResource(R.string.selection_mode_selected_count, selectedIds.size),
-            onClose = selectionViewModel::exitSelectionMode,
-            onToggleAll = { if (selectedIds.size == artists.size) selectionViewModel.deselectAll() else selectionViewModel.selectAll(artists) },
-            ) else null,
-            title = stringResource(R.string.artist_list_title, artists.size),
-            onSettings = { navigator.navigate(SettingsDestination()) },
-            onSearch = { navigator.navigate(LocalSearchDestination) },
-            menu = ArtistSortBy.entries.map { sortBy ->
-                val selected = sortInfo.sortBy == sortBy
-                LibraryMenuAction(
-                    title = stringResource(sortBy.labelRes),
-                    selected = selected,
-                    summary = if (selected) stringResource(
-                        if (sortInfo.order == SortOrder.ASC) R.string.sort_ascending else R.string.sort_descending
-                    ) else null,
-                ) {
-                    viewModel.onSortChange(ArtistSortInfo(sortBy, if (selected && sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC))
-                }
-            }, content = pageContent,
-        )
-    } else Scaffold(
+    Scaffold(
         topBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
                 AnimatedContent(

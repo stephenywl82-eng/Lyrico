@@ -563,7 +563,6 @@ private fun JsonArray?.parseMetadataElements(): List<LyricsMetadataElement> {
     }.orEmpty()
 }
 
-/** 单个 metadata 节点：{ name, namespace, attributes, text, children }，name 必填（缺失整节点丢弃） */
 private fun JsonObject.parseMetadataElement(): LyricsMetadataElement? {
     val name = primitiveString("name")?.takeIf { it.isNotBlank() } ?: return null
     val namespace = primitiveString("namespace")
@@ -587,7 +586,6 @@ private fun JsonObject.parseMetadataElement(): LyricsMetadataElement? {
     )
 }
 
-/** 纯解析（无三分支校验）：用于 children 递归，保证透传元素树完整 */
 private fun JsonArray?.parseMetadataTree(): List<LyricsMetadataElement> {
     return this?.mapNotNull { element ->
         (element as? JsonObject)?.parseMetadataElement()

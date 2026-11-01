@@ -1,12 +1,6 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
-import androidx.compose.foundation.rememberOverscrollEffect
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -21,11 +15,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.screen.ScreenCard
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
@@ -61,7 +51,7 @@ fun OpenSourceLicenceScreen(
     val uriHandler = LocalUriHandler.current
     val topAppBarScrollBehavior = MiuixScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     LibraryDetailPage(
         title = stringResource(R.string.title_opensource_licence),
         onBack = { navigator.popBackStack() },
@@ -92,13 +82,13 @@ fun OpenSourceLicenceScreen(
             state = listState,
             settings = ScrollbarSettings.Default.copy(
                 selectionMode = ScrollbarSelectionMode.Full,
-                thumbUnselectedColor = if (salt) SaltTheme.colors.subText else MiuixTheme.colorScheme.onSurfaceVariantActions,
-                thumbSelectedColor = if (salt) SaltTheme.colors.highlight else MiuixTheme.colorScheme.onSurfaceVariantActions,
+                thumbUnselectedColor = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                thumbSelectedColor = MiuixTheme.colorScheme.onSurfaceVariantActions,
             )
         ) {
             LazyColumn(
                 state = listState,
-                modifier = (if (salt) Modifier else Modifier
+                modifier = (Modifier
                     .blurSource(topBarBackdrop)
                     .scrollEndHaptic()
                     .overScrollVertical()
@@ -108,19 +98,9 @@ fun OpenSourceLicenceScreen(
                     paddingValues = paddingValues,
                     bottomExtra = 12.dp
                 ),
-                overscrollEffect = if (salt) rememberOverscrollEffect() else null,
+                overscrollEffect = null,
             ) {
-                if (salt && libs == null) {
-                    item("loading") {
-                        Box(Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) {
-                            androidx.compose.material3.CircularProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = SaltTheme.colors.highlight,
-                                trackColor = SaltTheme.colors.stroke
-                            )
-                        }
-                    }
-                }
+
                 libraries?.let { libs ->
                     items(libs, key = { it.uniqueId }) { library ->
                         val summary = buildString {
@@ -131,20 +111,7 @@ fun OpenSourceLicenceScreen(
                                 append(licenseNames.joinToString(", "))
                             }
                         }
-                        if (salt) {
-                            ScreenCard {
-                                val website = library.website
-                                if (website != null) {
-                                    com.moriafly.salt.ui.Item(
-                                        text = library.name,
-                                        sub = summary,
-                                        onClick = { uriHandler.openUri(website) }
-                                    )
-                                } else {
-                                    com.moriafly.salt.ui.ItemValue(text = library.name, sub = summary)
-                                }
-                            }
-                        } else {
+                        
                             Card(
                                 modifier = Modifier
                                     .padding(horizontal = 12.dp)
@@ -160,7 +127,7 @@ fun OpenSourceLicenceScreen(
                                     }
                                 )
                             }
-                        }
+                        
                     }
                 }
                 item {

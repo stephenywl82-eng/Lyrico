@@ -2,7 +2,6 @@ package com.lonx.lyrico.utils
 
 import android.annotation.SuppressLint
 
-/** 歌词格式化：时间戳格式化与 XML 转义。 */
 object LyricFormatter {
     
     // 匹配 LRC/Enhanced LRC 格式: [01:23.456] 或 <01:23.45>

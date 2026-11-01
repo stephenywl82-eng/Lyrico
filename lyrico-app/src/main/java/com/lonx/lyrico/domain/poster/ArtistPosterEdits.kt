@@ -11,7 +11,6 @@ import com.lonx.audiotag.model.type
  */
 object ArtistPosterEdits {
 
-    /** 把 [artistName] 名下的海报换成 [picture]（一个艺术家只保留一张），位置不变。 */
     fun setFor(
         pictures: List<AudioPicture>,
         artistNames: List<String>,
@@ -32,13 +31,11 @@ object ArtistPosterEdits {
         }
     }
 
-    /** 只删掉 [target] 这一张。 */
     fun remove(pictures: List<AudioPicture>, target: AudioPicture): List<AudioPicture> {
         if (pictures.none { it === target }) return pictures
         return pictures.filterNot { it === target }
     }
 
-    /** 只替换 [target] 的图片数据，保留它的归属描述。 */
     fun replaceData(
         pictures: List<AudioPicture>,
         target: AudioPicture,

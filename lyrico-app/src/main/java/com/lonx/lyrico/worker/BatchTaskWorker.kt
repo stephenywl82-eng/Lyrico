@@ -12,7 +12,6 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
 import com.lonx.lyrico.data.model.BatchTaskType
-import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.BatchTaskRepository
 import com.lonx.lyrico.worker.processor.BatchTaskProcessorFactory

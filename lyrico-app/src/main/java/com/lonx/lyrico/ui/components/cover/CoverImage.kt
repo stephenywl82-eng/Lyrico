@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,12 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.lonx.audiotag.model.AudioPictureType
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.CoverCandidate
 import com.lonx.lyrico.ui.components.CoverRequest
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.theme.LyricoColors
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun CoverImage(
@@ -69,21 +66,17 @@ fun CoverImage(
     // so keep the placeholder icon instead of an empty box.
     var loadFailed by remember(request) { mutableStateOf(false) }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
     Box(
         modifier = modifier
             .clip(shape)
-            .background(
-                if (salt) LyricoColors.coverPlaceholder else MiuixTheme.colorScheme.surfaceVariant
-            ),
+            .background(LyricoColors.coverPlaceholder),
         contentAlignment = Alignment.Center
     ) {
         if (!hasSource || loadFailed) {
             Icon(
                 imageVector = LucideIcons.Image,
                 contentDescription = contentDescription,
-                tint = if (salt) LyricoColors.coverPlaceholderIcon
-                else MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                tint = LyricoColors.coverPlaceholderIcon,
                 modifier = Modifier.size(26.dp)
             )
         }

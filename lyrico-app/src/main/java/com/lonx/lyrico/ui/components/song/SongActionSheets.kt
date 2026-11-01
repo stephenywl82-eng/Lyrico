@@ -1,18 +1,14 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.song
-
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-
 
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -156,21 +152,7 @@ private fun RenameSongDialog(
             }
         },
         content = {
-            if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == com.lonx.lyrico.data.model.UiEngine.SALT) {
-                com.moriafly.salt.ui.RoundedColumn(
-                    paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp)
-                ) {
-                    SaltTextInput(state = nameState,
-                        hint = oldName,
-                    )
-                }
-                if (extensionDot.isNotEmpty()) com.moriafly.salt.ui.Text(
-                    text = extensionDot,
-                    style = com.moriafly.salt.ui.SaltTheme.textStyles.sub,
-                    color = com.moriafly.salt.ui.SaltTheme.colors.subText,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-            } else TextField(
+            TextField(
                 state = nameState,
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {

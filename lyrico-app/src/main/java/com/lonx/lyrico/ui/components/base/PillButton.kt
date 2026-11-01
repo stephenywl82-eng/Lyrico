@@ -8,10 +8,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -25,14 +24,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.lonx.lyrico.data.model.UiEngine
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.lonx.lyrico.ui.theme.sdw.SDWShapes
 
 enum class PillButtonSize {
     Small,
     Medium,
-    Large
+    Large,
 }
 
 @Immutable
@@ -43,7 +40,7 @@ data class PillButtonStyle(
     val spacing: Dp,
     val shape: Shape,
     val textStyle: TextStyle,
-    val selectedTextStyle: TextStyle = textStyle
+    val selectedTextStyle: TextStyle = textStyle,
 )
 
 @Immutable
@@ -53,11 +50,11 @@ data class PillButtonColors(
     val containerColor: Color,
     val contentColor: Color,
     val disabledContainerColor: Color,
-    val disabledContentColor: Color
+    val disabledContentColor: Color,
 ) {
     fun containerColor(
         selected: Boolean,
-        enabled: Boolean
+        enabled: Boolean,
     ): Color {
         return when {
             !enabled -> disabledContainerColor
@@ -68,7 +65,7 @@ data class PillButtonColors(
 
     fun contentColor(
         selected: Boolean,
-        enabled: Boolean
+        enabled: Boolean,
     ): Color {
         return when {
             !enabled -> disabledContentColor
@@ -82,29 +79,16 @@ object PillButtonDefaults {
 
     @Composable
     fun style(size: PillButtonSize): PillButtonStyle {
-        // SaltUI 的密度更小，字号与字重按 Salt 的语义样式派生。
-        val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT
-        val smallBase = if (salt) com.moriafly.salt.ui.SaltTheme.textStyles.sub
-        else MiuixTheme.textStyles.body2
-        val mediumBase = if (salt) com.moriafly.salt.ui.SaltTheme.textStyles.main
-        else MiuixTheme.textStyles.body2
-        val largeBase = if (salt) com.moriafly.salt.ui.SaltTheme.textStyles.main
-        else MiuixTheme.textStyles.body1
+        val base = MaterialTheme.typography.bodyMedium
         return when (size) {
             PillButtonSize.Small -> PillButtonStyle(
                 height = 28.dp,
                 contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
                 iconOnlyPadding = PaddingValues(horizontal = 7.dp, vertical = 0.dp),
                 spacing = 4.dp,
-                shape = RoundedCornerShape(14.dp),
-                textStyle = smallBase.copy(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                selectedTextStyle = smallBase.copy(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                shape = SDWShapes.Pill,
+                textStyle = base.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                selectedTextStyle = base.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
             )
 
             PillButtonSize.Medium -> PillButtonStyle(
@@ -112,15 +96,9 @@ object PillButtonDefaults {
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 5.dp),
                 iconOnlyPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                 spacing = 5.dp,
-                shape = RoundedCornerShape(16.dp),
-                textStyle = mediumBase.copy(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                selectedTextStyle = mediumBase.copy(
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                shape = SDWShapes.Pill,
+                textStyle = base.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+                selectedTextStyle = base.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
             )
 
             PillButtonSize.Large -> PillButtonStyle(
@@ -128,41 +106,24 @@ object PillButtonDefaults {
                 contentPadding = PaddingValues(horizontal = 15.dp, vertical = 7.dp),
                 iconOnlyPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
                 spacing = 6.dp,
-                shape = RoundedCornerShape(19.dp),
-                textStyle = largeBase.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                selectedTextStyle = largeBase.copy(
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                shape = SDWShapes.Pill,
+                textStyle = base.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+                selectedTextStyle = base.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
             )
         }
     }
 
     @Composable
-    fun defaultContainerColor(): Color =
-        if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-            com.moriafly.salt.ui.SaltTheme.colors.subBackground
-        } else MiuixTheme.colorScheme.surface
+    fun defaultContainerColor(): Color = MaterialTheme.colorScheme.surface
 
     @Composable
     fun colors(
-        selectedContainerColor: Color = if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-            com.moriafly.salt.ui.SaltTheme.colors.highlight
-        } else MiuixTheme.colorScheme.primary,
-        selectedContentColor: Color = if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-            com.moriafly.salt.ui.SaltTheme.colors.onHighlight
-        } else MiuixTheme.colorScheme.onPrimary,
+        selectedContainerColor: Color = MaterialTheme.colorScheme.primary,
+        selectedContentColor: Color = MaterialTheme.colorScheme.onPrimary,
         containerColor: Color = defaultContainerColor(),
-        contentColor: Color = if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-            com.moriafly.salt.ui.SaltTheme.colors.text
-        } else MiuixTheme.colorScheme.onSurface,
+        contentColor: Color = MaterialTheme.colorScheme.onSurface,
         disabledContainerColor: Color = defaultContainerColor(),
-        disabledContentColor: Color = if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-            com.moriafly.salt.ui.SaltTheme.colors.subText
-        } else MiuixTheme.colorScheme.disabledOnSurface
+        disabledContentColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
     ): PillButtonColors {
         return PillButtonColors(
             selectedContainerColor = selectedContainerColor,
@@ -170,21 +131,17 @@ object PillButtonDefaults {
             containerColor = containerColor,
             contentColor = contentColor,
             disabledContainerColor = disabledContainerColor,
-            disabledContentColor = disabledContentColor
+            disabledContentColor = disabledContentColor,
         )
     }
 
     /**
      * 无底色、强调色文字的胶囊，用于面包屑、加载更多这类行内操作。
-     * 不复用 Salt 原生 Plain 按钮：其最小高度 48dp，和列表密度对不上。
      */
     @Composable
     fun plainColors(): PillButtonColors {
-        val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT
-        val accent = if (salt) com.moriafly.salt.ui.SaltTheme.colors.highlight
-        else MiuixTheme.colorScheme.primary
-        val disabledContent = if (salt) com.moriafly.salt.ui.SaltTheme.colors.subText
-        else MiuixTheme.colorScheme.disabledOnSurface
+        val accent = MaterialTheme.colorScheme.primary
+        val disabledContent = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
         return colors(
             selectedContainerColor = Color.Transparent,
             selectedContentColor = accent,
@@ -196,6 +153,10 @@ object PillButtonDefaults {
     }
 }
 
+/**
+ * [B] 统一到 SDW：胶囊按钮合并 Salt / MIUIX 两套实现为单一 Material3 实现，
+ * 取色与形状全部走 MaterialTheme / SDW 契约（shape 使用 SDW 全圆角 Pill）。
+ */
 @Composable
 fun PillButton(
     text: String,
@@ -207,67 +168,28 @@ fun PillButton(
     style: PillButtonStyle = PillButtonDefaults.style(PillButtonSize.Medium),
     colors: PillButtonColors = PillButtonDefaults.colors(),
     leading: (@Composable () -> Unit)? = null,
-    trailing: (@Composable () -> Unit)? = null
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val containerColor = colors.containerColor(
-        selected = selected,
-        enabled = enabled
-    )
-
-    val contentColor = colors.contentColor(
-        selected = selected,
-        enabled = enabled
-    )
+    val containerColor = colors.containerColor(selected, enabled)
+    val contentColor = colors.contentColor(selected, enabled)
 
     val hasText = showText && text.isNotBlank()
     val hasLeading = leading != null
     val hasTrailing = trailing != null
     val iconOnly = !hasText && (hasLeading || hasTrailing)
 
-    if (com.lonx.lyrico.ui.theme.LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.BasicButton(
-            onClick = onClick, modifier = modifier.heightIn(min = style.height), enabled = enabled,
-            size = com.moriafly.salt.ui.ControlSize.Small,
-            contentPadding = if (iconOnly) style.iconOnlyPadding else style.contentPadding,
-            colors = com.moriafly.salt.ui.ButtonColors(
-                containerColor = if (selected) colors.selectedContainerColor else colors.containerColor,
-                contentColor = if (selected) colors.selectedContentColor else colors.contentColor,
-                disabledContainerColor = colors.disabledContainerColor,
-                disabledContentColor = colors.disabledContentColor,
-            ),
-        ) {
-            leading?.invoke()
-            if (hasLeading && hasText) Spacer(Modifier.width(style.spacing))
-            // 字号/字重覆盖 Salt 正文字号，否则胶囊会被撑大一圈。
-            if (hasText) com.moriafly.salt.ui.Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                style = if (selected) style.selectedTextStyle else style.textStyle)
-            if (hasTrailing && hasText) Spacer(Modifier.width(style.spacing))
-            trailing?.invoke()
-        }
-        return
-    }
-
     Box(
         modifier = modifier
             .height(style.height)
             .clip(style.shape)
             .background(containerColor)
-            .clickable(
-                enabled = enabled,
-                onClick = onClick
-            )
-            .padding(
-                if (iconOnly) {
-                    style.iconOnlyPadding
-                } else {
-                    style.contentPadding
-                }
-            ),
-        contentAlignment = Alignment.Center
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(if (iconOnly) style.iconOnlyPadding else style.contentPadding),
+        contentAlignment = Alignment.Center,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
         ) {
             if (leading != null) {
                 leading()
@@ -279,12 +201,12 @@ fun PillButton(
 
             if (hasText) {
                 val textStyle = if (selected) style.selectedTextStyle else style.textStyle
-                Text(
+                androidx.compose.material3.Text(
                     text = text,
                     style = textStyle,
                     color = contentColor,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 

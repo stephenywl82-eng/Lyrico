@@ -6,7 +6,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.data.repository.SettingsRepository
 import org.koin.compose.koinInject
 
-/** The configured artist poster folder, plus the revision that changes when it is refreshed. */
 internal data class ArtistPosterSource(
     val folder: String? = null,
     val revision: Long = 0L

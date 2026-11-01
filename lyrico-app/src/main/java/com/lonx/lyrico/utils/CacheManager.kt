@@ -12,7 +12,6 @@ object CacheManager {
 
     private const val TAG = "CacheManager"
 
-    /** 按目录分类的缓存大小（字节）。 */
     @OptIn(ExperimentalCoilApi::class)
     suspend fun getCategorizedCacheSize(
         context: Context
@@ -55,11 +54,9 @@ object CacheManager {
         cacheMap
     }
 
-    /** 总大小。 */
     fun getTotalSize(map: Map<CacheCategory, Long>): Long =
         map.values.sum()
 
-    /** 清理指定类别的缓存。 */
     @OptIn(ExperimentalCoilApi::class)
     suspend fun clearCacheByCategory(
         context: Context,
@@ -106,7 +103,6 @@ object CacheManager {
         }
     }
 
-    /** 清理全部缓存。 */
     @OptIn(ExperimentalCoilApi::class)
     suspend fun clearAllCache(context: Context) =
         withContext(Dispatchers.IO) {
@@ -124,4 +120,3 @@ fun File.getFolderSize(): Long {
 
     return this.walkTopDown().filter { it.isFile }.map { it.length() }.sum()
 }
-

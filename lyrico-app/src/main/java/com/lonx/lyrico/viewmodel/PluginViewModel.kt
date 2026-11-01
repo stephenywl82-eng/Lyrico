@@ -207,7 +207,6 @@ class PluginViewModel(
         }
     }
 
-
     private fun runBusy(successMessage: PluginMessage.Status, block: suspend () -> Unit) {
         viewModelScope.launch {
             if (actionMutex.isLocked) {

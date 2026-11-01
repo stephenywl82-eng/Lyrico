@@ -16,7 +16,8 @@ android {
 
         consumerProguardFiles("consumer-rules.pro")
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            // Only arm64-v8a is needed (per project owner) — matches the app module.
+            abiFilters += listOf("arm64-v8a")
         }
         externalNativeBuild {
             cmake {

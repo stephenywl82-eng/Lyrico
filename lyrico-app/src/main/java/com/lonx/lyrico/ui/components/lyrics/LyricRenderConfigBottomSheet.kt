@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.lyrics
 
@@ -8,30 +7,26 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
-import com.lonx.lyrico.ui.components.salt.SaltBottomSheet
-import com.lonx.lyrico.ui.components.salt.SaltDropdownRow
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.lyrics.LyricFormat
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
 import com.lonx.lyrico.data.model.lyrics.LyricLineTrack
 import com.lonx.lyrico.data.model.lyrics.visibleLyricLineTracks
-import com.lonx.lyrico.ui.components.miuix.MiuixBottomSheet
-import com.moriafly.salt.ui.ItemSwitcher
+import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
+
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.preference.ArrowPreference
@@ -52,7 +47,7 @@ fun LyricRenderConfigBottomSheet(
     onRemoveEmptyLinesChange: (Boolean) -> Unit,
     onConversionModeChange: (ConversionMode) -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     var showLineOrder by remember { mutableStateOf(false) }
     LaunchedEffect(show) {
         if (!show) showLineOrder = false
@@ -79,81 +74,8 @@ fun LyricRenderConfigBottomSheet(
             }
         },
     )
-    if (salt) {
-        SaltBottomSheet(
-            show = show,
-            onDismissRequest = onDismissRequest,
-            onDismissFinished = {},
-            // 配置行自身不滚动，由弹层统一滚动。
-            scrollContent = true,
-        ) {
-            config?.let { lyricConfig ->
-                val lyricFormatItems = LyricFormat.entries.map {
-                    stringResource(it.labelRes)
-                }
-                val selectedLyricFormatIndex = LyricFormat.entries
-                    .indexOf(lyricConfig.format)
-                    .coerceAtLeast(0)
-                val conversionModeItems = ConversionMode.entries.map {
-                    stringResource(it.labelRes)
-                }
-                val selectedConversionModeIndex = ConversionMode.entries
-                    .indexOf(lyricConfig.conversionMode)
-                    .coerceAtLeast(0)
 
-                com.moriafly.salt.ui.RoundedColumn {
-                    SaltDropdownRow(
-                        title = stringResource(R.string.lyric_mode),
-                        labels = lyricFormatItems,
-                        selectedIndex = selectedLyricFormatIndex,
-                    ) { index ->
-                        onLyricFormatChange(LyricFormat.entries[index])
-                    }
-                    ItemSwitcher(
-                        text = stringResource(R.string.roma),
-                        sub = stringResource(R.string.roma_hint),
-                        state = lyricConfig.showRomanization,
-                        onChange = onRomaEnabledChange,
-                    )
-                    ItemSwitcher(
-                        text = stringResource(R.string.translation),
-                        sub = stringResource(R.string.translation_hint),
-                        state = lyricConfig.showTranslation,
-                        onChange = onTranslationEnabledChange,
-                    )
-                    AnimatedVisibility(visible = lyricConfig.showTranslation) {
-                        ItemSwitcher(
-                            text = stringResource(R.string.only_translation_if_available),
-                            sub = stringResource(R.string.only_translation_if_available_hint),
-                            state = lyricConfig.onlyTranslationIfAvailable,
-                            enabled = lyricConfig.showTranslation,
-                            onChange = onOnlyTranslationIfAvailableChange,
-                        )
-                    }
-                    ItemSwitcher(
-                        text = stringResource(R.string.remove_empty_lines),
-                        sub = stringResource(R.string.remove_empty_lines_hint),
-                        state = lyricConfig.removeEmptyLines,
-                        onChange = onRemoveEmptyLinesChange,
-                    )
-                    SaltDropdownRow(
-                        title = stringResource(R.string.conversion_mode),
-                        labels = conversionModeItems,
-                        selectedIndex = selectedConversionModeIndex,
-                    ) { index ->
-                        onConversionModeChange(ConversionMode.entries[index])
-                    }
-                    com.moriafly.salt.ui.Item(
-                        text = stringResource(R.string.lyric_line_order),
-                        sub = lineOrderSummary,
-                        onClick = { showLineOrder = true },
-                    )
-                }
-            }
-        }
-        return
-    }
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = show,
         scrollContent = true,
         onDismissRequest = onDismissRequest

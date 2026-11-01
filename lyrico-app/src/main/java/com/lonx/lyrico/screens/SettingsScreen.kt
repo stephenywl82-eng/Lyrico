@@ -1,10 +1,6 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.screens.settings.*
 import kotlin.math.roundToInt
 import android.annotation.SuppressLint
@@ -14,20 +10,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -98,12 +92,10 @@ fun SettingsScreen(
     val settingsRepository: SettingsRepository = koinInject()
     val artistPosterFolder by settingsRepository.artistPosterFolder.collectAsStateWithLifecycle(initialValue = null)
 
-    val uiEngine = LocalUiEngine.current
     val lyricFormat = settingsUiState.lyricFormat
     val artistSeparator = settingsUiState.separator
     val romaEnabled = settingsUiState.romaEnabled
     val themeMode = settingsUiState.themeMode
-    val monetEnable = settingsUiState.monetEnable
     val floatingBottomBarEnabled = settingsUiState.floatingBottomBarEnabled
     val barBlurEnabled = settingsUiState.barBlurEnabled
     val floatingBarEffect = settingsUiState.floatingBarEffect
@@ -129,14 +121,6 @@ fun SettingsScreen(
     val showRgTargetDialog = remember { mutableStateOf(false) }
     val showLyricLineOrderSheet = remember { mutableStateOf(false) }
     val visibleTracks = visibleLyricLineTracks(romaEnabled, translationEnabled, onlyTranslationIfAvailable)
-    val monetVisibilityState = remember(settingsUiState.isInitialized) {
-        MutableTransitionState(monetEnable)
-    }
-
-    LaunchedEffect(monetEnable) {
-        monetVisibilityState.targetState = monetEnable
-    }
-
     val themeModeItems = ThemeMode.entries.map { stringResource(it.labelRes) }
     val selectedThemeModeIndex =
         ThemeMode.entries.indexOf(themeMode).coerceAtLeast(0)
@@ -251,23 +235,12 @@ fun SettingsScreen(
         },
     )
     SettingsPage(
-        engine = uiEngine,
         initialized = settingsUiState.isInitialized,
         onBack = { navigator.popBackStack() },
     ) {
             item(key = "appearance"){
                 SectionTitle(text = stringResource(R.string.section_appearance))
                 Group {
-                    Choice(
-                        icon = LucideIcons.SwatchBook, tone = PreferenceIconTone.Appearance,
-                        title = stringResource(R.string.ui_engine),
-                        items = listOf(stringResource(R.string.ui_engine_miuix), stringResource(R.string.ui_engine_salt)),
-                        selectedIndex = uiEngine.ordinal,
-                        onSelectedIndexChange = { index ->
-                            scope.launch { settingsRepository.saveUiEngine(UiEngine.entries[index]) }
-                        },
-                    )
-
                     val configuration = LocalConfiguration.current
                     var selectedLanguageTag by remember(configuration) {
                         mutableStateOf(
@@ -297,65 +270,50 @@ fun SettingsScreen(
                             settingsViewModel.setThemeMode(ThemeMode.entries[index])
                         }
                     )
-                    if (uiEngine == UiEngine.MIUIX) {
-                        Toggle(
-                            icon = LucideIcons.Blend, tone = PreferenceIconTone.Lyrics,
-                            title = stringResource(R.string.bar_blur),
-                            summary = stringResource(R.string.bar_blur_summary),
-                            checked = barBlurEnabled,
-                            onCheckedChange = settingsViewModel::setBarBlurEnabled,
-                        )
-                        Toggle(
-                            icon = LucideIcons.PanelBottom, tone = PreferenceIconTone.Pink,
-                            title = stringResource(R.string.floating_bottom_bar),
-                            summary = stringResource(R.string.floating_bottom_bar_summary),
-                            checked = floatingBottomBarEnabled,
-                            onCheckedChange = { settingsViewModel.setFloatingBottomBarEnabled(it) }
-                        )
-                        AnimatedVisibility(visible = floatingBottomBarEnabled) {
-                            Choice(
-                                icon = LucideIcons.Layers, tone = PreferenceIconTone.Teal,
-                                title = stringResource(R.string.floating_bar_effect),
-                                items = floatingBarEffectItems,
-                                selectedIndex = floatingBarEffect.ordinal,
-                                onSelectedIndexChange = { index ->
-                                    settingsViewModel.setFloatingBarEffect(
-                                        FloatingBarEffect.entries[index]
-                                    )
-                                },
-                            )
-                        }
-                    }
-                    Toggle(
-                        icon = LucideIcons.Palette, tone = PreferenceIconTone.Orange,
-                        title = stringResource(R.string.monet),
-                        checked = monetEnable,
-                        onCheckedChange = {
-                            settingsViewModel.setMonetEnable(!monetEnable)
-                        }
+                                        Toggle(
+                        icon = LucideIcons.Blend, tone = PreferenceIconTone.Lyrics,
+                        title = stringResource(R.string.bar_blur),
+                        summary = stringResource(R.string.bar_blur_summary),
+                        checked = barBlurEnabled,
+                        onCheckedChange = settingsViewModel::setBarBlurEnabled,
                     )
-                    AnimatedVisibility(visibleState = monetVisibilityState) {
-                        val currentSelectedIndex = KeyColors.indexOf(currentKeyColor).let {
-                            if (it == -1) 0 else it
-                        }
-                        val options = KeyColors.map { keyColor ->
+                    Toggle(
+                        icon = LucideIcons.PanelBottom, tone = PreferenceIconTone.Pink,
+                        title = stringResource(R.string.floating_bottom_bar),
+                        summary = stringResource(R.string.floating_bottom_bar_summary),
+                        checked = floatingBottomBarEnabled,
+                        onCheckedChange = { settingsViewModel.setFloatingBottomBarEnabled(it) }
+                    )
+                    AnimatedVisibility(visible = floatingBottomBarEnabled) {
+                        Choice(
+                            icon = LucideIcons.Layers, tone = PreferenceIconTone.Teal,
+                            title = stringResource(R.string.floating_bar_effect),
+                            items = floatingBarEffectItems,
+                            selectedIndex = floatingBarEffect.ordinal,
+                            onSelectedIndexChange = { index ->
+                                settingsViewModel.setFloatingBarEffect(
+                                    FloatingBarEffect.entries[index]
+                                )
+                            },
+                        )
+                    }
+                    Spinner(
+                        items = KeyColors.map { keyColor ->
                             PaletteOption(
                                 title = stringResource(keyColor.nameResId),
                                 color = keyColor.color ?: getSystemWallpaperColor(context),
                             )
+                        },
+                        selectedIndex = KeyColors.indexOf(currentKeyColor).let {
+                            if (it == -1) 0 else it
+                        },
+                        icon = LucideIcons.Palette, tone = PreferenceIconTone.Appearance,
+                        title = stringResource(R.string.key_color),
+                        onSelectedIndexChange = {
+                            val selectedKeyColor = KeyColors[it]
+                            settingsViewModel.setKeyColor(selectedKeyColor)
                         }
-
-                        Spinner(
-                            items = options,
-                            selectedIndex = currentSelectedIndex,
-                            icon = LucideIcons.Palette, tone = PreferenceIconTone.Appearance,
-                            title = stringResource(R.string.key_color),
-                            onSelectedIndexChange = {
-                                val selectedKeyColor = KeyColors[it]
-                                settingsViewModel.setKeyColor(selectedKeyColor)
-                            }
-                        )
-                    }
+                    )
                 }
             }
 
@@ -708,50 +666,6 @@ private fun ReplayGainTargetLoudnessSheet(
     val customText = customState.text.toString()
     var invalid by remember(show) { mutableStateOf(false) }
     val clearInputError = InputTransformation { invalid = false }
-
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.lonx.lyrico.ui.components.salt.SaltConfirmDialog(
-            show = show, dismissOnConfirm = false,
-            title = stringResource(R.string.settings_replay_gain_target_loudness),
-            cancelText = stringResource(R.string.cancel),
-            confirmText = stringResource(R.string.confirm),
-            onDismissRequest = onDismiss,
-            onConfirm = {
-                val value = if (customSelected) customText.trim().toDoubleOrNull() else selectedPreset
-                if (value != null && value in -60.0..0.0) {
-                    onSave(value)
-                    onDismiss()
-                } else invalid = true
-            },
-            content = {
-                com.moriafly.salt.ui.RoundedColumn(paddingValues = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    presets.forEachIndexed { index, preset ->
-                        com.moriafly.salt.ui.ItemCheck(
-                            text = stringResource(presetLabels[index]),
-                            state = !customSelected && selectedPreset == preset,
-                            onChange = { selectedPreset = preset; customSelected = false; invalid = false },
-                        )
-                    }
-                    com.moriafly.salt.ui.ItemCheck(
-                        text = stringResource(R.string.replay_gain_target_preset_custom),
-                        state = customSelected,
-                        onChange = { customSelected = true; invalid = false },
-                    )
-                    if (customSelected) SaltTextInput(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        backgroundColor = com.moriafly.salt.ui.SaltTheme.colors.background,
-                        state = customState,
-                        inputTransformation = clearInputError,
-                        hint = stringResource(R.string.replay_gain_target_custom_hint),
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal),
-                    )
-                    if (invalid) com.moriafly.salt.ui.ItemTip(stringResource(R.string.replay_gain_target_invalid))
-                }
-            },
-        )
-        return
-    }
 
     YesNoBottomSheet(
         show = show,

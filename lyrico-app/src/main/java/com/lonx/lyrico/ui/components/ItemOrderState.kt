@@ -1,7 +1,7 @@
 package com.lonx.lyrico.ui.components
 
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 
 /** 手势回调读取同一个状态对象，避免松手时写回手势开始前捕获的列表。 */

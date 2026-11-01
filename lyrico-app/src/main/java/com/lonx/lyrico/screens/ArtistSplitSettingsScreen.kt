@@ -1,16 +1,9 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 
 package com.lonx.lyrico.screens
 
-import com.lonx.lyrico.ui.components.salt.SaltTextInput
-
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberOverscrollEffect
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -32,13 +24,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
@@ -50,16 +41,9 @@ import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
-import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.ItemSwitcher
-import com.moriafly.salt.ui.ItemOuterTitle
-import com.moriafly.salt.ui.ItemTip
-import com.moriafly.salt.ui.screen.ScreenCard
+
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
@@ -73,7 +57,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
@@ -82,7 +65,6 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
@@ -130,7 +112,7 @@ fun ArtistSplitSettingsScreen(
         }
     }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val separatorChips = ArtistSplitDefaults.BUILTIN_SEPARATORS
         .filterNot { it.id in uiState.config.hiddenBuiltinSeparatorIds }
         .map { separator ->
@@ -172,95 +154,16 @@ fun ArtistSplitSettingsScreen(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = (if (salt) Modifier else Modifier.blurSource(topBarBackdrop))
+            modifier = (Modifier.blurSource(topBarBackdrop))
                 .libraryDetailScroll(topAppBarScrollBehavior)
                 .fillMaxHeight(),
             contentPadding = scaffoldContentPadding(
                 paddingValues = paddingValues,
                 bottomExtra = 12.dp
             ),
-            overscrollEffect = if (salt) rememberOverscrollEffect() else null
+            overscrollEffect = null
         ) {
-            if (salt) {
-                item(key = "config") {
-                    ItemOuterTitle(stringResource(R.string.artist_split_general_section))
-                    ScreenCard {
-                        ItemSwitcher(
-                            text = stringResource(R.string.artist_split_enabled),
-                            sub = stringResource(R.string.artist_split_enabled_summary),
-                            state = uiState.config.enabled,
-                            onChange = viewModel::setEnabled,
-                            iconPainter = rememberVectorPainter(LucideIcons.Split),
-                            iconColor = PreferenceIconTone.Appearance.color(),
-                        )
-                        Item(
-                            text = stringResource(if (uiState.hasPendingIndexRebuild) R.string.rebuild_artist_index_now else R.string.rebuild_artist_index),
-                            sub = when {
-                                uiState.isRebuildingIndex -> stringResource(R.string.artist_index_rebuilding)
-                                uiState.hasPendingIndexRebuild -> stringResource(R.string.artist_index_rebuild_pending)
-                                else -> stringResource(R.string.artist_index_current)
-                            },
-                            iconPainter = rememberVectorPainter(LucideIcons.RefreshCw),
-                            iconColor = PreferenceIconTone.Tools.color(),
-                            onClick = viewModel::rebuildArtistIndex
-                        )
-                    }
-                }
-                item(key = "separators") {
-                    ItemOuterTitle(stringResource(R.string.section_artist_separators))
-                    ScreenCard {
-                        ChipGrid(Modifier.padding(12.dp)) {
-                            separatorChips.forEach { chip ->
-                                com.lonx.lyrico.ui.components.ManagedChip(
-                                    text = chip.text, checked = chip.checked,
-                                    onClick = {
-                                        val enabled = !chip.checked
-                                        if (chip.isBuiltin) viewModel.setBuiltinSeparatorEnabled(chip.id, enabled)
-                                        else viewModel.setCustomSeparatorEnabled(chip.id, enabled)
-                                    },
-                                    onDelete = { pendingDelete = PendingRuleDelete.Separator(chip.id, chip.text, chip.isBuiltin) },
-                                    editDescription = stringResource(R.string.edit_custom_separator),
-                                    onEdit = if (chip.isBuiltin) null else {
-                                        { editingSeparator = uiState.config.customSeparators.firstOrNull { it.id == chip.id } }
-                                    }
-                                )
-                            }
-                        }
-                        Item(
-                            text = stringResource(R.string.add_custom_separator),
-                            iconPainter = rememberVectorPainter(LucideIcons.Plus),
-                            iconColor = PreferenceIconTone.Library.color(),
-                            onClick = { addingSeparator = true }
-                        )
-                        Item(
-                            text = stringResource(R.string.reset_to_default),
-                            iconPainter = rememberVectorPainter(LucideIcons.RotateCcw),
-                            iconColor = PreferenceIconTone.Lyrics.color(),
-                            onClick = viewModel::resetSeparators
-                        )
-                    }
-                }
-                item(key = "custom_no_split") {
-                    ItemOuterTitle(stringResource(R.string.section_no_split_artists))
-                    ScreenCard {
-                        uiState.config.customNoSplitArtists.forEach { artist ->
-                            SaltRuleRow(
-                                text = artist.name, checked = artist.enabled,
-                                onCheckedChange = { viewModel.setCustomNoSplitArtistEnabled(artist.id, it) },
-                                onDelete = { pendingDelete = PendingRuleDelete.NoSplitArtist(artist.id, artist.name) },
-                                onEdit = { editingNoSplitArtist = artist },
-                                editDescription = stringResource(R.string.edit_no_split_artist)
-                            )
-                        }
-                        Item(
-                            text = stringResource(R.string.add_no_split_artist),
-                            iconPainter = rememberVectorPainter(LucideIcons.UserPlus),
-                            iconColor = PreferenceIconTone.Library.color(),
-                            onClick = { addingNoSplitArtist = true }
-                        )
-                    }
-                }
-            } else {
+            
                 item(key = "config") {
                     SmallTitle(text = stringResource(R.string.artist_split_general_section))
                     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
@@ -371,7 +274,7 @@ fun ArtistSplitSettingsScreen(
                         )
                     }
                 }
-            }
+            
         }
     }
 
@@ -574,42 +477,6 @@ private fun ArtistSplitInputDialog(
     val inputState = remember(show, initialValue) { TextFieldState(initialValue) }
     val text = inputState.text.toString()
 
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        if (show) com.lonx.lyrico.ui.components.salt.SaltBasicDialog(onDismissRequest = onDismiss) {
-            val focusRequester = remember { FocusRequester() }
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            Column(Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState())) {
-                com.lonx.lyrico.ui.components.salt.SaltDialogTitle(title)
-                com.moriafly.salt.ui.RoundedColumn(paddingValues = PaddingValues(0.dp)) {
-                    SaltTextInput(
-                        state = inputState, hint = hint,
-                        modifier = Modifier.focusRequester(focusRequester),
-                    )
-                }
-                ItemTip(hint)
-            }
-            Spacer(Modifier.height(16.dp))
-            FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (showDelete) {
-                    com.lonx.lyrico.ui.components.salt.SaltDialogButton(
-                        text = stringResource(R.string.common_delete), onClick = onDelete,
-                        appearance = com.moriafly.salt.ui.ButtonAppearance.Plain,
-                        intent = com.moriafly.salt.ui.ButtonIntent.Destructive
-                    )
-                }
-                com.lonx.lyrico.ui.components.salt.SaltDialogButton(
-                    text = stringResource(R.string.cancel), onClick = onDismiss,
-                    appearance = com.moriafly.salt.ui.ButtonAppearance.Subtle
-                )
-                com.lonx.lyrico.ui.components.salt.SaltDialogButton(
-                    text = stringResource(R.string.confirm), onClick = { onSave(text) },
-                )
-            }
-        }
-        return
-    }
-
     WindowDialog(
         show = show,
         title = title,
@@ -659,19 +526,6 @@ private fun ConfirmRuleDeleteDialog(
     onDismiss: () -> Unit,
     onConfirm: (PendingRuleDelete) -> Unit
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        pendingDelete?.let { rule ->
-            com.lonx.lyrico.ui.components.salt.SaltConfirmDialog(
-                title = stringResource(R.string.artist_split_delete_rule_title),
-                summary = stringResource(R.string.artist_split_delete_rule_message, rule.label),
-                onDismissRequest = onDismiss,
-                onConfirm = { onConfirm(rule) },
-                cancelText = stringResource(R.string.cancel),
-                confirmText = stringResource(R.string.common_delete)
-            )
-        }
-        return
-    }
 
     WindowDialog(
         show = pendingDelete != null,
@@ -704,23 +558,5 @@ private fun ConfirmRuleDeleteDialog(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SaltRuleRow(
-    text: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    onDelete: () -> Unit,
-    onEdit: (() -> Unit)? = null,
-    editDescription: String
-) {
-    Row(Modifier.fillMaxWidth().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        ItemSwitcher(text = text, state = checked, onChange = onCheckedChange, modifier = Modifier.weight(1f))
-        onEdit?.let { edit ->
-            SaltIconButton(LucideIcons.Pencil, editDescription, edit)
-        }
-        SaltIconButton(LucideIcons.Trash, stringResource(R.string.common_delete), onDelete)
     }
 }

@@ -1,29 +1,13 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.FlowRow
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
-import com.lonx.lyrico.ui.components.editor.SaltEditorField
-import com.lonx.lyrico.ui.components.editor.SaltEditorUndoAction
 import com.lonx.lyrico.ui.components.editor.EditorSheet
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
-import com.lonx.lyrico.ui.components.salt.SaltBasicDialog
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
 import com.lonx.lyrico.ui.components.base.ItemMenuAction
-import com.lonx.lyrico.ui.components.base.PillButton
-import com.lonx.lyrico.ui.components.base.PillButtonDefaults
-import com.lonx.lyrico.ui.components.base.PillButtonSize
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.RoundedColumn
-import com.moriafly.salt.ui.ItemSwitcher
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ClipData
@@ -113,7 +97,6 @@ import com.lonx.audiotag.model.artistPictureTypes
 import com.lonx.audiotag.model.type
 import com.lonx.lyrico.data.model.lyrics.LyricsOperation
 import com.lonx.lyrico.ui.components.lyrics.LyricsProcessingSheet
-import com.lonx.lyrico.ui.components.lyrics.saltLyricsReadingStyle
 import com.lonx.lyrico.ui.components.lyrics.LyricsOrganizationMenu
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
@@ -189,10 +172,15 @@ import top.yukonga.miuix.kmp.basic.TextFieldDefaults
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.FlowRow
+import com.lonx.lyrico.ui.components.scaffoldContentPadding
+import com.lonx.lyrico.ui.components.base.PillButton
+import com.lonx.lyrico.ui.components.base.PillButtonDefaults
+import com.lonx.lyrico.ui.components.base.PillButtonSize
 
 private const val LIMITED_LYRICS_INPUT_MAX_LINES = 30
 
-/** 艺术家海报描述对不上任何艺术家时，角标的警示底色。 */
 private val ArtistImageUnmatchedBadgeColor = Color(0xFFB45309).copy(alpha = 0.9f)
 
 @SuppressLint("LocalContextGetResourceValueCall")
@@ -304,7 +292,6 @@ fun EditMetadataScreen(
 
     val clipboardManager = LocalClipboard.current
 
-    /** 弹一条带「撤销」的提示；用户点撤销时执行 [restoreChange]。 */
     fun showUndoSnackbar(message: String, restoreChange: () -> Unit) {
         scope.launch {
             val result = snackbarHostState.showSnackbar(
@@ -347,7 +334,7 @@ fun EditMetadataScreen(
         ) { value -> field.write(this, value) }
     }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val imeVisible = WindowInsets.isImeVisible
     val isFloatingToolbarVisible = !imeVisible
 
@@ -440,7 +427,6 @@ fun EditMetadataScreen(
     val posterFileEditState by posterFileEditor.state.collectAsState()
     var pendingPosterFileDelete by remember { mutableStateOf<ResolvedArtistPoster.File?>(null) }
 
-
     // 各种 Launcher
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -450,8 +436,7 @@ fun EditMetadataScreen(
 
     fun showPosterMessage(message: com.lonx.lyrico.utils.UiMessage) {
         val text = message.asString(context) ?: return
-        if (salt) android.widget.Toast.makeText(context, text, android.widget.Toast.LENGTH_SHORT).show()
-        else scope.launch { snackbarHostState.showSnackbar(text) }
+        scope.launch { snackbarHostState.showSnackbar(text) }
     }
 
     com.lonx.lyrico.ui.components.poster.ArtistPosterPickerHost(
@@ -662,8 +647,7 @@ fun EditMetadataScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            if (salt) androidx.compose.material3.CircularProgressIndicator(color = SaltTheme.colors.highlight)
-            else CircularProgressIndicator()
+            CircularProgressIndicator()
         }
         return
     }
@@ -862,11 +846,6 @@ Box(modifier = Modifier.fillMaxSize()) {
         title = uiState.songInfo?.tagData?.title ?: uiState.songInfo?.tagData?.fileName
             ?: stringResource(R.string.edit_metadata_default_title),
         onBack = { if (externalEditRequestId == null || !uiState.isSaving) closeEditor(saved = uiState.saveSuccess == true) },
-        actions = {
-            if (uiState.isSaving) androidx.compose.material3.CircularProgressIndicator(
-                modifier = Modifier.size(24.dp), color = SaltTheme.colors.highlight)
-            else SaltIconButton(LucideIcons.Check, stringResource(R.string.confirm), { viewModel.saveMetadata() })
-        },
         miuixTopBar = {
             val titleText = uiState.songInfo?.tagData?.title
                 ?: uiState.songInfo?.tagData?.fileName
@@ -907,53 +886,16 @@ Box(modifier = Modifier.fillMaxSize()) {
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
-                .then(if (salt) Modifier else Modifier.blurSource(topBarBackdrop).imePadding())
+                .then(Modifier.blurSource(topBarBackdrop).imePadding())
                 .libraryDetailScroll(topAppBarScrollBehavior),
             // 用 contentPadding 而不是 padding，表单才会从毛玻璃顶栏下面滚过
-            contentPadding = if (salt) scaffoldContentPadding(paddingValues, bottomExtra = 132.dp) else scaffoldTopHorizontalPadding(paddingValues),
+            contentPadding = scaffoldTopHorizontalPadding(paddingValues),
         ) {
             fieldBlocks.forEach { block ->
                 val definition = block.fields.first()
                 item(key = block.key) {
                     Column {
-                        if (salt && block.kind == EditFieldKind.ReplayGain) {
-                            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.weight(1f)) {
-                                    androidx.compose.animation.AnimatedVisibility(
-                                        visible = uiState.isReplayGainCalculating,
-                                        enter = fadeIn(),
-                                        exit = fadeOut(),
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            androidx.compose.material3.CircularProgressIndicator(
-                                                progress = { replayGainCalculateProgress ?: 0f },
-                                                modifier = Modifier.size(20.dp),
-                                                color = SaltTheme.colors.highlight,
-                                                strokeWidth = 2.5.dp,
-                                                trackColor = SaltTheme.colors.highlight.copy(alpha = 0.2f),
-                                            )
-                                            Spacer(Modifier.width(8.dp))
-                                            com.moriafly.salt.ui.Text(
-                                                "${((replayGainCalculateProgress ?: 0f) * 100).toInt()}%",
-                                                style = SaltTheme.textStyles.sub,
-                                                color = SaltTheme.colors.highlight,
-                                            )
-                                        }
-                                    }
-                                }
-                                // 行内小胶囊：用应用密度映射，避免 Salt 原生 Small 的 40dp + 正文字号。
-                                PillButton(
-                                    text = stringResource(if (uiState.isReplayGainCalculating) R.string.replay_gain_calculate_in_progress else R.string.action_calculate_replay_gain),
-                                    onClick = { if (uiState.isReplayGainCalculating) viewModel.cancelScan() else viewModel.calculateReplayGain() },
-                                    colors = PillButtonDefaults.colors(
-                                        containerColor = SaltTheme.colors.highlight,
-                                        contentColor = SaltTheme.colors.onHighlight,
-                                    ),
-                                    style = PillButtonDefaults.style(PillButtonSize.Small))
-                            }
-                        }
-                        if (!salt && block.kind == EditFieldKind.ReplayGain) {
+                        if (block.kind == EditFieldKind.ReplayGain) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1020,6 +962,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                 }
                             }
                         }
+
                         when {
                             definition.custom -> {
                                 val key = requireNotNull(EditFieldRegistry.customTagKeyOf(definition.code))
@@ -1097,9 +1040,6 @@ Box(modifier = Modifier.fillMaxSize()) {
                                         ) { copy(lyrics = it) }
                                     },
                                     actionButtons = {
-                                        if (salt) SaltIconButton(LucideIcons.EllipsisVertical,
-                                            stringResource(R.string.action_lyrics_options), { showLyricsActionBottomSheet = true }, size = 32.dp, iconSize = 20.dp)
-                                        else
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -1436,14 +1376,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                         }
                     )
                 }
-                if (salt) ItemSwitcher(
-                    iconPainter = androidx.compose.ui.graphics.vector.rememberVectorPainter(LucideIcons.Captions),
-                    iconColor = PreferenceIconTone.Appearance.color(),
-                    text = stringResource(R.string.limit_lyrics_input_lines),
-                    sub = stringResource(R.string.limit_lyrics_input_lines_hint),
-                    state = limitLyricsInputLines,
-                    onChange = { viewModel.setLimitLyricsInputLines(it) }
-                ) else SwitchPreference(
+                SwitchPreference(
                     startAction = { com.lonx.lyrico.ui.components.icons.PreferenceIcon(LucideIcons.Captions, PreferenceIconTone.Appearance) },
                     title = stringResource(R.string.limit_lyrics_input_lines),
                     summary = stringResource(R.string.limit_lyrics_input_lines_hint),
@@ -1466,12 +1399,7 @@ Box(modifier = Modifier.fillMaxSize()) {
         show = showPlainLyricsSheet,
         enableNestedScroll = false,
         tools = {
-            if (salt) SaltIconButton(LucideIcons.Copy, stringResource(R.string.action_copy_lyrics), {
-                showPlainLyricsSheet = false
-                if (!plainLyrics.isNullOrEmpty()) scope.launch {
-                    clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("copy plain lyrics", plainLyrics)))
-                }
-            }) else IconButton(
+            IconButton(
                 onClick = {
                     showPlainLyricsSheet = false
                     if (!plainLyrics.isNullOrEmpty()) {
@@ -1502,7 +1430,7 @@ Box(modifier = Modifier.fillMaxSize()) {
             val lyricsBody: @Composable ColumnScope.() -> Unit = {
                 Box(
                     modifier = Modifier
-                        .then(if (salt) Modifier.weight(1f, fill = false) else Modifier)
+                        .then(Modifier)
                         .heightIn(min = 30.dp, max = 420.dp)
                         .fillMaxWidth()
                         .verticalScroll(plainLyricsScrollState)
@@ -1512,12 +1440,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                             .padding(vertical = 12.dp)
                             .fillMaxWidth()
                     ) {
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = plainLyrics ?: stringResource(R.string.lyrics_empty),
-                            // RoundedColumn 不提供内容内边距，这里自带一档。
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                            style = saltLyricsReadingStyle(),
-                        ) else Text(
+                        Text(
                             style = MiuixTheme.textStyles.body2,
                             text = plainLyrics ?: stringResource(R.string.lyrics_empty),
                             modifier = Modifier.fillMaxWidth(),
@@ -1525,12 +1448,12 @@ Box(modifier = Modifier.fillMaxSize()) {
                     }
                 }
             }
-            if (salt) RoundedColumn { lyricsBody() } else lyricsBody()
+            lyricsBody()
             Spacer(modifier = Modifier.height(12.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(if (salt) Modifier.padding(horizontal = 16.dp, vertical = 8.dp) else Modifier)
+                    .then(Modifier)
                     .horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1643,10 +1566,8 @@ Box(modifier = Modifier.fillMaxSize()) {
         }
     }
 
-    /** 重新绑定：目标艺术家已有海报时，等用户选「交换归属」还是「直接替换」。 */
     var pendingRebind by remember { mutableStateOf<PendingRebind?>(null) }
 
-    /** 改挂归属，给一次反悔机会。 */
     fun applyRebind(target: AudioPicture, artistName: String, swap: Boolean = false) {
         val previousPictures = editingTagData?.pictures.orEmpty()
         if (swap) {
@@ -1730,18 +1651,7 @@ Box(modifier = Modifier.fillMaxSize()) {
         title = stringResource(R.string.offset_adjust_hint),
         onDismissRequest = { showOffsetSheet = false }
     ) {
-        if (salt) Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-            RoundedColumn {
-                SelectionContainer {
-                    com.moriafly.salt.ui.Text(editingTagData?.lyrics.orEmpty(),
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 300.dp)
-                            .verticalScroll(rememberScrollState()).padding(16.dp),
-                        style = SaltTheme.textStyles.sub)
-                }
-            }
-            RoundedColumn { LyricsOffsetField(offset = currentShiftOffset,
-                onOffsetChange = { viewModel.applyLyricsOffset(it) }, modifier = Modifier.padding(vertical = 12.dp)) }
-        } else Column(
+        Column(
             modifier = Modifier
                 .padding(bottom = 32.dp)
                 .fillMaxWidth()
@@ -1780,24 +1690,7 @@ Box(modifier = Modifier.fillMaxSize()) {
     // 添加自定义标签 dialog
     // 目标艺术家已有海报：交换归属，还是把原来那张替换掉
     pendingRebind?.let { pending ->
-        if (salt) SaltBasicDialog(onDismissRequest = { pendingRebind = null }) {
-            Column(Modifier.fillMaxWidth()) {
-                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
-                    com.lonx.lyrico.ui.components.salt.SaltDialogTitle(stringResource(R.string.label_artist_image_conflict_title, pending.artistName))
-                    com.moriafly.salt.ui.Text(stringResource(R.string.label_artist_image_conflict_message),
-                        style = SaltTheme.textStyles.main, color = SaltTheme.colors.text)
-                }
-                Spacer(Modifier.height(16.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
-                    maxItemsInEachRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.3f) 1 else 2) {
-                    com.lonx.lyrico.ui.components.salt.SaltDialogButton(text = stringResource(R.string.label_artist_image_swap), modifier = Modifier.weight(1f),
-                        appearance = com.moriafly.salt.ui.ButtonAppearance.Subtle,
-                        onClick = { pendingRebind = null; applyRebind(pending.target, pending.artistName, swap = true) })
-                    com.lonx.lyrico.ui.components.salt.SaltDialogButton(text = stringResource(R.string.label_artist_image_replace), modifier = Modifier.weight(1f),
-                        onClick = { pendingRebind = null; applyRebind(pending.target, pending.artistName) })
-                }
-            }
-        } else WindowDialog(
+        WindowDialog(
             show = true,
             title = stringResource(R.string.label_artist_image_conflict_title, pending.artistName),
             onDismissRequest = { pendingRebind = null }
@@ -1833,25 +1726,7 @@ Box(modifier = Modifier.fillMaxSize()) {
         }
     }
 
-    if (salt && showAddCustomTagDialog) {
-        val keyState = rememberTextFieldState()
-        val valueState = rememberTextFieldState()
-        SaltConfirmDialog(show = true, title = stringResource(R.string.action_add_custom_tag),
-            onDismissRequest = { showAddCustomTagDialog = false },
-            onConfirm = {
-                if (keyState.text.isNotBlank()) {
-                    viewModel.addCustomFieldAndShow(keyState.text.toString(), valueState.text.toString())
-                    showAddCustomTagDialog = false
-                }
-            }, confirmEnabled = keyState.text.isNotBlank(), dismissOnConfirm = false,
-            cancelText = stringResource(R.string.cancel), confirmText = stringResource(R.string.confirm),
-            content = {
-                RoundedColumn(paddingValues = PaddingValues(0.dp)) {
-                    SaltEditorField(stringResource(R.string.label_custom_tag_name), keyState, grouped = false)
-                    SaltEditorField(stringResource(R.string.label_custom_tag_value), valueState, grouped = false)
-                }
-            })
-    } else if (!salt) WindowDialog(
+    WindowDialog(
         show = showAddCustomTagDialog,
         title = stringResource(R.string.action_add_custom_tag),
         onDismissRequest = { showAddCustomTagDialog = false }
@@ -1932,12 +1807,6 @@ private fun PlainLyricsToggleChip(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        // Salt 原生 Small 是 40dp + 正文字号，和 Miuix 分支的 30dp 胶囊差太多。
-        PillButton(text = text, selected = selected, onClick = onClick,
-            style = PillButtonDefaults.style(PillButtonSize.Medium))
-        return
-    }
 
     val background = if (selected) {
         MiuixTheme.colorScheme.primary
@@ -1969,19 +1838,15 @@ private fun PlainLyricsToggleChip(
     }
 }
 
-/** 等待用户决定「交换归属」还是「直接替换」的一次重新绑定。 */
 private data class PendingRebind(val target: AudioPicture, val artistName: String)
 
-/** 当前正在裁剪的目标。 */
 private sealed interface CropRequest {
     data object Cover : CropRequest
 
-    /** 只替换这一张艺术家图片的数据，保留它的归属。 */
     data class ArtistImage(val target: AudioPicture) : CropRequest
     data class ExternalArtistImage(val target: ResolvedArtistPoster.File) : CropRequest
 }
 
-/** 这张艺术家海报和原始标签里的同名海报是否已经不同（新增或数据/描述被改过）。 */
 private fun isArtistPictureModified(
     picture: AudioPicture,
     originals: List<AudioPicture>
@@ -1996,9 +1861,7 @@ private data class PicturePagerItem(
     val editLabel: String,
     val source: Any?,
     val isModified: Boolean,
-    /** 描述对不上任何已有艺术家，标签会用警示色提示。 */
     val isUnmatched: Boolean = false,
-    /** 图片来源说明（内嵌在标签里 / 来自外置海报文件夹），显示在尺寸旁边。 */
     val sourceLabel: String? = null,
     val onClick: () -> Unit,
     val onRevertClick: () -> Unit
@@ -2091,105 +1954,6 @@ private fun CoverSection(
         } else {
             imageSize = null
         }
-    }
-
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        // 两个引擎共用图片角标排列，尺寸与来源分行显示。
-        RoundedColumn {
-            Box(Modifier.fillMaxWidth().height(220.dp)) {
-                AsyncImage(
-                    model = currentImageSource ?: coverUri,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .matchParentSize()
-                        .graphicsLayer { alpha = 0.15f }
-                )
-
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    SaltTheme.colors.subBackground.copy(alpha = 0.6f),
-                                    SaltTheme.colors.subBackground.copy(alpha = 0.95f)
-                                )
-                            )
-                        )
-                )
-
-                Row(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier
-                                .size(160.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(SaltTheme.colors.subText.copy(alpha = 0.1f))
-                        ) { page ->
-                            val item = picturePages[page]
-                            Box(Modifier.fillMaxSize().clickable { item.onClick() }) {
-                                AsyncImage(
-                                    model = item.source,
-                                    contentDescription = item.editLabel,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.matchParentSize(),
-                                    placeholder = painterResource(id = R.drawable.ic_album_24dp),
-                                    error = painterResource(id = R.drawable.ic_album_24dp)
-                                )
-                                PictureOverlayBadges(item, page == currentPage, imageSize)
-                            }
-                        }
-                        if (picturePages.size > 1) {
-                            Spacer(Modifier.height(8.dp))
-                            PagerDotsIndicator(
-                                pageCount = picturePages.size,
-                                currentPage = currentPage,
-                                activeColor = SaltTheme.colors.text,
-                                inactiveColor = SaltTheme.colors.subText.copy(alpha = 0.4f),
-                                pageDescriptions = picturePages.map { it.label },
-                                onPageClick = { target ->
-                                    pagerScope.launch { pagerState.animateScrollToPage(target) }
-                                }
-                            )
-                        }
-                    }
-
-                    Spacer(Modifier.width(16.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        com.moriafly.salt.ui.Text(
-                            text = title.ifEmpty { stringResource(R.string.edit_metadata_default_title) },
-                            style = SaltTheme.textStyles.main,
-                            color = SaltTheme.colors.text,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        if (artist.isNotEmpty()) {
-                            com.moriafly.salt.ui.Text(
-                                text = artist,
-                                style = SaltTheme.textStyles.sub,
-                                color = SaltTheme.colors.subText,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        return
     }
 
     Box(
@@ -2307,7 +2071,6 @@ private fun CoverSection(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-
                     }
                 }
             }
@@ -2315,10 +2078,6 @@ private fun CoverSection(
     }
 }
 
-
-
-
-/** 类型与撤销分列上方，尺寸、来源分行放在下方；各角标随内容收缩。 */
 @Composable
 private fun BoxScope.PictureOverlayBadges(
     item: PicturePagerItem,
@@ -2381,16 +2140,7 @@ private fun PictureBadge(
 /** 角标文字：按当前引擎取原生文本控件，字号、字重与颜色保持一致。 */
 @Composable
 private fun PictureBadgeText(text: String, color: Color, fontSize: TextUnit = 10.sp) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        com.moriafly.salt.ui.Text(
-            text = text,
-            color = color,
-            fontSize = fontSize,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    } else {
+    
         Text(
             text = text,
             color = color,
@@ -2399,26 +2149,12 @@ private fun PictureBadgeText(text: String, color: Color, fontSize: TextUnit = 10
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
-    }
+    
 }
 
 @Composable
 private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        RoundedColumn {
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                com.moriafly.salt.ui.Text(
-                    stringResource(R.string.label_rating),
-                    style = SaltTheme.textStyles.sub.copy(fontSize = 14.sp, lineHeight = 20.sp),
-                    color = SaltTheme.colors.subText,
-                )
-                com.lonx.lyrico.ui.components.editor.RatingStars(rating, onRatingChange)
-            }
-        }
-    } else {
+    
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
             colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
@@ -2436,7 +2172,7 @@ private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
                 com.lonx.lyrico.ui.components.editor.RatingStars(rating, onRatingChange)
             }
         }
-    }
+    
 }
 
 @Composable
@@ -2454,19 +2190,6 @@ private fun MetadataInputField(
         "(" + stringResource(R.string.status_modified) + ")"
     } else {
         ""
-    }
-
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltEditorField(label = fieldLabel, state = state, modifier = modifier,
-            lineLimits = if (isMultiline) TextFieldLineLimits.MultiLine(
-                minHeightInLines = 10,
-                maxHeightInLines = if (limitMultilineLines) LIMITED_LYRICS_INPUT_MAX_LINES else Int.MAX_VALUE
-            ) else TextFieldLineLimits.SingleLine,
-            actions = {
-                SaltEditorUndoAction(visible = isModified, onUndo = onRevert)
-                actionButtons()
-            })
-        return
     }
 
     val colors = TextFieldDefaults.textFieldColors(
@@ -2569,14 +2292,6 @@ private fun CustomMetadataFieldEditor(
         onValueChange = onValueChange
     )
 
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltEditorField(label = field.key, state = fieldState, actions = {
-            SaltEditorUndoAction(visible = isModified, onUndo = onRevert)
-            SaltIconButton(LucideIcons.Trash, stringResource(R.string.action_delete), onRemove,
-                tint = SaltTheme.colors.error, size = 32.dp, iconSize = 18.dp)
-        })
-        return
-    }
     Column(modifier = Modifier.padding(vertical = 6.dp)) {
         Row(
             modifier = Modifier
@@ -2657,8 +2372,7 @@ private fun editedValue(data: AudioTagData?, field: SimpleTextField): String =
 
 @Composable
 private fun EditorMenuGroup(content: @Composable ColumnScope.() -> Unit) {
-    if (LocalUiEngine.current == UiEngine.SALT) RoundedColumn(content = content)
-    else Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
         Column(content = content)
     }
 }

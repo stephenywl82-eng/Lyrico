@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
-import android.provider.MediaStore
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -21,9 +20,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.SaltTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.io.FileOutputStream
@@ -126,10 +122,8 @@ fun getSystemWallpaperColor(context: Context): Color {
         dynamicScheme.primary
     } else {
         // API<31 无动态取色，Salt 下回退到 Salt 语义色。
-        if (LocalUiEngine.current == UiEngine.SALT) {
-            SaltTheme.colors.highlight
-        } else {
+        
             MiuixTheme.colorScheme.primary
-        }
+        
     }
 }

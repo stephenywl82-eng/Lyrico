@@ -1,29 +1,20 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import android.annotation.SuppressLint
 import android.content.ClipData
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.LocalOverscrollFactory
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -34,15 +25,14 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton as MaterialTextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -53,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
@@ -64,20 +53,15 @@ import com.lonx.lyrico.ui.components.base.SheetActionBar
 import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
 import com.lonx.lyrico.ui.components.base.PillButtonSize
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
 import com.lonx.lyrico.ui.components.lyrics.LyricRenderConfigBottomSheet
 import com.lonx.lyrico.ui.components.lyrics.LyricsPreviewPane
 import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.utils.UiMessage
 import com.lonx.lyrico.viewmodel.LyricsSearchCandidateUi
 import com.lonx.lyrico.viewmodel.LyricsSearchUiState
 import com.lonx.lyrico.viewmodel.LyricsSearchViewModel
-import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonAppearance
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.gestures.cupertino.CupertinoOverscrollEffectFactory
+
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.result.ResultBackNavigator
@@ -115,7 +99,7 @@ fun SearchLyricsScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val clipboardManager = LocalClipboard.current
     val scope = rememberCoroutineScope()
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
 
     var showLyricRenderConfig by remember { mutableStateOf(false) }
     var showLyricsSheet by remember { mutableStateOf(false) }
@@ -185,18 +169,7 @@ fun SearchLyricsScreen(
                     viewModel.onKeywordChanged(searchFieldState.text.toString())
                     viewModel.performSearch()
                 }
-                if (salt) {
-                    Button(
-                        onClick = submit,
-                        text = stringResource(R.string.action_search),
-                        appearance = ButtonAppearance.Plain,
-                    )
-                    SaltIconButton(
-                        icon = LucideIcons.Settings,
-                        label = stringResource(R.string.search_settings),
-                        onClick = { showLyricRenderConfig = true }
-                    )
-                } else {
+                
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(R.string.action_search),
@@ -211,59 +184,11 @@ fun SearchLyricsScreen(
                             tint = MiuixTheme.colorScheme.primary
                         )
                     }
-                }
+                
             }
         )
     }
 
-    if (salt) {
-        // Salt 该页没有标题栏：固定搜索行为首屏。
-        CompositionLocalProvider(
-            LocalIndication provides SaltTheme.configs.indication,
-            LocalOverscrollFactory provides CupertinoOverscrollEffectFactory(),
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SaltTheme.colors.background)
-                    .windowInsetsPadding(
-                        com.lonx.lyrico.ui.components.scaffoldPageWindowInsets().only(
-                            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-                        )
-                    )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(
-                                WindowInsetsSides.Top
-                            )
-                        )
-                        .padding(vertical = 8.dp)
-                ) {
-                    searchField(Modifier.padding(horizontal = 12.dp))
-                }
-                SearchLyricsContent(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel,
-                    uiState = uiState,
-                    pagerState = pagerState,
-                    salt = true,
-                    onCandidateClick = { candidate ->
-                        pendingSourceId = candidate.song.pluginId
-                        pendingSongId = candidate.song.id
-                        showLyricsSheet = true
-                        if (candidate.lyrics == null) {
-                            viewModel.loadLyrics(
-                                sourceId = candidate.song.pluginId,
-                                candidate = candidate
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    } else {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
@@ -297,8 +222,7 @@ fun SearchLyricsScreen(
                 }
             )
         }
-    }
-
+    
     val copySelectedLyrics: () -> Unit = {
         selectedCandidate?.formattedLyrics
             ?.takeIf { it.isNotBlank() }
@@ -324,7 +248,7 @@ fun SearchLyricsScreen(
             pendingSongId = null
         },
         tools = {
-            val buttonStyle = PillButtonDefaults.style(if (salt) PillButtonSize.Medium else PillButtonSize.Large)
+            val buttonStyle = PillButtonDefaults.style(PillButtonSize.Large)
             SheetActionBar(
                 leading = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -333,11 +257,7 @@ fun SearchLyricsScreen(
                             onClick = { showLyricRenderConfig = true },
                             style = buttonStyle,
                         )
-                        if (salt) SaltIconButton(
-                            icon = LucideIcons.Copy,
-                            label = stringResource(R.string.action_copy_lyrics),
-                            onClick = copySelectedLyrics,
-                        )
+
                     }
                 },
                 trailing = {
@@ -381,8 +301,8 @@ fun SearchLyricsScreen(
                 onCopyLyrics = copySelectedLyrics,
                 modifier = Modifier.height(420.dp),
                 // Salt 的复制入口在顶栏；正文内边距由外壳的 groupContent 提供。
-                showCopyAction = !salt,
-                contentPadding = if (salt) PaddingValues(0.dp) else PaddingValues(12.dp),
+                showCopyAction = true,
+                contentPadding = PaddingValues(12.dp),
             )
         }
     )
@@ -401,7 +321,6 @@ fun SearchLyricsScreen(
     )
 }
 
-/** 来源分页与结果列表：两引擎共用状态与分页逻辑，只换排版。 */
 @Composable
 private fun SearchLyricsContent(
     modifier: Modifier,
@@ -416,7 +335,7 @@ private fun SearchLyricsContent(
         when {
             uiState.isInitializing -> {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    if (salt) SaltLyricsProgress() else CircularProgressIndicator()
+                    CircularProgressIndicator()
                 }
                 return@Column
             }
@@ -483,7 +402,7 @@ private fun SearchLyricsContent(
             when {
                 isLoading && results.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        if (salt) SaltLyricsProgress() else CircularProgressIndicator()
+                        CircularProgressIndicator()
                     }
                 }
 
@@ -526,16 +445,6 @@ private fun SearchLyricsContent(
             }
         }
     }
-}
-
-/** SaltUI 没有加载指示器，统一使用 Salt 配色的回退控件。 */
-@Composable
-private fun SaltLyricsProgress(size: androidx.compose.ui.unit.Dp = 32.dp) {
-    androidx.compose.material3.CircularProgressIndicator(
-        modifier = Modifier.width(size).height(size),
-        color = SaltTheme.colors.highlight,
-        trackColor = SaltTheme.colors.stroke,
-    )
 }
 
 @Composable
@@ -585,14 +494,9 @@ private fun LyricsSearchResultList(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (salt) SaltLyricsProgress(size = 20.dp)
-                        else CircularProgressIndicator(size = 20.dp)
+                        CircularProgressIndicator(size = 20.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = stringResource(R.string.search_loading_more),
-                            style = SaltTheme.textStyles.sub,
-                            color = SaltTheme.colors.subText
-                        ) else Text(
+                        Text(
                             text = stringResource(R.string.search_loading_more),
                             fontSize = 14.sp,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary
@@ -609,11 +513,7 @@ private fun LyricsSearchResultList(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (salt) Button(
-                            onClick = onLoadMore,
-                            text = stringResource(R.string.search_load_more_failed),
-                            appearance = ButtonAppearance.Plain,
-                        ) else TextButton(
+                        TextButton(
                             text = stringResource(R.string.search_load_more_failed),
                             onClick = onLoadMore,
                             colors = ButtonDefaults.textButtonColorsPrimary()
@@ -630,11 +530,7 @@ private fun LyricsSearchResultList(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (salt) Button(
-                            onClick = onLoadMore,
-                            text = stringResource(R.string.search_load_more),
-                            appearance = ButtonAppearance.Plain,
-                        ) else TextButton(
+                        TextButton(
                             text = stringResource(R.string.search_load_more),
                             onClick = onLoadMore,
                             colors = ButtonDefaults.textButtonColorsPrimary()

@@ -12,7 +12,6 @@ data class EditFieldConfig(
     val componentOverrides: Map<String, Boolean> = emptyMap(),
 ) {
 
-    /** 自定义标签对应的字段定义。 */
     val customFields: List<EditFieldDefinition> = customTags.map { key ->
         EditFieldDefinition(
             code = EditFieldRegistry.customTagCode(key),
@@ -26,7 +25,6 @@ data class EditFieldConfig(
         )
     }
 
-    /** 内置字段 + 自定义字段，按用户顺序排列。 */
     val allFields: List<EditFieldDefinition> = run {
         val byCode = (EditFieldRegistry.fields + customFields).associateBy { it.code }
         val ordered = order.mapNotNull { byCode[it] }
@@ -35,7 +33,6 @@ data class EditFieldConfig(
         (ordered + missing).distinctBy { it.code }
     }
 
-    /** 显式改过的顺序；没有条目时回落到注册表默认顺序。 */
     fun orderedCodes(): List<String> = allFields.map { it.code }
 
     fun isEnabled(code: String): Boolean {
@@ -60,17 +57,14 @@ data class EditFieldConfig(
     fun isVisibleInScene(field: EditFieldDefinition, scene: EditFieldScene): Boolean =
         field.scope.supports(scene) && isEffectivelyEnabled(field)
 
-    /** 指定页面下、按用户顺序排列的可见字段。 */
     fun visibleFieldsForScene(scene: EditFieldScene): List<EditFieldDefinition> =
         allFields.toEditFieldBlocks().flatMap { block ->
             block.fields.filter { isVisibleInScene(it, scene) }
         }
 
-    /** 指定页面下可见字段的 code 集合，供编辑页按 code 判断单个字段。 */
     fun visibleFieldCodesForScene(scene: EditFieldScene): Set<String> =
         visibleFieldsForScene(scene).map { it.code }.toSet()
 
-    /** 指定页面下可见的自定义标签键，供编辑页渲染自定义标签区。 */
     fun visibleCustomTagKeys(scene: EditFieldScene): List<String> =
         visibleFieldsForScene(scene)
             .filter { it.custom }
@@ -92,14 +86,12 @@ data class EditFieldConfig(
         return copy(order = normalized.distinct())
     }
 
-    /** 主列表移动整个组件，保留组件内顺序和所有隐藏成员。 */
     fun withBlockOrder(keys: List<String>): EditFieldConfig {
         val blocks = allFields.toEditFieldBlocks().associateBy { it.key }
         val orderedKeys = (keys.filter { it in blocks } + blocks.keys).distinct()
         return withOrder(orderedKeys.flatMap { blocks.getValue(it).fields }.map { it.code })
     }
 
-    /** 只修改指定组件内部顺序，不改其他组件的位置、顺序和显隐。 */
     fun withComponentOrder(key: String, codes: List<String>): EditFieldConfig {
         val blocks = allFields.toEditFieldBlocks()
         val component = blocks.firstOrNull { it.key == key && it.isComposite } ?: return this

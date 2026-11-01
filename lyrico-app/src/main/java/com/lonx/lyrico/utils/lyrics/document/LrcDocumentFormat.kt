@@ -116,8 +116,7 @@ private fun parseLrc(raw: String, sourceFormat: LyricFormat): LyricsDocument {
             val isLeadingEnhancedLineTimestamp =
                 index == 0 &&
                         match.value.startsWith("[") &&
-                        matches.getOrNull(index + 1)?.value?.startsWith("<") == true &&
-                        text.isBlank()
+                        matches.getOrNull(index + 1)?.value?.startsWith("<") == text.isBlank()
 
             if (isLeadingEnhancedLineTimestamp) return@forEachIndexed
             if (text.isEmpty()) return@forEachIndexed

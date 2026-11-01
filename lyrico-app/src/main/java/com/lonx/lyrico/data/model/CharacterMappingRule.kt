@@ -20,7 +20,6 @@ data class CharacterMappingRule(
     val isEnabled: Boolean = true
 )
 
-/** 字符映射规则列表。 */
 @Serializable
 data class CharacterMappingConfig(
     val rules: List<CharacterMappingRule> = emptyList()

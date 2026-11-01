@@ -16,7 +16,6 @@ import com.lonx.lyrico.data.model.lyrics.SearchSource
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.combine
 import com.lonx.lyrico.plugin.i18n.PluginLocales

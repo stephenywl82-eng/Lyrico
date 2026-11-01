@@ -16,7 +16,6 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.viewmodel.ArtistDetailViewModel
 import com.lonx.lyrico.viewmodel.ArtistImageSource
 
-/** Shared local image picker, destination, permission retry and write progress. */
 @Composable
 fun ArtistPosterAddHost(
     viewModel: ArtistDetailViewModel,

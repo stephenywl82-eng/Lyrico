@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -27,16 +26,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,10 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
-import com.lonx.lyrico.screens.library.LibrarySelectionState
 import com.lonx.lyrico.ui.components.library.SelectableLibraryItem
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
@@ -65,12 +59,8 @@ import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.ui.components.song.SongActionSheets
 import com.lonx.lyrico.ui.components.song.SongListItemContent
 import com.lonx.lyrico.ui.components.song.SongListItemActions
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.FieldSongsViewModel
 import com.lonx.lyrico.viewmodel.SongSelectionViewModel
-import com.moriafly.salt.ui.Button
-import com.moriafly.salt.ui.ButtonAppearance
-import com.moriafly.salt.ui.SaltTheme
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
@@ -112,7 +102,7 @@ fun FieldSongsScreen(
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBarBlurBackdrop()
     val context = LocalContext.current
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     var expanded by remember { mutableStateOf(false) }
     var selectedSong by remember { mutableStateOf<SongEntity?>(null) }
     var showMenu by remember { mutableStateOf(false) }
@@ -143,20 +133,7 @@ fun FieldSongsScreen(
 
     Box(Modifier.fillMaxSize()) {
         // Salt 的选择态由 LibraryDetailPage 的原生槽位承担；Miuix 继续用原来的动画顶栏。
-        val selectionState = if (salt && isSelectionMode) {
-            LibrarySelectionState(
-                title = stringResource(R.string.selection_mode_selected_count, selectedSongUris.size),
-                allSelected = allSelected,
-                onClose = {
-                    expanded = false
-                    selectionViewModel.exitSelectionMode()
-                },
-                onToggleAll = {
-                    if (allSelected) selectionViewModel.deselectAll()
-                    else selectionViewModel.selectAll(songs)
-                },
-            )
-        } else null
+        val selectionState = null
 
         LibraryDetailPage(
             title = title,
@@ -225,51 +202,7 @@ fun FieldSongsScreen(
                 }
             }
         ) { padding ->
-            if (salt) {
-                // Salt 顶栏是透明模糊的 BasicScreen，内容顶部会被标题栏区域裁掉：
-                // 整列先让开标题栏高度，Tab 才显示得出来（与插件管理页同一做法）。
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(scaffoldContentPadding(paddingValues = padding))
-                ) {
-                    if (!isSelectionMode) {
-                        LibraryDetailTabs(
-                            tabs = tabLabels,
-                            selectedIndex = pagerState.currentPage,
-                            onSelected = { index -> scope.launch { pagerState.animateScrollToPage(index) } }
-                        )
-                    }
-                    HorizontalPager(
-                        state = pagerState,
-                        userScrollEnabled = false,
-                        modifier = Modifier.fillMaxSize(),
-                        verticalAlignment = Alignment.Top,
-                    ) { page ->
-                        FieldSongsPageContent(
-                            songs = if (page == 0) uiState.songsWithField else uiState.songsWithoutField,
-                            isLoading = uiState.isLoading,
-                            loadFailed = uiState.loadFailed,
-                            isSelectionMode = isSelectionMode,
-                            selectedSongUris = selectedSongUris,
-                            swipeLabel = swipeLabel,
-                            swipeSecondaryLabel = swipeSecondaryLabel,
-                            // 顶部内边距已由外层 Column 消费，这里只补列表底部（多选 FAB 让位）。
-                            padding = PaddingValues(bottom = if (isSelectionMode) 88.dp else 12.dp),
-                            scrollConnection = scrollBehavior.nestedScrollConnection,
-                            salt = true,
-                            onRefresh = viewModel::refresh,
-                            onOpenSong = { song -> navigator.navigate(EditMetadataDestination(songFileUri = song.uri)) },
-                            onToggleSelection = { song -> selectionViewModel.toggleSelection(song.uri) },
-                            onSwipeSelection = { song, pageSongs -> selectionViewModel.swipeSelect(song, pageSongs) },
-                            onShowMenu = { song ->
-                                selectedSong = song
-                                showMenu = true
-                            },
-                        )
-                    }
-                }
-            } else {
+            
                 HorizontalPager(
                     state = pagerState,
                     userScrollEnabled = false,
@@ -300,7 +233,7 @@ fun FieldSongsScreen(
                         },
                     )
                 }
-            }
+            
         }
 
         SongActionSheets(
@@ -360,11 +293,7 @@ private fun FieldSongsPageContent(
             Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            if (salt) androidx.compose.material3.CircularProgressIndicator(
-                modifier = Modifier.size(32.dp),
-                color = SaltTheme.colors.highlight,
-                trackColor = SaltTheme.colors.stroke,
-            ) else CircularProgressIndicator(size = 32.dp)
+            CircularProgressIndicator(size = 32.dp)
         }
 
         songs.isEmpty() -> IllustratedEmptyState(
@@ -379,13 +308,13 @@ private fun FieldSongsPageContent(
 
         else -> LazyColumn(
             state = listState,
-            modifier = (if (salt) Modifier else Modifier
+            modifier = (Modifier
                 .scrollEndHaptic()
                 .overScrollVertical()
                 .nestedScroll(scrollConnection))
                 .fillMaxSize(),
             contentPadding = padding,
-            overscrollEffect = if (salt) rememberOverscrollEffect() else null,
+            overscrollEffect = null,
         ) {
             if (loadFailed) {
                 item {
@@ -394,22 +323,13 @@ private fun FieldSongsPageContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        if (salt) com.moriafly.salt.ui.Text(
-                            text = stringResource(R.string.edit_field_songs_load_failed_hint),
-                            style = SaltTheme.textStyles.sub,
-                            color = SaltTheme.colors.subText,
-                            modifier = Modifier.weight(1f),
-                        ) else Text(
+                        Text(
                             text = stringResource(R.string.edit_field_songs_load_failed_hint),
                             style = MiuixTheme.textStyles.footnote1,
                             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                             modifier = Modifier.weight(1f),
                         )
-                        if (salt) Button(
-                            onClick = onRefresh,
-                            text = stringResource(R.string.edit_field_songs_retry),
-                            appearance = ButtonAppearance.Plain,
-                        ) else TextButton(
+                        TextButton(
                             text = stringResource(R.string.edit_field_songs_retry),
                             onClick = onRefresh,
                             colors = ButtonDefaults.textButtonColorsPrimary(),

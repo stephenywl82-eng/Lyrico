@@ -25,4 +25,3 @@ data class AlbumEntity(
     val year: String? = null,
     val updatedAt: Long = System.currentTimeMillis()
 )
-

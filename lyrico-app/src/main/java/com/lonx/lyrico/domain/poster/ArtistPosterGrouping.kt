@@ -16,13 +16,10 @@ data class ArtistPictureEntry(
     val description: String,
     val artist: String?
 ) {
-    /** 描述与当前艺术家字段对不上，需要用户重新指定归属。 */
     val isUnmatched: Boolean get() = artist == null
 
-    /** 归属名：匹配到的艺术家，否则退回标签描述（可能为空）。 */
     val ownerName: String get() = artist ?: description
 
-    /** 归属键：归组与定位都按它比较（忽略大小写与首尾空白）。 */
     val ownerKey: String get() = ownerName.normalizedArtistKey()
 
     /**
@@ -66,10 +63,8 @@ object ArtistPosterGrouping {
         }
     }
 
-    /** [ownerName] 对应的归属键；写操作按它定位。 */
     fun ownerKeyOf(ownerName: String): String = ownerName.normalizedArtistKey()
 
-    /** 单张图片的归属键；不是艺术家图片时返回 `null`。 */
     fun ownerKeyOf(picture: AudioPicture, artistNames: List<String>): String? =
         entries(listOf(picture), artistNames).firstOrNull()?.ownerKey
 

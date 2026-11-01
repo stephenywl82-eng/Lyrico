@@ -31,17 +31,15 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,13 +52,8 @@ import com.lonx.lyrico.ui.components.library.SelectableLibraryItem
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import com.lonx.lyrico.ui.components.library.LibraryDetailIconButton
-import com.lonx.lyrico.ui.components.library.LibraryDetailText
-import com.lonx.lyrico.ui.components.library.LibraryDetailTextTone
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.screens.library.LibrarySelectionState
-import com.lonx.lyrico.data.model.UiEngine
-import com.moriafly.salt.ui.SaltTheme
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
@@ -471,7 +464,7 @@ private fun ArtistSongsPage(
             .fillMaxHeight(),
         state = listState,
         contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
-        overscrollEffect = if (LocalUiEngine.current == UiEngine.SALT) androidx.compose.foundation.rememberOverscrollEffect() else null
+        overscrollEffect = null
     ) {
         if (songs.isEmpty()) {
             item("empty") {
@@ -528,7 +521,7 @@ private fun ArtistAlbumsPage(
             .libraryDetailScroll(topAppBarScrollBehavior)
             .fillMaxHeight(),
         contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
-        overscrollEffect = if (LocalUiEngine.current == UiEngine.SALT) androidx.compose.foundation.rememberOverscrollEffect() else null
+        overscrollEffect = null
     ) {
         if (albums.isEmpty()) {
             item("empty") {
@@ -570,7 +563,7 @@ private fun ArtistDetailHeader(
     coverCandidates: List<CoverCandidate>,
     onAvatarClick: () -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -603,42 +596,22 @@ private fun ArtistDetailHeader(
             val badgeModifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(if (salt) SaltTheme.colors.subBackground else MiuixTheme.colorScheme.secondaryContainer)
+                .background(MiuixTheme.colorScheme.secondaryContainer)
                 .padding(5.dp)
-            if (salt) {
-                com.moriafly.salt.ui.Icon(
-                    painter = rememberVectorPainter(LucideIcons.Image),
-                    contentDescription = null,
-                    tint = SaltTheme.colors.highlight,
-                    modifier = badgeModifier
-                )
-            } else {
+            
                 Icon(
                     imageVector = LucideIcons.Image,
                     contentDescription = null,
                     tint = MiuixTheme.colorScheme.primary,
                     modifier = badgeModifier
                 )
-            }
+            
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
             val title = artist.ifBlank { stringResource(R.string.artist_detail_title) }
             val summary = stringResource(R.string.album_song_count, albums.size, songCount)
-            if (salt) {
-                LibraryDetailText(
-                    text = title,
-                    tone = LibraryDetailTextTone.Title,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                LibraryDetailText(
-                    text = summary,
-                    tone = LibraryDetailTextTone.Secondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            } else {
+            
                 Text(
                     text = title,
                     style = MiuixTheme.textStyles.title3,
@@ -652,7 +625,7 @@ private fun ArtistDetailHeader(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-            }
+            
         }
     }
 }

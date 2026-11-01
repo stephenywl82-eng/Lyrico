@@ -16,6 +16,5 @@ enum class ArtistSeparator(
     }
 }
 
-
 fun String.toArtistSeparator(): ArtistSeparator =
     ArtistSeparator.fromText(this)

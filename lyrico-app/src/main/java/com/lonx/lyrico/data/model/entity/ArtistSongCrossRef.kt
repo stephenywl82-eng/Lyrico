@@ -30,4 +30,3 @@ data class ArtistSongCrossRef(
     val artistId: Long,
     val songId: Long
 )
-

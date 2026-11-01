@@ -6,21 +6,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 
 /** Shared settings definitions; native controls live in SettingsSalt/SettingsMiuix. */
 @Composable
 internal fun SettingsPage(
-    engine: UiEngine,
     initialized: Boolean,
     onBack: () -> Unit,
     content: SettingsItemsScope.() -> Unit,
 ) {
-    when (engine) {
-        UiEngine.SALT -> SettingsPageSalt(initialized, onBack, content)
-        UiEngine.MIUIX -> SettingsPageMiuix(initialized, onBack, content)
-    }
+    SettingsPageMiuix(initialized, onBack, content)
 }
 
 internal data class PaletteOption(val title: String, val color: Color)

@@ -54,7 +54,6 @@ data class SettingsUiState(
     val searchSourceTabStyle: SearchSourceTabStyle = SearchSourceTabStyle.ICON_AND_TEXT,
     val showAllSearchResultFields: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.AUTO,
-    val monetEnable: Boolean = false,
     val floatingBottomBarEnabled: Boolean = true,
     val barBlurEnabled: Boolean = false,
     val floatingBarEffect: FloatingBarEffect = FloatingBarEffect.NONE,
@@ -173,7 +172,6 @@ class SettingsViewModel(
             themeMode = base.theme.themeMode,
             lyricIndexEnabled = lyricIndexEnabled,
             ignoreShortAudio = base.ignoreShortAudio,
-            monetEnable = base.theme.monetEnable,
             floatingBottomBarEnabled = base.floatingBottomBarEnabled,
             barBlurEnabled = base.barBlurEnabled,
             floatingBarEffect = base.floatingBarEffect,
@@ -240,12 +238,6 @@ class SettingsViewModel(
             settingsRepository.saveOnlyTranslationIfAvailable(enabled)
         }
     }
-    fun setMonetEnable(enabled: Boolean) {
-        viewModelScope.launch {
-            settingsRepository.saveMonetEnable(enabled)
-        }
-    }
-
     fun setFloatingBottomBarEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settingsRepository.saveFloatingBottomBarEnabled(enabled)
@@ -465,4 +457,3 @@ class SettingsViewModel(
         const val TAG = "SettingsViewModel"
     }
 }
-

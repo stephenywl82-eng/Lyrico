@@ -3,7 +3,6 @@ package com.lonx.lyrico.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.ConversionMode
 import com.lonx.lyrico.data.model.log.AppLogLevel
 import com.lonx.lyrico.data.model.log.AppLogType
@@ -158,7 +157,6 @@ class SearchViewModel(
         searchSourceConfigApplier.observeIn(viewModelScope, allSourcesFlow)
     }
 
-
     val uiState: StateFlow<SearchUiState> =
         combine(
             searchState,
@@ -200,7 +198,6 @@ class SearchViewModel(
             SharingStarted.WhileSubscribed(5000),
             SearchUiState()
         )
-
 
     private val searchResultCache =
         mutableMapOf<String, MutableMap<String, CachedSearchResults>>()
@@ -432,8 +429,7 @@ class SearchViewModel(
         } else {
             allSourcesFlow.value.map { it.id }
         }.filter { id ->
-            state.hasMoreBySource[id] == true &&
-                    id !in state.loadingMoreSourceIds &&
+            state.hasMoreBySource[id] == id !in state.loadingMoreSourceIds &&
                     loadMoreJobs[id]?.isActive != true
         }
 
@@ -527,7 +523,6 @@ class SearchViewModel(
     // 歌词逻辑
     // -------------------------------------------------------------------------
 
-    /** 加载指定歌曲的歌词；同一时间只允许一个加载任务。 */
     fun loadLyrics(song: SongSearchResult) {
         lyricsJob?.cancel()
         val source = findSource(song.pluginId)
@@ -579,7 +574,6 @@ class SearchViewModel(
         }
     }
 
-    /** 清除歌词状态（关闭歌词页或切换列表时）。 */
     fun clearLyrics() {
         lyricsJob?.cancel()
         lyricsState.value = LyricsUiState()

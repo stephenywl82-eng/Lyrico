@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
@@ -26,10 +26,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieDynamicProperties
 import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.theme.LyricoColors
-import com.moriafly.salt.ui.SaltTheme
 
 enum class EmptyStateKind(internal val asset: String) {
     List("list"), Songs("songs"), Albums("albums"), Artists("artists"),
@@ -44,9 +41,9 @@ internal fun EmptyStateAnimation(kind: EmptyStateKind, compact: Boolean) = key(k
         LottieCompositionSpec.Asset("empty_states/${kind.asset}.json"),
     )
     val composition by compositionResult
-    val salt = LocalUiEngine.current == UiEngine.SALT
-    val accent = if (salt) SaltTheme.colors.highlight else MiuixTheme.colorScheme.primary
-    val surface = if (salt) SaltTheme.colors.subBackground else MiuixTheme.colorScheme.surfaceContainer
+    val salt = false
+    val accent = MiuixTheme.colorScheme.primary
+    val surface = MiuixTheme.colorScheme.surfaceContainer
     val warm = LyricoColors.emptyIllustrationWarm
     val fresh = LyricoColors.emptyIllustrationFresh
     val properties = rememberLottieDynamicProperties(

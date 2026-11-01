@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.content.ContextCompat
@@ -108,7 +108,6 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             }
         }
 
-
     private val songListViewModel: SongListViewModel by viewModel()
     private val settingsRepository: SettingsRepository by inject()
     private val libraryIndexRepository: LibraryIndexRepository by inject()
@@ -137,15 +136,8 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             LaunchedEffect(configuration) {
                 com.lonx.lyrico.plugin.i18n.PluginLocales.update(configuration)
             }
-            val uiEngine by settingsRepository.uiEngine.collectAsStateWithLifecycle(
-                initialValue = null
-            )
-            val resolvedUiEngine = uiEngine ?: return@setContent
             val themeMode by settingsRepository.themeMode.collectAsStateWithLifecycle(
                 initialValue = ThemeMode.AUTO
-            )
-            val monetEnable by settingsRepository.monetEnable.collectAsStateWithLifecycle(
-                initialValue = false
             )
             val keyColor by settingsRepository.keyColor.collectAsStateWithLifecycle(
                 initialValue = KeyColors.first()
@@ -180,9 +172,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             val context = this
 
             LyricoTheme(
-                uiEngine = resolvedUiEngine,
                 colorMode = themeMode,
-                monetEnabled = monetEnable,
                 keyColor = keyColor.color
             ) {
                 LaunchedEffect(Unit) {

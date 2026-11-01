@@ -23,7 +23,6 @@ class ArtistLibraryViewModel(
     val sortInfo: StateFlow<ArtistSortInfo> = settingsRepository.artistSortInfo
         .stateIn(viewModelScope, SharingStarted.Eagerly, ArtistSortInfo())
 
-
     val scanState = libraryScanManager.state
     val artists: StateFlow<List<ArtistEntity>> =
         combine(libraryIndexRepository.observeArtists(), sortInfo) { artists, sort ->
@@ -60,11 +59,9 @@ class ArtistLibraryViewModel(
         }
     }
 
-
     fun refreshSongs() {
         libraryScanManager.scanAll {
             libraryIndexRepository.rebuildArtistIndex()
         }
     }
 }
-

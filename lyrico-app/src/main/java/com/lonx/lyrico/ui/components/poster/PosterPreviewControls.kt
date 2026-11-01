@@ -36,10 +36,7 @@ import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.ArtistPosterFile
-import com.moriafly.salt.ui.SaltTheme
 import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -124,28 +121,23 @@ internal fun PosterThumbnailStrip(items: List<PosterPreviewMedia>, currentPage: 
 internal fun PosterInformation(item: PosterPreviewMedia, info: PosterMediaInfo?, loading: Boolean, failed: Boolean,
     onRetry: () -> Unit, headerGesture: Modifier) {
     val context = LocalContext.current
-    val salt = LocalUiEngine.current == UiEngine.SALT
-    val summaryColor = if (salt) SaltTheme.colors.subText else MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val salt = false
+    val summaryColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 84.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.fillMaxWidth().then(headerGesture), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             info?.lastModified?.let { time ->
                 // Salt 侧走自身 main/sub 字号，不把 Miuix 的 fontSize 硬塞给 Salt 控件。
-                if (salt) com.moriafly.salt.ui.Text(java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
-                    .format(java.util.Date(time)), style = SaltTheme.textStyles.main, color = SaltTheme.colors.text)
-                else Text(java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
+                Text(java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
                     .format(java.util.Date(time)), fontSize = MiuixTheme.textStyles.body1.fontSize)
             }
-            if (salt) com.moriafly.salt.ui.Text(item.name, style = SaltTheme.textStyles.sub, color = SaltTheme.colors.text)
-            else Text(item.name, fontSize = MiuixTheme.textStyles.body2.fontSize)
+            Text(item.name, fontSize = MiuixTheme.textStyles.body2.fontSize)
         }
         HorizontalDivider()
         when {
             loading -> CircularProgressIndicator(size = 24.dp)
             failed -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (salt) com.moriafly.salt.ui.Text(stringResource(R.string.artist_poster_read_error),
-                    modifier = Modifier.weight(1f), style = SaltTheme.textStyles.main, color = SaltTheme.colors.text)
-                else Text(stringResource(R.string.artist_poster_read_error), modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.artist_poster_read_error), modifier = Modifier.weight(1f))
                 IconButton(onClick = onRetry) { Icon(LucideIcons.RefreshCw, stringResource(R.string.refresh)) }
             }
             info != null -> {
@@ -153,12 +145,9 @@ internal fun PosterInformation(item: PosterPreviewMedia, info: PosterMediaInfo?,
                 info.size?.let { InformationRow(stringResource(R.string.label_file_size), android.text.format.Formatter.formatFileSize(context, it)) }
                 InformationRow(stringResource(R.string.poster_preview_format), info.mime.substringAfter('/').uppercase(java.util.Locale.ROOT))
                 HorizontalDivider()
-                if (salt) com.moriafly.salt.ui.Text(stringResource(if (item.embedded) R.string.label_image_source_embedded else R.string.label_image_source_external),
-                    style = SaltTheme.textStyles.sub, color = SaltTheme.colors.text)
-                else Text(stringResource(if (item.embedded) R.string.label_image_source_embedded else R.string.label_image_source_external),
+                Text(stringResource(if (item.embedded) R.string.label_image_source_embedded else R.string.label_image_source_external),
                     fontSize = MiuixTheme.textStyles.body2.fontSize)
-                if (salt) com.moriafly.salt.ui.Text(info.source, style = SaltTheme.textStyles.sub, color = summaryColor)
-                else Text(info.source, fontSize = MiuixTheme.textStyles.footnote1.fontSize, color = summaryColor)
+                Text(info.source, fontSize = MiuixTheme.textStyles.footnote1.fontSize, color = summaryColor)
             }
         }
     }
@@ -167,15 +156,11 @@ internal fun PosterInformation(item: PosterPreviewMedia, info: PosterMediaInfo?,
 @Composable
 private fun InformationRow(label: String, value: String) {
     // 标签=副文、取值=主文；Salt 用自身 sub/main，Miuix 保持原字号与色板。
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        if (salt) com.moriafly.salt.ui.Text(label, modifier = Modifier.weight(1f),
-            style = SaltTheme.textStyles.sub, color = SaltTheme.colors.subText)
-        else Text(label, fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+        Text(label, fontSize = MiuixTheme.textStyles.footnote1.fontSize,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary, modifier = Modifier.weight(1f))
-        if (salt) com.moriafly.salt.ui.Text(value, modifier = Modifier.weight(2f),
-            style = SaltTheme.textStyles.sub, color = SaltTheme.colors.text)
-        else Text(value, fontSize = MiuixTheme.textStyles.footnote1.fontSize, modifier = Modifier.weight(2f))
+        Text(value, fontSize = MiuixTheme.textStyles.footnote1.fontSize, modifier = Modifier.weight(2f))
     }
 }
 

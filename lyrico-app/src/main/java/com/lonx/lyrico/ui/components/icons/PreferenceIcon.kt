@@ -2,17 +2,14 @@ package com.lonx.lyrico.ui.components.icons
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.SaltTheme
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal enum class PreferenceIconTone {
     Appearance, Library, Lyrics, Tools, Teal, Orange, Pink, Gold, Danger;
@@ -27,10 +24,7 @@ internal enum class PreferenceIconTone {
 
     @Composable
     fun color(): Color {
-        // 暗色判断与语义色都跟随当前引擎，避免 Salt 下取到 Miuix 色板。
-        val salt = LocalUiEngine.current == UiEngine.SALT
-        val dark = if (salt) SaltTheme.colors.background.luminance() < 0.5f
-        else MiuixTheme.colorScheme.surface.luminance() < 0.5f
+        val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
         return when (this) {
             Appearance -> if (dark) Color(0xFFBF9AFF) else Color(0xFF8950E6)
             Library -> if (dark) Color(0xFFF3B85E) else Color(0xFFC47B08)
@@ -40,7 +34,7 @@ internal enum class PreferenceIconTone {
             Orange -> if (dark) Color(0xFFFFAC76) else Color(0xFFDB741F)
             Pink -> if (dark) Color(0xFFF393C5) else Color(0xFFD94C91)
             Gold -> if (dark) Color(0xFFE9C157) else Color(0xFFAF850A)
-            Danger -> if (salt) SaltTheme.colors.error else MiuixTheme.colorScheme.error
+            Danger -> MaterialTheme.colorScheme.error
         }
     }
 }

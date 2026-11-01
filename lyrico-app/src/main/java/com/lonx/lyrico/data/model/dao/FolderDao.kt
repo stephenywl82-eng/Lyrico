@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface FolderDao {
 
-
-    /** 所有文件夹 (UI 使用，包含已忽略和未忽略) */
     @Query("SELECT * FROM folders ORDER BY path")
     fun getAllFolders(): Flow<List<FolderEntity>>
 
@@ -37,7 +35,6 @@ interface FolderDao {
     @Update
     suspend fun update(folder: FolderEntity)
 
-    /** upsert 并返回 id */
     @Transaction
     suspend fun upsertAndGetId(
         path: String,
@@ -215,7 +212,6 @@ interface FolderDao {
         updateTime: Long = System.currentTimeMillis()
     )
 
-
     /**
      * 刷新所有文件夹的歌曲数量；忽略状态也按实际物理歌曲数统计。
      */
@@ -226,7 +222,6 @@ interface FolderDao {
     """)
     suspend fun refreshAllSongCounts(updateTime: Long = System.currentTimeMillis())
 
-    /** 刷新单个文件夹的歌曲数量。 */
     @Query("""
         UPDATE folders 
         SET songCount = (SELECT COUNT(*) FROM songs WHERE folderId = :folderId),

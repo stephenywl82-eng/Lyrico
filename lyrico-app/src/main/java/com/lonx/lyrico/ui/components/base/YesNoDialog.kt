@@ -3,11 +3,9 @@ package com.lonx.lyrico.ui.components.base
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.miuix.MiuixConfirmDialog
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
-import com.lonx.lyrico.ui.theme.LocalUiEngine
+import com.lonx.lyrico.ui.components.sdw.SdwConfirmDialog
 
+/** [B] 统一到 SDW：确认对话框直接走 SDW 基础件，原 MIUIX / Salt 分支坍缩为单路。 */
 @Composable
 fun YesNoDialog(
     show: Boolean,
@@ -21,32 +19,16 @@ fun YesNoDialog(
     confirmText: String = stringResource(R.string.confirm),
     confirmEnabled: Boolean = true,
 ) {
-    when (LocalUiEngine.current) {
-        UiEngine.SALT ->
-            SaltConfirmDialog(
-                show = show,
-                title = title,
-                summary = summary,
-                content = content,
-                onDismissRequest = onDismissRequest,
-                onDismissFinished = onDismissFinished,
-                onConfirm = onConfirm,
-                cancelText = cancelText,
-                confirmText = confirmText,
-                confirmEnabled = confirmEnabled,
-            )
-        UiEngine.MIUIX ->
-            MiuixConfirmDialog(
-                show = show,
-                title = title,
-                summary = summary,
-                content = content,
-                onDismissRequest = onDismissRequest,
-                onDismissFinished = onDismissFinished,
-                onConfirm = onConfirm,
-                cancelText = cancelText,
-                confirmText = confirmText,
-                confirmEnabled = confirmEnabled,
-            )
-    }
+    SdwConfirmDialog(
+        show = show,
+        title = title,
+        summary = summary,
+        content = content,
+        onDismissRequest = onDismissRequest,
+        onDismissFinished = onDismissFinished,
+        onConfirm = onConfirm,
+        cancelText = cancelText,
+        confirmText = confirmText,
+        confirmEnabled = confirmEnabled,
+    )
 }

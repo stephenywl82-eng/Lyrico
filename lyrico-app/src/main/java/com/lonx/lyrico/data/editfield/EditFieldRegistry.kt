@@ -3,7 +3,6 @@ package com.lonx.lyrico.data.editfield
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
 
-/** 内置字段的稳定代码、文案、默认顺序与显隐定义。 */
 object EditFieldRegistry {
 
     const val GROUP_BASIC_INFO = "basic_info"
@@ -13,7 +12,6 @@ object EditFieldRegistry {
     const val GROUP_LYRICS = "lyrics"
     const val GROUP_COVER = "cover"
 
-    /** 自定义标签在列表里的归属标记。 */
     const val GROUP_CUSTOM_TAGS = "custom_tags"
 
     val fields: List<EditFieldDefinition> = listOf(
@@ -110,10 +108,8 @@ object EditFieldRegistry {
     val fieldMap: Map<String, EditFieldDefinition> =
         fields.associateBy { it.code }
 
-    /** 内置字段的 code 集合；不包含运行时追加的自定义标签。 */
     val knownCodes: Set<String> = fieldMap.keys
 
-    /** 独立命名空间，避免用户标签名与内置字段代码冲突。 */
     const val CUSTOM_TAG_PREFIX = "tag:"
 
     fun customTagCode(key: String): String = CUSTOM_TAG_PREFIX + key

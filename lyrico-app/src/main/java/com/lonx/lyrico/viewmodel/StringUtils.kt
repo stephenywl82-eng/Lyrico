@@ -1,6 +1,5 @@
 package com.lonx.lyrico.viewmodel
 
-
 /**
  * 比较两个字符串是否相等，将 null 和空字符串视为相等
  */

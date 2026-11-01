@@ -22,11 +22,11 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,18 +40,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import com.lonx.lyrico.viewmodel.SortOrder
-import com.moriafly.salt.ui.Icon as SaltIcon
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.Text as SaltText
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private sealed interface AlphabetSideBarItem {
     data object ScrollTop : AlphabetSideBarItem
@@ -251,7 +246,6 @@ private fun AlphabetSideBarIndicator(
     item: AlphabetSideBarItem?,
     visible: Boolean
 ) {
-    val isSalt = LocalUiEngine.current == UiEngine.SALT
     AnimatedVisibility(
         visible = visible && item != null,
         enter = fadeIn() + scaleIn(),
@@ -263,53 +257,30 @@ private fun AlphabetSideBarIndicator(
                     .width(50.dp)
                     .height(50.dp)
                     .background(
-                        color = if (isSalt) SaltTheme.colors.highlight else MiuixTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 when (item) {
                     AlphabetSideBarItem.ScrollTop -> {
-                        if (isSalt) {
-                            SaltIcon(
-                                painter = painterResource(R.drawable.ic_arrow_up_24dp),
-                                modifier = Modifier.size(30.dp),
-                                contentDescription = null,
-                                tint = SaltTheme.colors.onHighlight
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_up_24dp),
-                                modifier = Modifier.size(30.dp),
-                                contentDescription = null,
-                                tint = MiuixTheme.colorScheme.onPrimary
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.ic_arrow_up_24dp),
+                            modifier = Modifier.size(30.dp),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
 
                     is AlphabetSideBarItem.Section -> {
-                        if (isSalt) {
-                            SaltText(
-                                text = item.value,
-                                style = SaltTheme.textStyles.main.copy(
-                                    fontSize = 30.sp,
-                                    lineHeight = 36.sp
-                                ),
-                                color = SaltTheme.colors.onHighlight,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1
-                            )
-                        } else {
-                            Text(
-                                text = item.value,
-                                style = MiuixTheme.textStyles.title1,
-                                color = MiuixTheme.colorScheme.onPrimary,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                maxLines = 1
-                            )
-                        }
+                        Text(
+                            text = item.value,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -379,71 +350,41 @@ private fun AlphabetSideBarCell(
         size < 24.dp -> size * 0.66f
         else -> size * 0.62f
     }
-    val isSalt = LocalUiEngine.current == UiEngine.SALT
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
         when (item) {
             AlphabetSideBarItem.ScrollTop -> {
-                if (isSalt) {
-                    SaltIcon(
-                        painter = painterResource(R.drawable.ic_arrow_up_24dp),
-                        contentDescription = null,
-                        tint = if (selected) {
-                            SaltTheme.colors.highlight
-                        } else {
-                            SaltTheme.colors.subText
-                        },
-                        modifier = Modifier.size(iconSize)
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_up_24dp),
-                        contentDescription = null,
-                        tint = if (selected) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurfaceContainer
-                        },
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
+                Icon(
+                    painter = painterResource(R.drawable.ic_arrow_up_24dp),
+                    contentDescription = null,
+                    tint = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.size(iconSize)
+                )
             }
 
             is AlphabetSideBarItem.Section -> {
-                if (isSalt) {
-                    SaltText(
-                        text = item.value,
-                        style = SaltTheme.textStyles.sub.copy(fontSize = fontSize),
-                        color = if (selected) {
-                            SaltTheme.colors.highlight
-                        } else {
-                            SaltTheme.colors.subText
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
-                    )
-                } else {
-                    Text(
-                        text = item.value,
-                        style = MiuixTheme.textStyles.body2.copy(fontSize = fontSize),
-                        color = if (selected) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurfaceContainer
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1
-                    )
-                }
+                Text(
+                    text = item.value,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontSize),
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
             }
         }
     }
 }
-
 
 fun findScrollIndex(
     section: String,

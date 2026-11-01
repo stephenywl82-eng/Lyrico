@@ -1,6 +1,5 @@
 package com.lonx.lyrico.data.model
 
-
 import com.lonx.lyrico.data.editfield.EditFieldConfigJson
 import com.lonx.lyrico.data.model.artist.ArtistSplitConfig
 import com.lonx.lyrico.data.model.plugin.PluginMetadataFieldWriteRule
@@ -33,7 +32,6 @@ data class SettingsBackup(
     @SerialName("search_page_size") val searchPageSize: Int? = null,
     @SerialName("search_source_tab_style") val searchSourceTabStyle: String? = null,
     @SerialName("show_all_search_result_fields") val showAllSearchResultFields: Boolean? = null,
-    @SerialName("ui_engine") val uiEngine: String? = null,
     @SerialName("theme_mode") val themeMode: String? = null,
     @SerialName("only_translation_if_available") val onlyTranslationIfAvailable: Boolean? = null,
     @SerialName("limit_lyrics_input_lines") val limitLyricsInputLines: Boolean? = null,
@@ -45,12 +43,10 @@ data class SettingsBackup(
     @SerialName("conversion_mode") val conversionMode: String? = null,
     @SerialName("log_retention_option") val logRetentionOption: String? = null,
     @SerialName("key_theme_color") val keyThemeColor: Int? = null,
-    @SerialName("monet_enable") val monetEnable: Boolean? = null,
     @SerialName("floating_bottom_bar_enabled") val floatingBottomBarEnabled: Boolean? = null,
     @SerialName("bar_blur_enabled") val barBlurEnabled: Boolean? = null,
     @SerialName("floating_bar_effect") val floatingBarEffect: String? = null,
     @SerialName("artist_split_config") val artistSplitConfig: ArtistSplitConfig? = null,
-    /** 只用于导入旧备份；新备份使用 editFieldConfig。 */
     @SerialName("edit_field_visibility_overrides") val editFieldVisibilityOverrides: Map<String, Boolean>? = null,
     /** 字段顺序、显隐与自定义标签。 */
     @SerialName("edit_field_config") val editFieldConfig: EditFieldConfigJson? = null

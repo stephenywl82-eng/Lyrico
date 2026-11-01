@@ -2,18 +2,10 @@ package com.lonx.lyrico.ui.components.base
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import com.moriafly.salt.ui.Item
-import com.moriafly.salt.ui.SaltTheme
-import top.yukonga.miuix.kmp.basic.BasicComponentColors
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import com.lonx.lyrico.ui.components.sdw.SdwItemRow
 
-/** Menu semantics are shared; each engine renders its own action row. */
+/** [B] 统一到 SDW：菜单操作行直接走 SdwItemRow，原 MIUIX / Salt 分支坍缩为单路。 */
 @Composable
 internal fun ItemMenuAction(
     title: String,
@@ -23,16 +15,12 @@ internal fun ItemMenuAction(
     enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        val color = if (tone == PreferenceIconTone.Danger) SaltTheme.colors.error else SaltTheme.colors.text
-        Item(text = title, sub = summary, iconPainter = rememberVectorPainter(icon),
-            textColor = color, iconColor = tone.color(), enabled = enabled, onClick = onClick)
-    } else {
-        ArrowPreference(title = title, summary = summary, enabled = enabled,
-            startAction = { PreferenceIcon(icon, tone, enabled = enabled) },
-            titleColor = BasicComponentColors(
-                if (tone == PreferenceIconTone.Danger) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.onSurface,
-                MiuixTheme.colorScheme.disabledOnSecondaryVariant),
-            onClick = onClick)
-    }
+    SdwItemRow(
+        title = title,
+        icon = icon,
+        tone = tone,
+        summary = summary,
+        enabled = enabled,
+        onClick = onClick,
+    )
 }

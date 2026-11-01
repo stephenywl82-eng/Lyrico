@@ -1,4 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.screens
 
@@ -6,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,18 +14,12 @@ import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.CharacterMappingRule
 import com.lonx.lyrico.data.model.ReplacementCharOption
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.data.model.toReplacementOption
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.viewmodel.CharacterMappingViewModel
-import com.moriafly.salt.ui.ItemDropdown
-import com.moriafly.salt.ui.ItemTip
-import com.moriafly.salt.ui.popup.PopupMenuItem
-import com.moriafly.salt.ui.screen.ScreenCard
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -49,7 +41,7 @@ fun CharacterMappingScreen(
     val viewModel: CharacterMappingViewModel = koinViewModel()
     val characterMappingConfig by viewModel.characterMappingConfig.collectAsState()
     val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     LibraryDetailPage(
         title = stringResource(R.string.configure_character_mapping),
         onBack = { navigator.popBackStack() },
@@ -72,7 +64,7 @@ fun CharacterMappingScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize().libraryDetailScroll(topAppBarScrollBehavior),
             contentPadding = scaffoldContentPadding(paddingValues, bottomExtra = 12.dp),
-            overscrollEffect = if (salt) rememberOverscrollEffect() else null
+            overscrollEffect = null
         ) {
             val config = characterMappingConfig
             if (config != null && config.rules.isNotEmpty()) {
@@ -94,12 +86,9 @@ private fun CharacterMappingRuleSection(
     rule: CharacterMappingRule,
     onCharacterMappingChanged: (character: String, replacementChar: String?) -> Unit
 ) {
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     if (rule.charMappings.isEmpty()) {
-        if (salt) {
-            ScreenCard { ItemTip(stringResource(R.string.no_character_mappings)) }
-            return
-        }
+
         Card(
             modifier = Modifier.padding(horizontal = 12.dp),
         ) {
@@ -125,20 +114,7 @@ private fun CharacterMappingRuleSection(
                 val replacementValue = if (index == 0) null else ReplacementCharOption.entries[index - 1].value
                 onCharacterMappingChanged(character, replacementValue)
             }
-            if (salt) {
-                ItemDropdown(
-                    text = stringResource(R.string.character_to_replace, character),
-                    sub = stringResource(R.string.character_replacement_selector_subtitle),
-                    value = optionLabels[selectedIndex]
-                ) {
-                    optionLabels.forEachIndexed { index, label ->
-                        PopupMenuItem(text = label, selected = index == selectedIndex, onClick = {
-                            state.dismiss()
-                            onSelected(index)
-                        })
-                    }
-                }
-            } else WindowDropdownPreference(
+            WindowDropdownPreference(
                 title = stringResource(R.string.character_to_replace, character),
                 summary = stringResource(R.string.character_replacement_selector_subtitle),
                 items = optionLabels,
@@ -147,6 +123,5 @@ private fun CharacterMappingRuleSection(
             )
         }
     }
-    if (salt) ScreenCard { rows() }
-    else Card(modifier = Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { rows() }
+    Card(modifier = Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { rows() }
 }

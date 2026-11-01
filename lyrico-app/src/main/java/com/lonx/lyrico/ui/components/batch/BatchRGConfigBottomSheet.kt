@@ -1,11 +1,10 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
 
 package com.lonx.lyrico.ui.components.batch
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import com.lonx.lyrico.R
@@ -23,8 +22,7 @@ fun BatchRGConfigBottomSheet(
     onConfirm: (Int) -> Unit
 ) {
     var concurrency by remember { mutableIntStateOf(initialConcurrency) }
-    val salt = com.lonx.lyrico.ui.theme.LocalUiEngine.current ==
-            com.lonx.lyrico.data.model.UiEngine.SALT
+    val salt = false
     val tempConcurrency = remember(initialConcurrency) {
         mutableIntStateOf(initialConcurrency)
     }
@@ -44,9 +42,7 @@ fun BatchRGConfigBottomSheet(
                     },
                 )
             }
-            if (salt) {
-                com.moriafly.salt.ui.RoundedColumn { field() }
-            } else Card(
+            Card(
                 colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
             ) { field() }
         },

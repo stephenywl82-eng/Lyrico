@@ -1,15 +1,10 @@
 package com.lonx.lyrico.ui.components.base
 
 import androidx.compose.runtime.Composable
-import com.lonx.lyrico.data.model.UiEngine
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.components.icons.PreferenceIcon
-import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
-import com.lonx.lyrico.ui.components.salt.SaltDropdownRow
-import com.lonx.lyrico.ui.theme.LocalUiEngine
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
+import com.lonx.lyrico.ui.components.sdw.SdwDropdownRow
 
-/** Concurrency has the same five choices; each engine supplies its native dropdown. */
+/** [B] 统一到 SDW：并发下拉直接走 SdwDropdownRow，原 MIUIX / Salt 分支坍缩为单路。 */
 @Composable
 internal fun ConcurrencyDropdown(
     title: String,
@@ -18,23 +13,12 @@ internal fun ConcurrencyDropdown(
     summary: String? = null,
 ) {
     val labels = (1..5).map { it.toString() }
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltDropdownRow(
-            title = title,
-            sub = summary,
-            labels = labels,
-            selectedIndex = value - 1,
-            icon = LucideIcons.Parallel,
-            onSelectedIndexChange = { onChange(it + 1) },
-        )
-    } else {
-        WindowDropdownPreference(
-            title = title,
-            summary = summary,
-            items = labels,
-            selectedIndex = value - 1,
-            startAction = { PreferenceIcon(LucideIcons.Parallel, PreferenceIconTone.Tools) },
-            onSelectedIndexChange = { onChange(it + 1) },
-        )
-    }
+    SdwDropdownRow(
+        title = title,
+        sub = summary,
+        labels = labels,
+        selectedIndex = value - 1,
+        icon = LucideIcons.Parallel,
+        onSelectedIndexChange = { onChange(it + 1) },
+    )
 }

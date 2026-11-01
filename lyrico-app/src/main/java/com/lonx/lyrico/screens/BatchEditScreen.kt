@@ -1,5 +1,3 @@
-@file:OptIn(com.moriafly.salt.ui.UnstableSaltUiApi::class)
-
 package com.lonx.lyrico.screens
 
 import androidx.activity.compose.BackHandler
@@ -38,32 +36,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ColumnScope
-import com.lonx.lyrico.data.model.UiEngine
-import com.lonx.lyrico.ui.theme.LocalUiEngine
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
-import com.lonx.lyrico.ui.components.salt.SaltIconButton
-import com.lonx.lyrico.ui.components.salt.SaltBottomSheet
-import com.lonx.lyrico.ui.components.salt.SaltConfirmDialog
-import com.lonx.lyrico.ui.components.base.ItemMenuBottomSheet
-import com.lonx.lyrico.ui.components.base.ItemMenuAction
-import com.lonx.lyrico.ui.components.base.SheetProgressAction
-import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
-import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
-import com.moriafly.salt.ui.SaltTheme
-import com.moriafly.salt.ui.RoundedColumn
-import com.moriafly.salt.ui.Item
-import com.lonx.lyrico.ui.components.editor.SaltEditorField
+
 import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
-import com.moriafly.salt.ui.ItemOuterTitle
-import com.moriafly.salt.ui.Text as SaltText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -104,7 +87,7 @@ import com.lonx.lyrico.viewmodel.BatchEditSelectableCover
 import com.lonx.lyrico.viewmodel.BatchEditSelectableValue
 import com.lonx.lyrico.viewmodel.BatchEditUiState
 import com.lonx.lyrico.viewmodel.BatchEditViewModel
-import com.lonx.lyrico.ui.components.miuix.MiuixBottomSheet
+import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.EditFieldSettingsDestination
@@ -131,8 +114,13 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import com.lonx.lyrico.ui.components.base.ItemMenuBottomSheet
+import com.lonx.lyrico.ui.components.base.ItemMenuAction
+import com.lonx.lyrico.ui.components.base.SheetProgressAction
+import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
+import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 
 private enum class BatchEditTab(val labelRes: Int) {
@@ -288,7 +276,7 @@ fun BatchEditScreen(
         }
     }
 
-    val salt = LocalUiEngine.current == UiEngine.SALT
+    val salt = false
     val topAppBarScrollBehavior = MiuixScrollBehavior()
 
     BackHandler(
@@ -308,8 +296,6 @@ Box(
     LibraryDetailPage(
         title = stringResource(R.string.batch_edit_title),
         onBack = { if (!uiState.isSaving) navigator.popBackStack() },
-        actions = { SaltIconButton(LucideIcons.Check, stringResource(R.string.confirm),
-            { viewModel.saveBatchEdit() }, enabled = !uiState.isSaving) },
         miuixTopBar = {
             SmallTopAppBar(
                 title = stringResource(R.string.batch_edit_title),
@@ -365,14 +351,13 @@ Box(
                                 modifier = Modifier
                                     .libraryDetailScroll(topAppBarScrollBehavior)
                                     .fillMaxHeight()
-                                    .then(if (salt) Modifier else Modifier.imePadding()),
+                                    .then(Modifier.imePadding()),
                                 contentPadding = PaddingValues(
                                     bottom = scaffoldBottomPadding(paddingValues, bottomExtra = 80.dp),
                                 ),
                             ) {
                                 item(key = "song_count") {
-                                    if (salt) ItemOuterTitle(stringResource(R.string.batch_edit_song_count, uiState.songCount))
-                                    else SmallTitle(stringResource(R.string.batch_edit_song_count, uiState.songCount))
+                                    SmallTitle(stringResource(R.string.batch_edit_song_count, uiState.songCount))
                                 }
 
                                 fieldBlocks.forEach { block ->
@@ -521,31 +506,8 @@ Box(
     }
 }
 
-    if (salt) {
-    SaltBatchOverlays(
-        viewModel, uiState, showCoverOptionsSheet, { showCoverOptionsSheet = false },
-        onPickCover = { photoPickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-        onSelectCover = { openSelectedCoverSheet() }, onAlbumCover = { loadSameAlbumCovers() },
-        showSelectedValueSheet, { showSelectedValueSheet = false },
-        selectedValueField?.let { stringResource(it.labelResId) } ?: selectedCustomValueKey.orEmpty(),
-        selectedValueOptionsLoading, selectedValueOptions,
-        onValue = { value ->
-            selectedValueField?.let { applySelectedValue(it, value) }
-            selectedCustomValueKey?.let { viewModel.setCustomFieldValue(it, value) }
-            showSelectedValueSheet = false
-        },
-        showSelectedCoverSheet, { showSelectedCoverSheet = false },
-        selectedCoverOptionsLoading, selectedCoverOptions,
-        onCover = { option -> scope.launch {
-            viewModel.getSelectedSongCover(option.sourceUri)?.let { applyCoverSource(it); showSelectedCoverSheet = false }
-        } },
-        showInfoDialog, { showInfoDialog = false },
-        showAddCustomTagDialog, { showAddCustomTagDialog = false },
-        onSaved = { if (uiState.saveSuccess == true) navigator.popBackStack() },
-    )
-    } else {
     // 封面操作 BottomSheet
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = showCoverOptionsSheet,
         onDismissRequest = { showCoverOptionsSheet = false }
     ) {
@@ -611,7 +573,7 @@ Box(
         }
     }
 
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = showSelectedValueSheet,
         enableNestedScroll = false,
         title = selectedValueField?.let { stringResource(it.labelResId) }
@@ -669,7 +631,7 @@ Box(
         }
     }
 
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = showSelectedCoverSheet,
         enableNestedScroll = false,
         title = stringResource(R.string.batch_edit_select_cover_from_selected_songs),
@@ -751,7 +713,7 @@ Box(
     }
 
     // 保存进度对话框
-    MiuixBottomSheet(
+    SdwBottomSheet(
         show = uiState.saveProgressBottomSheet,
         onDismissRequest = {
             if (!uiState.isSaving) viewModel.closeSaveBottomSheet()
@@ -851,8 +813,6 @@ Box(
                 )
             }
 
-
-
         }
     }
 
@@ -906,7 +866,6 @@ Box(
         }
     }
 
-    }
 }
 
 @Composable
@@ -994,19 +953,7 @@ private fun BatchEditRatingItem(
     onRatingChange: (Int) -> Unit,
     onRevert: () -> Unit
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f)) { (1..5).forEach { value ->
-                SaltIconButton(LucideIcons.Star, "$value", { onRatingChange(if (rating == value) 0 else value) },
-                    tint = if (value <= rating) SaltTheme.colors.highlight else SaltTheme.colors.subText,
-                    size = 36.dp, iconSize = 24.dp)
-            } }
-            if (isModified) SaltIconButton(LucideIcons.Undo, stringResource(R.string.action_undo_changes), onRevert, size = 36.dp)
-            else SaltText("<keep>", style = SaltTheme.textStyles.sub, color = SaltTheme.colors.subText)
-        }
-        return
-    }
+
     val onSurfaceDim = MiuixTheme.colorScheme.onSurfaceVariantActions
 
     Column(
@@ -1096,18 +1043,7 @@ private fun BatchEditCoverSection(
     isRemoved: Boolean,
     onCoverClick: () -> Unit
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        Column(Modifier.fillMaxWidth().clickable(onClick = onCoverClick).padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (coverUri != null && !isRemoved) AsyncImage(coverUri, null,
-                modifier = Modifier.size(128.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Fit)
-            else com.moriafly.salt.ui.Icon(androidx.compose.ui.graphics.vector.rememberVectorPainter(LucideIcons.Image),
-                null, modifier = Modifier.size(40.dp), tint = SaltTheme.colors.subText)
-            SaltText(stringResource(if (isRemoved) R.string.batch_edit_cover_remove else R.string.batch_edit_cover_hint),
-                style = SaltTheme.textStyles.sub, color = if (isRemoved) SaltTheme.colors.error else SaltTheme.colors.subText)
-        }
-        return
-    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -1158,38 +1094,13 @@ private fun BatchEditCoverSection(
     }
 }
 
-
 @Composable
 private fun BatchEditPreviewTab(
     previews: List<BatchEditPreview>,
     bottomPadding: androidx.compose.ui.unit.Dp,
     topAppBarNestedScrollConnection: NestedScrollConnection
 ) {
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        var expandedKey by remember { mutableStateOf<String?>(null) }
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottomPadding + 12.dp)) {
-            if (previews.isEmpty()) item { IllustratedEmptyState(kind = EmptyStateKind.Tasks,
-                title = stringResource(R.string.batch_edit_preview_empty), modifier = Modifier.fillMaxWidth()) }
-            items(previews, key = { it.songUri }) { preview ->
-                RoundedColumn {
-                    Item(text = preview.fileName, sub = stringResource(R.string.batch_edit_preview_change_count, preview.changes.size),
-                        onClick = { expandedKey = if (expandedKey == preview.songUri) null else preview.songUri })
-                    AnimatedVisibility(expandedKey == preview.songUri) {
-                        Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            preview.changes.forEach { change ->
-                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    SaltText(change.labelResId?.let { stringResource(it) } ?: change.customLabel.orEmpty(), color = SaltTheme.colors.highlight)
-                                    SaltText(stringResource(R.string.batch_edit_preview_old_value, displayBatchEditPreviewValue(change.oldValue)), style = SaltTheme.textStyles.sub, color = SaltTheme.colors.subText)
-                                    SaltText(stringResource(R.string.batch_edit_preview_new_value, displayBatchEditPreviewValue(change.newValue)), style = SaltTheme.textStyles.sub)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return
-    }
+
     var expandedPreviewKey by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
@@ -1280,8 +1191,6 @@ private fun BatchEditPreviewTab(
     }
 }
 
-
-
 @Composable
 private fun displayBatchEditPreviewValue(value: String): String {
     return when (value) {
@@ -1291,7 +1200,6 @@ private fun displayBatchEditPreviewValue(value: String): String {
         else -> value
     }
 }
-
 
 /**
  * 单个标签编辑字段
@@ -1306,11 +1214,7 @@ private fun BatchEditFieldItem(
     isMultiline: Boolean = false
 ) {
     val fieldState = rememberEditorTextFieldState(value, onValueChange)
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltBatchField(stringResource(field.labelResId), fieldState,
-            onKeep = { onValueChange("<keep>") }, onSelectFromSongs, isMultiline)
-        return
-    }
+
     val isKeep = value == "<keep>"
 
     if (isMultiline) {
@@ -1418,10 +1322,7 @@ private fun BatchEditCustomFieldItem(
     onSelectFromSongs: () -> Unit,
 ) {
     val fieldState = rememberEditorTextFieldState(value, onValueChange)
-    if (LocalUiEngine.current == UiEngine.SALT) {
-        SaltBatchField(keyName, fieldState, onKeep, onSelectFromSongs)
-        return
-    }
+
     val isKeep = value == "<keep>"
 
     TextField(
@@ -1512,144 +1413,9 @@ private fun BatchEditField.applyTo(viewModel: BatchEditViewModel, value: String)
     }
 }
 
-
 @Composable
 private fun BatchEditorGroup(content: @Composable ColumnScope.() -> Unit) {
-    if (LocalUiEngine.current == UiEngine.SALT) RoundedColumn(content = content)
-    else Card(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+    Card(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
         Column(Modifier.padding(vertical = 6.dp), content = content)
-    }
-}
-
-@Composable
-private fun SaltBatchField(
-    label: String, state: TextFieldState,
-    onKeep: () -> Unit, onSelect: () -> Unit, multiline: Boolean = false,
-) {
-    val keep = state.text.toString() == "<keep>"
-    val fieldLabel = if (keep) stringResource(R.string.batch_edit_unchanged_field_label, label) else label
-    SaltEditorField(
-        label = fieldLabel,
-        state = state,
-        lineLimits = if (multiline) {
-            TextFieldLineLimits.MultiLine(minHeightInLines = 6, maxHeightInLines = 12)
-        } else TextFieldLineLimits.SingleLine,
-        grouped = false,
-    ) {
-        SaltIconButton(if (keep) LucideIcons.Close else LucideIcons.Undo,
-            stringResource(if (keep) R.string.action_delete else R.string.action_undo_changes),
-            { if (keep) state.setTextAndPlaceCursorAtEnd("") else onKeep() },
-            tint = if (keep) SaltTheme.colors.highlight else SaltTheme.colors.error,
-            size = 32.dp, iconSize = 18.dp)
-        SaltIconButton(LucideIcons.ListCheck,
-            stringResource(R.string.batch_edit_select_from_selected_songs), onSelect,
-            size = 32.dp, iconSize = 18.dp)
-    }
-}
-
-@Composable
-private fun SaltBatchOverlays(
-    viewModel: BatchEditViewModel, state: BatchEditUiState,
-    showCoverMenu: Boolean, closeCoverMenu: () -> Unit,
-    onPickCover: () -> Unit, onSelectCover: () -> Unit, onAlbumCover: () -> Unit,
-    showValues: Boolean, closeValues: () -> Unit, valueTitle: String,
-    valuesLoading: Boolean, values: List<BatchEditSelectableValue>, onValue: (String) -> Unit,
-    showCovers: Boolean, closeCovers: () -> Unit,
-    coversLoading: Boolean, covers: List<BatchEditSelectableCover>, onCover: (BatchEditSelectableCover) -> Unit,
-    showInfo: Boolean, closeInfo: () -> Unit,
-    showCustom: Boolean, closeCustom: () -> Unit, onSaved: () -> Unit,
-) {
-    ItemMenuBottomSheet(show = showCoverMenu, label = stringResource(R.string.label_cover), onDismissRequest = closeCoverMenu) {
-        ItemMenuAction(stringResource(R.string.batch_edit_cover_change), LucideIcons.ImageAdd, PreferenceIconTone.Appearance) { closeCoverMenu(); onPickCover() }
-        ItemMenuAction(stringResource(R.string.batch_edit_select_cover_from_selected_songs), LucideIcons.ImageLibrary, PreferenceIconTone.Tools) { closeCoverMenu(); onSelectCover() }
-        ItemMenuAction(stringResource(R.string.label_select_same_album_cover), LucideIcons.Disc, PreferenceIconTone.Library) { closeCoverMenu(); onAlbumCover() }
-        ItemMenuAction(stringResource(R.string.batch_edit_cover_remove), LucideIcons.Trash, PreferenceIconTone.Danger) { closeCoverMenu(); viewModel.removeCover() }
-        if (state.coverUri != null || state.removeCover) ItemMenuAction(stringResource(R.string.batch_edit_cover_revert), LucideIcons.Undo, PreferenceIconTone.Lyrics) { closeCoverMenu(); viewModel.revertCover() }
-    }
-    SaltBottomSheet(showValues, closeValues, title = valueTitle) {
-        when {
-            valuesLoading -> RoundedColumn { SaltText(stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp)) }
-            values.isEmpty() -> IllustratedEmptyState(title = stringResource(R.string.batch_edit_no_selected_values), compact = true, modifier = Modifier.fillMaxWidth())
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(values, key = { "${it.sourceUri}\n${it.value}" }) { option ->
-                        com.moriafly.salt.ui.Card(modifier = Modifier.fillMaxWidth()) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                                    .clickable { onValue(option.value) }
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                contentAlignment = Alignment.CenterStart,
-                            ) {
-                                SaltText(option.value, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    SaltBottomSheet(showCovers, closeCovers,
-        title = stringResource(R.string.batch_edit_select_cover_from_selected_songs)) {
-        LazyVerticalGrid(GridCells.Adaptive(96.dp), Modifier.heightIn(max = 420.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (coversLoading || covers.isEmpty()) item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
-                if (coversLoading) SaltText(stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp))
-                else IllustratedEmptyState(kind = EmptyStateKind.Cover, title = stringResource(R.string.batch_edit_no_selected_covers), compact = true, modifier = Modifier.fillMaxWidth())
-            }
-            if (!coversLoading) gridItems(covers, key = { "${it.sourceUri}\n${it.fileLastModified}" }) { option ->
-                com.moriafly.salt.ui.Card {
-                    Column(Modifier.clickable { onCover(option) }.padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        AsyncImage(CoverRequest(option.previewUri.toUri(), option.fileLastModified), null,
-                            modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
-                        SaltText(option.title, style = SaltTheme.textStyles.sub, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        if (option.summary.isNotBlank()) SaltText(option.summary, style = SaltTheme.textStyles.sub,
-                            color = SaltTheme.colors.subText, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-        }
-    }
-    SaltConfirmDialog(showInfo, stringResource(R.string.batch_edit_info_summary), closeInfo, closeInfo,
-        stringResource(R.string.cancel), stringResource(R.string.confirm), summary = stringResource(R.string.batch_edit_info_content))
-    SaltBottomSheet(state.saveProgressBottomSheet,
-        onDismissRequest = { if (!state.isSaving) viewModel.closeSaveBottomSheet() },
-        onDismissFinished = onSaved, allowDismiss = !state.isSaving,
-        title = stringResource(R.string.batch_edit_title),
-        groupContent = true, scrollContent = true,
-        footer = { SheetProgressAction(state.isSaving, { viewModel.abortSave() }, { viewModel.closeSaveBottomSheet() },
-            label = stringResource(if (state.isSaving) R.string.action_abort else R.string.confirm)) }) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            SaltText(if (state.isSaving) state.currentFile.ifEmpty { stringResource(R.string.batch_edit_processing) }
-                else stringResource(R.string.batch_matching_total_time, state.saveTimeMillis / 1000.0),
-                maxLines = 2, overflow = TextOverflow.Ellipsis)
-            SaltText("${state.saveProgress} / ${state.saveTotal}", style = SaltTheme.textStyles.sub, color = SaltTheme.colors.subText)
-            AppLinearProgressIndicator(if (state.saveTotal > 0) state.saveProgress.toFloat() / state.saveTotal else 0f, Modifier.fillMaxWidth())
-            SheetStatisticsRow {
-                SaltText(stringResource(R.string.batch_matching_success, state.successCount))
-                SaltText(stringResource(R.string.batch_replay_gain_skipped, state.skippedCount))
-                SaltText(stringResource(R.string.batch_matching_failure, state.failureCount))
-            }
-        }
-    }
-    if (showCustom) {
-        val keyState = rememberTextFieldState()
-        val valueState = rememberTextFieldState()
-        val key = keyState.text.toString()
-        val value = valueState.text.toString()
-        SaltConfirmDialog(true, stringResource(R.string.action_add_custom_tag), closeCustom,
-            onConfirm = {
-                if (key.isNotBlank()) { viewModel.addCustomFieldAndShow(key, value); closeCustom() }
-            }, cancelText = stringResource(R.string.cancel), confirmText = stringResource(R.string.confirm),
-            dismissOnConfirm = false, confirmEnabled = key.isNotBlank(), content = {
-                RoundedColumn(paddingValues = PaddingValues(0.dp)) {
-                    SaltEditorField(stringResource(R.string.label_custom_tag_name), keyState, grouped = false)
-                    SaltEditorField(stringResource(R.string.label_custom_tag_value), valueState, grouped = false)
-                }
-            })
     }
 }

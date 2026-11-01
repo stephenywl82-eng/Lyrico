@@ -346,8 +346,7 @@ class LyricsSearchViewModel(
         } else {
             sourceFlow.value.map { it.id }
         }.filter { id ->
-            current.hasMoreBySource[id] == true &&
-                    id !in current.loadingMoreSourceIds &&
+            current.hasMoreBySource[id] == id !in current.loadingMoreSourceIds &&
                     loadMoreJobs[id]?.isActive != true
         }
 

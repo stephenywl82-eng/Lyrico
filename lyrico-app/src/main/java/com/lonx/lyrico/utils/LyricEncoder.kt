@@ -17,7 +17,6 @@ object LyricEncoder {
     // 匹配 TTML 格式: begin="00:01:23.456" 或 end="00:01:23.456"
     private val TTML_TIME_PATTERN = Regex("(begin=\"|end=\")(\\d{2,}):(\\d{2}):(\\d{2})\\.(\\d{2,3})(\")")
 
-    
     /**
      * 计算应用偏移量，保证结果大于等于 0
      */
@@ -402,7 +401,6 @@ object LyricEncoder {
                 )?.let { return it }
             }
 
-
         return null
     }
 
@@ -425,7 +423,6 @@ object LyricEncoder {
         return config.format != TTML &&
                 config.normalizedLineOrder != DefaultLyricLineOrder
     }
-
 
     private fun appendEnhancedLine(
         builder: StringBuilder,
