@@ -137,6 +137,7 @@ class App : Application(), SingletonImageLoader.Factory {
         const val TELEGRAM_GROUP_LINK = "https://t.me/lyrico_app"
         const val OWNER_ID = "Replica0110"
         const val REPO_NAME = "Lyrico"
+        const val MOTO_MUSIC_GITHUB_URL = "https://github.com/stephenywl82-eng/SDWMP3_CN"
 
         @SuppressLint("StaticFieldLeak")
         @JvmStatic

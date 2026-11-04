@@ -46,6 +46,7 @@ import coil3.compose.AsyncImage
 import com.lonx.lyrico.App.Companion.OWNER_ID
 import com.lonx.lyrico.App.Companion.REPO_NAME
 import com.lonx.lyrico.App.Companion.TELEGRAM_GROUP_LINK
+import com.lonx.lyrico.App.Companion.MOTO_MUSIC_GITHUB_URL
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.BuildConfig
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
@@ -193,6 +194,14 @@ fun AboutScreen(
                                         context,
                                         "https://github.com/$OWNER_ID/$REPO_NAME"
                                     )
+                                }
+                            )
+                            ArrowPreference(
+                                startAction = { PreferenceIcon(LucideIcons.Music, PreferenceIconTone.Tools) },
+                                title = stringResource(R.string.about_moto_music_url),
+                                summary = stringResource(R.string.about_moto_music_url_sub),
+                                onClick = {
+                                    viewModel.openBrowser(context, MOTO_MUSIC_GITHUB_URL)
                                 }
                             )
                             ArrowPreference(

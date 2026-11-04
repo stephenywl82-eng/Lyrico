@@ -145,6 +145,8 @@
     <string name="about_app_version">应用版本</string>
     <string name="about_project_url">GitHub</string>
     <string name="about_project_url_sub">在 GitHub 上查看源码</string>
+    <string name="about_moto_music_url">Moto Music</string>
+    <string name="about_moto_music_url_sub">在 GitHub 上查看 Moto Music 源码</string>
 
     <string name="about_auto_check_update">自动检查新版本</string>
     <string name="about_auto_check_update_sub">应用启动时检查是否有新版本</string>
