@@ -50,7 +50,6 @@ import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.ui.components.getSystemWallpaperColor
 import com.lonx.lyrico.ui.theme.KeyColors
-import com.lonx.lyrico.viewmodel.FolderManagerViewModel
 import com.lonx.lyrico.viewmodel.SettingsEvent
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.ramcosta.composedestinations.annotation.Destination
@@ -61,7 +60,6 @@ import com.ramcosta.composedestinations.generated.destinations.ArtistPosterFolde
 import com.ramcosta.composedestinations.generated.destinations.ArtistSplitSettingsDestination
 import com.ramcosta.composedestinations.generated.destinations.BatchTaskListDestination
 import com.ramcosta.composedestinations.generated.destinations.EditFieldSettingsDestination
-import com.ramcosta.composedestinations.generated.destinations.FolderManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.LyricsCleanupRulesDestination
 import com.ramcosta.composedestinations.generated.destinations.PluginManagerDestination
 import com.ramcosta.composedestinations.generated.destinations.QuickjsTestDestination
@@ -88,8 +86,6 @@ fun SettingsScreen(
 ) {
     val settingsViewModel: SettingsViewModel = koinViewModel()
     val settingsUiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
-    val folderViewModel: FolderManagerViewModel = koinViewModel()
-    val folderUiState by folderViewModel.uiState.collectAsStateWithLifecycle()
     val settingsRepository: SettingsRepository = koinInject()
     val artistPosterFolder by settingsRepository.artistPosterFolder.collectAsStateWithLifecycle(initialValue = null)
 
@@ -105,13 +101,10 @@ fun SettingsScreen(
     val onlyTranslationIfAvailable = settingsUiState.onlyTranslationIfAvailable
     val removeEmptyLines = settingsUiState.removeEmptyLines
     val ignoreShortAudio = settingsUiState.ignoreShortAudio
-    val folders = folderUiState.folders
-    val totalFolders = folders.filter { it.addedBySaf }.size
     val conversionMode = settingsUiState.conversionMode
     val searchSourceTabStyle = settingsUiState.searchSourceTabStyle
     val showAllSearchResultFields = settingsUiState.showAllSearchResultFields
 
-    val ignoredFolders = folders.count { it.isIgnored && it.addedBySaf }
     val searchPageSize = settingsUiState.searchPageSize
     val scope = rememberCoroutineScope()
 
@@ -321,22 +314,6 @@ fun SettingsScreen(
             item(key = "scan"){
                 SectionTitle(text = stringResource(R.string.section_scan))
                 Group {
-                    val folderSummary = if (totalFolders > 0) {
-                        buildString {
-                            append(stringResource(R.string.folder_found, totalFolders))
-                            if (ignoredFolders > 0) {
-                                append(stringResource(R.string.folder_ignored, ignoredFolders))
-                            }
-                        }
-                    } else {
-                        stringResource(R.string.folder_manage_hint)
-                    }
-                    Action(
-                        icon = LucideIcons.Folder, tone = PreferenceIconTone.Tools,
-                        title = stringResource(R.string.folder_manager),
-                        summary = folderSummary,
-                        onClick = { navigator.navigate(FolderManagerDestination()) }
-                    )
                     Action(
                         icon = LucideIcons.Image, tone = PreferenceIconTone.Library,
                         title = stringResource(R.string.artist_poster_folders),

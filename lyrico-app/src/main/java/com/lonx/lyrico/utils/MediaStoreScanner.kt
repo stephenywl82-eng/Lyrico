@@ -2,6 +2,7 @@ package com.lonx.lyrico.utils
 
 import android.content.ContentUris
 import android.content.Context
+import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import com.lonx.lyrico.data.model.SongFile
@@ -29,19 +30,59 @@ class MediaStoreScanner(
         val songs = mutableListOf<MediaStoreSong>()
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
 
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.DISPLAY_NAME,
-            MediaStore.Audio.Media.DATA,
-            MediaStore.Audio.Media.DATE_MODIFIED,
-            MediaStore.Audio.Media.DATE_ADDED,
-            MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.SIZE,
-            MediaStore.Audio.Media.MIME_TYPE,
-            MediaStore.Audio.Media.IS_MUSIC
-        )
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} = ?"
-        val selectionArgs = arrayOf("1")
+        // IS_AUDIOBOOK 仅在 Android 11(R/30)+ 才有该列；minSdk=28，低于此版本的
+        // 设备查询该列会直接抛异常。故按系统版本决定是否纳入过滤。
+        val isAudiobookColumnAvailable =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+
+        val projection = buildList {
+            add(MediaStore.Audio.Media._ID)
+            add(MediaStore.Audio.Media.DISPLAY_NAME)
+            add(MediaStore.Audio.Media.DATA)
+            add(MediaStore.Audio.Media.DATE_MODIFIED)
+            add(MediaStore.Audio.Media.DATE_ADDED)
+            add(MediaStore.Audio.Media.DURATION)
+            add(MediaStore.Audio.Media.SIZE)
+            add(MediaStore.Audio.Media.MIME_TYPE)
+            add(MediaStore.Audio.Media.IS_MUSIC)
+            add(MediaStore.Audio.Media.IS_RINGTONE)
+            add(MediaStore.Audio.Media.IS_NOTIFICATION)
+            add(MediaStore.Audio.Media.IS_ALARM)
+            add(MediaStore.Audio.Media.IS_PODCAST)
+            if (isAudiobookColumnAvailable) {
+                add(MediaStore.Audio.Media.IS_AUDIOBOOK)
+            }
+        }.toTypedArray()
+
+        // 对齐 SDWMP3_CN：只取「音乐」，排除系统音效与录制音频。
+        // 关键：MediaStore 里 IS_RINGTONE/IS_NOTIFICATION/... 这些列对普通音乐文件
+        // 通常是 NULL 而非 0，直接写 `IS_RINGTONE = 0` 在 NULL 时整条判定为 NULL
+        // （非真）会把歌曲全部误排除。因此用 COALESCE(列, 0) = 0：NULL 视为「非该类别」保留。
+        // 1) 标志位排除 铃声 / 通知 / 闹钟 / 播客（+ 30+ 的有声书）；
+        // 2) 路径关键字排除 录音机、微信语音、钉钉 等用户录制音频。
+        val excludeFlagColumns = buildList {
+            add(MediaStore.Audio.Media.IS_RINGTONE)
+            add(MediaStore.Audio.Media.IS_NOTIFICATION)
+            add(MediaStore.Audio.Media.IS_ALARM)
+            add(MediaStore.Audio.Media.IS_PODCAST)
+            if (isAudiobookColumnAvailable) {
+                add(MediaStore.Audio.Media.IS_AUDIOBOOK)
+            }
+        }
+
+        val selectionParts = mutableListOf<String>()
+        val selectionArgs = mutableListOf<String>()
+        selectionParts.add("COALESCE(${MediaStore.Audio.Media.IS_MUSIC}, 0) = ?")
+        selectionArgs.add("1")
+        for (flag in excludeFlagColumns) {
+            selectionParts.add("COALESCE($flag, 0) = ?")
+            selectionArgs.add("0")
+        }
+        for (pathKeyword in RECORDING_PATH_KEYWORDS) {
+            selectionParts.add("(COALESCE(${MediaStore.Audio.Media.DATA}, '') NOT LIKE ?)")
+            selectionArgs.add("%$pathKeyword%")
+        }
+        val selection = selectionParts.joinToString(" AND ")
         val sortOrder = "${MediaStore.Audio.Media.DATA} ASC"
 
         try {
@@ -49,7 +90,7 @@ class MediaStoreScanner(
                 collection,
                 projection,
                 selection,
-                selectionArgs,
+                selectionArgs.toTypedArray(),
                 sortOrder
             )?.use { cursor ->
                 val idCol = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
@@ -107,6 +148,26 @@ class MediaStoreScanner(
 
     private val supportedAudioExtensions = setOf(
         "mp3", "flac", "m4a", "ogg", "opus", "wav", "aac", "wma", "ape"
+    )
+
+    /**
+     * 路径关键字黑名单（大小写敏感，按 %keyword% 模糊匹配 DATA 列）。
+     * 用于排除「用户录制」的音频：录音机、微信语音、钉钉语音、系统提示音等。
+     * 与 SDWMP3_CN 的过滤策略一致。
+     */
+    private val RECORDING_PATH_KEYWORDS = listOf(
+        "Record",        // Recordings / Recorder / Recording / Records
+        "录音",
+        "录音机",
+        "WhatsApp Voice Notes",
+        "MicroMsg",      // 微信语音
+        "WeChat",
+        "DingTalk",      // 钉钉语音
+        "Ringtones",
+        "Notifications",
+        "Alarms",
+        "Podcasts",
+        "Sounds"
     )
 
     private fun isSupportedAudioFile(fileName: String): Boolean {

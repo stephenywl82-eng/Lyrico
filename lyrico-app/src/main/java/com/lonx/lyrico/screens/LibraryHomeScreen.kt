@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,9 +19,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.lonx.lyrico.ui.components.song.LibraryScanningBanner
+import com.lonx.lyrico.utils.LibraryScanState
 import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.screens.library.AlbumsPage
@@ -72,6 +79,7 @@ fun LibraryHomeScreen(navigator: DestinationsNavigator) {
     val floatingBarEffect by
         settingsRepository.floatingBarEffect.collectAsState(initial = FloatingBarEffect.NONE)
     val songs by viewModel.songs.collectAsState()
+    val scanState by viewModel.scanState.collectAsStateWithLifecycle()
     val isSelectionMode by selectionViewModel.isSelectionMode.collectAsState(initial = false)
     val selectedSongUris by selectionViewModel.selectedSongUris.collectAsState()
     var isFabMenuExpanded by remember { mutableStateOf(false) }
@@ -131,6 +139,15 @@ fun LibraryHomeScreen(navigator: DestinationsNavigator) {
                 onBottomPaddingChange = { bottomBarPadding = it },
                 content = pagerContent,
             )
+
+            if (scanState.isScanning) {
+                LibraryScanningBanner(
+                    scanState = scanState,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                )
+            }
 
             ArtistBatchSelectionActions(
                 selection = artistSelectionViewModel,

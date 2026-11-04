@@ -116,7 +116,6 @@ fun SongsPage(
     } else {
         null
     }
-    val hasFolders by viewModel.hasFolders.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
     val alphabetScrollController = rememberAlphabetSideBarScrollController(listState)
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -130,26 +129,6 @@ fun SongsPage(
     }
 
     val context = LocalContext.current
-    val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        uri?.let {
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
-            try {
-                context.contentResolver.takePersistableUriPermission(it, flags)
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-            }
-
-            val path = UriUtils.getFileAbsolutePath(context, it) ?: it.toString()
-            viewModel.addSafFolderAndRefresh(
-                path = path,
-                treeUri = it.toString()
-            )
-        }
-    }
     val sectionIndexMap = remember(songs, sortInfo) {
         val map = mutableMapOf<String, Int>()
         if (sortInfo.sortBy.supportsIndex) {
@@ -191,16 +170,6 @@ fun SongsPage(
                     when {
                         scanProgress != null -> {
                             LibraryScanProgressText(progress = scanProgress)
-                        }
-
-                        !hasFolders -> {
-                            IllustratedEmptyState(
-                                kind = EmptyStateKind.Songs,
-                                title = stringResource(R.string.song_list_empty_title),
-                                icon = LucideIcons.FolderPlus,
-                                actionText = stringResource(R.string.action_add_folder),
-                                onAction = { folderPickerLauncher.launch(null) },
-                            )
                         }
 
                         else -> {
