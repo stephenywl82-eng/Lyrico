@@ -30,6 +30,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -63,7 +65,7 @@ class BatchTaskWorker(
             val startedAt = System.currentTimeMillis()
             val configSummary = buildConfigSummary(task.type, task.configJson)
 
-            setForeground(createForegroundInfo(title, 0, total))
+            updateForeground(title, 0, total)
 
             taskRepository.markRunning(taskId)
 
@@ -105,14 +107,22 @@ class BatchTaskWorker(
 
             try {
                 coroutineScope {
-                    val jobs = items.map { item ->
+                    val jobs = items.mapIndexed { index, item ->
                         async(Dispatchers.IO) {
                             semaphore.withPermit {
                                 if (isStopped) return@async
                                 try {
                                     taskRepository.markItemRunning(item.itemId)
-                                    val result = processor.process(task, item) { progress ->
-                                        taskRepository.updateItemProgress(item.itemId, progress)
+                                    updateForeground(title, processedCount.get(), itemTotal, item.fileName)
+                                    logBatch(
+                                        level = AppLogLevel.INFO,
+                                        message = "处理第 ${index + 1}/$itemTotal 首: ${item.fileName}",
+                                        relatedId = taskId
+                                    )
+                                    val result = withTimeout(ITEM_PROCESS_TIMEOUT_MILLIS) {
+                                        processor.process(task, item) { progress ->
+                                            taskRepository.updateItemProgress(item.itemId, progress)
+                                        }
                                     }
                                     if (result.updatedFilePath != null && result.updatedFileName != null) {
                                         taskRepository.updateItemFileInfo(
@@ -131,6 +141,27 @@ class BatchTaskWorker(
                                     taskRepository.markItemSkipped(item.itemId, e.message)
                                     skippedCount.incrementAndGet()
                                     itemDetails.add("SKIPPED ${item.fileName}: ${e.message ?: "No reason"}")
+                                    logBatch(
+                                        level = AppLogLevel.INFO,
+                                        message = "跳过 ${item.fileName}: ${e.message ?: "No reason"}",
+                                        relatedId = taskId
+                                    )
+                                } catch (e: TimeoutCancellationException) {
+                                    Log.e(
+                                        TAG,
+                                        "Item processing timed out (${ITEM_PROCESS_TIMEOUT_MILLIS / 1000}s): ${item.fileName}"
+                                    )
+                                    taskRepository.markItemFailed(
+                                        item.itemId,
+                                        "处理超时（>${ITEM_PROCESS_TIMEOUT_MILLIS / 1000}s，已跳过该文件）"
+                                    )
+                                    failureCount.incrementAndGet()
+                                    itemDetails.add("TIMEOUT ${item.fileName}: >${ITEM_PROCESS_TIMEOUT_MILLIS / 1000}s")
+                                    logBatch(
+                                        level = AppLogLevel.WARNING,
+                                        message = "超时（>${ITEM_PROCESS_TIMEOUT_MILLIS / 1000}s）已跳过: ${item.fileName}",
+                                        relatedId = taskId
+                                    )
                                 } catch (e: Exception) {
                                     Log.e(TAG, "Item processing failed: ${item.fileName}", e)
                                     taskRepository.markItemFailed(item.itemId, e.message)
@@ -141,16 +172,15 @@ class BatchTaskWorker(
                                             append(Log.getStackTraceString(e))
                                         }
                                     )
+                                    logBatch(
+                                        level = AppLogLevel.ERROR,
+                                        message = "失败 ${item.fileName}: ${e.message ?: e::class.java.simpleName}",
+                                        relatedId = taskId
+                                    )
                                 } finally {
                                     val current = processedCount.incrementAndGet()
                                     taskRepository.updateProgressFromItems(taskId, item.fileName)
-                                    try {
-                                        setForeground(
-                                            createForegroundInfo(title, current, itemTotal)
-                                        )
-                                    } catch (e: Exception) {
-                                        Log.w(TAG, "Failed to update foreground notification", e)
-                                    }
+                                    updateForeground(title, current, itemTotal, item.fileName)
                                 }
                             }
                         }
@@ -262,16 +292,32 @@ class BatchTaskWorker(
         return createForegroundInfo("Batch Task", 0, 0)
     }
 
+    private suspend fun updateForeground(
+        title: String,
+        current: Int,
+        total: Int,
+        currentFile: String? = null
+    ) {
+        withContext(Dispatchers.Main) {
+            try {
+                setForeground(createForegroundInfo(title, current, total, currentFile))
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to update foreground notification", e)
+            }
+        }
+    }
+
     private fun createForegroundInfo(
         title: String,
         current: Int,
-        total: Int
+        total: Int,
+        currentFile: String? = null
     ): ForegroundInfo {
         val notification = BatchTaskNotification.buildRunningNotification(
             context = applicationContext,
             taskId = taskId,
             title = title,
-            currentFile = null,
+            currentFile = currentFile,
             current = current,
             total = total
         )
@@ -572,5 +618,6 @@ class BatchTaskWorker(
         private const val MAX_ITEM_DETAILS_IN_LOG = 50
         private const val MAX_CONFIG_LOG_LENGTH = 8_000
         private const val MAX_CONFIG_VALUE_LENGTH = 200
+        private const val ITEM_PROCESS_TIMEOUT_MILLIS = 120_000L
     }
 }

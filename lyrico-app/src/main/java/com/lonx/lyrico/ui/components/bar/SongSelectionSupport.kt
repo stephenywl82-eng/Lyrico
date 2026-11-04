@@ -1,8 +1,14 @@
 package com.lonx.lyrico.ui.components.bar
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxScope
@@ -192,6 +198,41 @@ fun BoxScope.SongBatchSelectionActions(
         }
     }
 
+    var pendingBatchMatch: (() -> Unit)? by remember { mutableStateOf(null) }
+    val batchWritePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { _ ->
+        val action = pendingBatchMatch
+        pendingBatchMatch = null
+        action?.invoke()
+    }
+
+    fun requestMatchWritePermission(uris: List<String>, onGranted: () -> Unit) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || uris.isEmpty()) {
+            onGranted()
+            return
+        }
+        val contentUris = uris.mapNotNull { raw ->
+            runCatching { Uri.parse(raw) }.getOrNull()?.takeIf { it.scheme == "content" }
+        }
+        if (contentUris.isEmpty()) {
+            onGranted()
+            return
+        }
+        val intentSender = try {
+            MediaStore.createWriteRequest(context.contentResolver, contentUris).intentSender
+        } catch (e: Exception) {
+            Log.w("SongSelectionSupport", "createWriteRequest failed", e)
+            null
+        }
+        if (intentSender == null) {
+            onGranted()
+        } else {
+            pendingBatchMatch = onGranted
+            batchWritePermissionLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+        }
+    }
+
     ExportDestinationBottomSheet(
         show = showExportDestinationSheet,
         onDismissRequest = {
@@ -242,7 +283,10 @@ fun BoxScope.SongBatchSelectionActions(
         },
         onConfirm = { config ->
             batchMatchViewModel.saveBatchMatchConfig(config)
-            batchMatchViewModel.batchMatch(songs, config)
+            val candidateUris = songs.filter { it.uri in selectedSongUris }.map { it.uri }
+            requestMatchWritePermission(candidateUris) {
+                batchMatchViewModel.batchMatch(songs, config)
+            }
         }
     )
 

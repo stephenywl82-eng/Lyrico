@@ -355,8 +355,16 @@ class MatchMetadataProcessor(
         onProgress(0.9f)
 
         val result = patchSongTagsUseCase(song.uri, tagDataToWrite)
-        if (result !is SaveAudioTagsResult.Success) {
-            throw Exception("Write failed")
+        when (result) {
+            is SaveAudioTagsResult.Success -> Unit
+            is SaveAudioTagsResult.PermissionRequired -> {
+                Log.e(TAG, "patchSongTags requires MediaStore write permission for ${song.uri}")
+                throw Exception("Write failed: permission required (grant MediaStore write access)")
+            }
+            is SaveAudioTagsResult.Failed -> {
+                Log.e(TAG, "patchSongTags failed for ${song.uri}", result.error)
+                throw Exception("Write failed: ${result.error.message}", result.error)
+            }
         }
 
         onProgress(1f)
