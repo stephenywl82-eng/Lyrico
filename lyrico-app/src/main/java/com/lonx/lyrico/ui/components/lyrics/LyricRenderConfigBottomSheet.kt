@@ -33,6 +33,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun LyricRenderConfigBottomSheet(
@@ -86,7 +87,7 @@ fun LyricRenderConfigBottomSheet(
                     .padding(bottom = 12.dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 config?.let { lyricConfig ->

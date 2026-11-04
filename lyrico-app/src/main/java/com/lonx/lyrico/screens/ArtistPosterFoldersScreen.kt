@@ -45,6 +45,7 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "artist_poster_folders")
@@ -260,10 +261,10 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                         },
                         lineLimits = TextFieldLineLimits.SingleLine,
                     )
-                    Text(stringResource(R.string.poster_rename_hint), style = MiuixTheme.textStyles.footnote1,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary, modifier = Modifier.padding(top = 8.dp))
+                    Text(stringResource(R.string.poster_rename_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
                     if (proposedName == null) Text(stringResource(R.string.poster_rename_invalid),
-                        style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 8.dp))
                 }
             )
@@ -275,16 +276,16 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                 Column(Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(rememberScrollState())) {
                     Text(
                         stringResource(R.string.artist_poster_folders_summary),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        style = MiuixTheme.textStyles.body2,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
                     MarkdownText(
                         modifier = Modifier.fillMaxWidth(),
                         markdown = stringResource(R.string.artist_poster_folders_help),
-                        linkColor = MiuixTheme.colorScheme.primary,
-                        style = MiuixTheme.textStyles.body2.copy(
-                            color = MiuixTheme.colorScheme.onSurface
+                        linkColor = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -296,10 +297,10 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                     onDismissRequest = { showFolderDetails = false }
                 ) {
                     Column(Modifier.verticalScroll(rememberScrollState())) {
-                        Text(folder.name, style = MiuixTheme.textStyles.title4)
+                        Text(folder.name, style = MaterialTheme.typography.titleSmall)
                         Text(
                             folder.path,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 8.dp)
                         )
                         Text(
@@ -320,8 +321,8 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                         Spacer(Modifier.height(12.dp))
                         Text(
                             stringResource(R.string.artist_poster_folder_remove_tip),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
                         )
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {

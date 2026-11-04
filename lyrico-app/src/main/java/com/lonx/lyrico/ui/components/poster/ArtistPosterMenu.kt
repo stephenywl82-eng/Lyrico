@@ -26,6 +26,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 /**
  * 「艺术家海报」的两个面板（操作菜单、目标选择）以及它们的选中状态。
@@ -255,7 +256,7 @@ fun ArtistPosterMenu(
                 .verticalScroll(rememberScrollState()),
         ) {
             Card(
-                colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 if (pickerRequest?.picksArtist == true) {
                     artists.forEach { artistName ->

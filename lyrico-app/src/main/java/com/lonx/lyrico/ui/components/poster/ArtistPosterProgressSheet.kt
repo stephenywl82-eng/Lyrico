@@ -21,6 +21,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 /**
  * 设置艺术家海报的进度与结果面板。
@@ -97,8 +98,8 @@ fun ArtistPosterProgressSheet(
                 state.message?.let { message ->
                     Text(
                         text = message,
-                        style = MiuixTheme.textStyles.main,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -110,7 +111,7 @@ fun ArtistPosterProgressSheet(
                     Text(
                         text = state.activeSong
                             ?: title,
-                        style = MiuixTheme.textStyles.subtitle,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -118,7 +119,7 @@ fun ArtistPosterProgressSheet(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${(state.progress * 100).toInt()}%",
-                        style = MiuixTheme.textStyles.main,
+                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.End
                     )
                 }
@@ -138,7 +139,7 @@ fun ArtistPosterProgressSheet(
                             state.done,
                             state.total
                         ),
-                        style = MiuixTheme.textStyles.main
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     if (state.failures.isNotEmpty()) {
                         Text(
@@ -146,8 +147,8 @@ fun ArtistPosterProgressSheet(
                                 R.string.label_artist_poster_write_failed,
                                 state.failures.size
                             ),
-                            style = MiuixTheme.textStyles.main,
-                            color = MiuixTheme.colorScheme.error
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }

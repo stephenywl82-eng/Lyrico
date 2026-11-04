@@ -122,6 +122,7 @@ import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
 import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material3.MaterialTheme
 
 private enum class BatchEditTab(val labelRes: Int) {
     Config(R.string.batch_edit_tab_config),
@@ -520,7 +521,7 @@ Box(
         ) {
             item {
                 Card(
-                    colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+                    colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
                     ArrowPreference(
                         startAction = { PreferenceIcon(LucideIcons.ImageAdd, PreferenceIconTone.Appearance) },
@@ -587,7 +588,7 @@ Box(
 
                 when {
                     selectedValueOptionsLoading -> {
-                        Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+                        Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
                             BasicComponent(title = stringResource(R.string.batch_edit_loading_selected_values))
                         }
                     }
@@ -651,7 +652,7 @@ Box(
             if (selectedCoverOptionsLoading || selectedCoverOptions.isEmpty()) {
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                     if (selectedCoverOptionsLoading) {
-                        Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+                        Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
                             BasicComponent(title = stringResource(R.string.batch_edit_loading_selected_values))
                         }
                     } else {
@@ -700,7 +701,7 @@ Box(
         ) {
             Text(
                 text = stringResource(R.string.batch_edit_info_content),
-                style = MiuixTheme.textStyles.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             TextButton(
@@ -764,7 +765,7 @@ Box(
                             // 保存完成后显示总用时
                             stringResource(R.string.batch_matching_total_time, uiState.saveTimeMillis / 1000.0)
                         },
-                        style = MiuixTheme.textStyles.subtitle,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -774,7 +775,7 @@ Box(
 
                     Text(
                         text = "${uiState.saveProgress} / ${uiState.saveTotal}",
-                        style = MiuixTheme.textStyles.main,
+                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.End
                     )
                 }
@@ -795,21 +796,21 @@ Box(
                         R.string.batch_matching_success,
                         uiState.successCount
                     ),
-                    style = MiuixTheme.textStyles.main
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = stringResource(
                         R.string.batch_replay_gain_skipped,
                         uiState.skippedCount
                     ),
-                    style = MiuixTheme.textStyles.main
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = stringResource(
                         R.string.batch_matching_failure,
                         uiState.failureCount
                     ),
-                    style = MiuixTheme.textStyles.main
+                    style = MaterialTheme.typography.bodyLarge
                 )
             }
 
@@ -877,7 +878,7 @@ private fun BatchEditCoverOptionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(6.dp))
-            .background(MiuixTheme.colorScheme.secondaryContainer)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
             .clickable { onClick() }
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -903,15 +904,15 @@ private fun BatchEditCoverOptionItem(
         Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = option.title,
-            style = MiuixTheme.textStyles.footnote1,
+            style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
         if (option.summary.isNotBlank()) {
             Text(
                 text = option.summary,
-                style = MiuixTheme.textStyles.footnote2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -926,7 +927,7 @@ private fun BatchEditValueOptionItem(
 ) {
     Card(
         modifier = Modifier.padding(vertical = 6.dp),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Box(
             modifier = Modifier
@@ -938,7 +939,7 @@ private fun BatchEditValueOptionItem(
         ) {
             Text(
                 text = option.value,
-                style = MiuixTheme.textStyles.main,
+                style = MaterialTheme.typography.bodyLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -954,7 +955,7 @@ private fun BatchEditRatingItem(
     onRevert: () -> Unit
 ) {
 
-    val onSurfaceDim = MiuixTheme.colorScheme.onSurfaceVariantActions
+    val onSurfaceDim = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
         modifier = Modifier
@@ -969,14 +970,14 @@ private fun BatchEditRatingItem(
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.error.copy(alpha = 0.1f))
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
                             .clickable { onRevert() }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.action_undo_changes),
                             fontSize = 11.sp,
-                            color = MiuixTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -984,13 +985,13 @@ private fun BatchEditRatingItem(
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "<keep>",
                             fontSize = 11.sp,
-                            color = MiuixTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -1013,7 +1014,7 @@ private fun BatchEditRatingItem(
                             ),
                             contentDescription = null,
                             tint = if (isFilled)
-                                MiuixTheme.colorScheme.primary
+                                MaterialTheme.colorScheme.primary
                             else
                                 onSurfaceDim.copy(alpha = 0.4f),
                             modifier = Modifier
@@ -1054,7 +1055,7 @@ private fun BatchEditCoverSection(
         if (isRemoved) {
             Text(
                 text = stringResource(R.string.batch_edit_cover_remove),
-                color = MiuixTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Medium
             )
         } else if (coverUri != null) {
@@ -1081,12 +1082,12 @@ private fun BatchEditCoverSection(
                     painter = painterResource(id = R.drawable.ic_album_24dp),
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
-                    tint = MiuixTheme.colorScheme.onSurfaceVariantActions
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.batch_edit_cover_hint),
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             }
@@ -1139,14 +1140,14 @@ private fun BatchEditPreviewTab(
                     ) {
                         Text(
                             text = preview.fileName,
-                            style = MiuixTheme.textStyles.body1,
+                            style = MaterialTheme.typography.bodyLarge,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = stringResource(R.string.batch_edit_preview_change_count, preview.changes.size),
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         AnimatedVisibility(visible = expandedPreviewKey == preview.songUri) {
@@ -1160,24 +1161,24 @@ private fun BatchEditPreviewTab(
                                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(
                                             text = change.labelResId?.let { stringResource(it) } ?: change.customLabel.orEmpty(),
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.primary
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                         Text(
                                             text = stringResource(
                                                 R.string.batch_edit_preview_old_value,
                                                 displayBatchEditPreviewValue(change.oldValue)
                                             ),
-                                            style = MiuixTheme.textStyles.footnote1,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                         Text(
                                             text = stringResource(
                                                 R.string.batch_edit_preview_new_value,
                                                 displayBatchEditPreviewValue(change.newValue)
                                             ),
-                                            style = MiuixTheme.textStyles.footnote1,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -1234,14 +1235,14 @@ private fun BatchEditFieldItem(
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                             .clickable { /* 无法恢复，已经是 <keep> */ }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "<keep>",
                             fontSize = 11.sp,
-                            color = MiuixTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -1249,14 +1250,14 @@ private fun BatchEditFieldItem(
                     Box(
                         modifier = Modifier
                             .clip(CircleShape)
-                            .background(MiuixTheme.colorScheme.error.copy(alpha = 0.1f))
+                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
                             .clickable { onValueChange("<keep>") }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.action_undo_changes),
                             fontSize = 11.sp,
-                            color = MiuixTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -1269,7 +1270,7 @@ private fun BatchEditFieldItem(
                 }
             }
             TextField(
-                textStyle = MiuixTheme.textStyles.body2,
+                textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 state = fieldState,
                 label = if (isKeep) stringResource(R.string.batch_edit_unchanged_field_label, stringResource(field.labelResId)) else stringResource(field.labelResId),
@@ -1292,9 +1293,9 @@ private fun BatchEditFieldItem(
                             imageVector = if (isKeep) LucideIcons.Close else LucideIcons.Undo,
                             contentDescription = null,
                             tint = if (isKeep)
-                                MiuixTheme.colorScheme.primary
+                                MaterialTheme.colorScheme.primary
                             else
-                                MiuixTheme.colorScheme.error
+                                MaterialTheme.colorScheme.error
                         )
                     }
                     IconButton(onClick = onSelectFromSongs) {
@@ -1344,9 +1345,9 @@ private fun BatchEditCustomFieldItem(
                         imageVector = if (isKeep) LucideIcons.Close else LucideIcons.Undo,
                         contentDescription = null,
                         tint = if (isKeep)
-                            MiuixTheme.colorScheme.primary
+                            MaterialTheme.colorScheme.primary
                         else
-                            MiuixTheme.colorScheme.error
+                            MaterialTheme.colorScheme.error
                     )
                 }
                 IconButton(onClick = onSelectFromSongs) {

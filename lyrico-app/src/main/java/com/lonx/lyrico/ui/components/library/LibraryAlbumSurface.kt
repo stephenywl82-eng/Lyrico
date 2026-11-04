@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 /**
  * 专辑卡片容器（Miuix）。
@@ -36,7 +37,7 @@ internal fun LibraryAlbumSurface(
         onLongPress = onLongPress,
     ) {
         BasicComponent(
-            modifier = Modifier.fillMaxWidth().background(MiuixTheme.colorScheme.surfaceVariant),
+            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant),
             insideMargin = PaddingValues(8.dp),
         ) { content() }
     }

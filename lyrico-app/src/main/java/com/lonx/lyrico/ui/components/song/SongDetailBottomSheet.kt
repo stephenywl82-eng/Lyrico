@@ -45,6 +45,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongDetailBottomSheet(
@@ -146,13 +147,13 @@ fun SongDetailBottomSheet(
                 ) {
                     Text(
                         text = title,
-                        style = MiuixTheme.textStyles.title3,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = artist,
-                        style = MiuixTheme.textStyles.footnote1,
-                        color = MiuixTheme.colorScheme.primary
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -160,7 +161,7 @@ fun SongDetailBottomSheet(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
                 )
             ) {
                 rows.forEach { (label, value) ->
@@ -186,7 +187,7 @@ fun SongDetailItem(
     ) {
         Text(
             text = label,
-            style = MiuixTheme.textStyles.footnote1,
+            style = MaterialTheme.typography.bodySmall,
         )
 
         Row(
@@ -197,7 +198,7 @@ fun SongDetailItem(
         ) {
             Text(
                 text = value,
-                style = MiuixTheme.textStyles.main,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f)
             )
 

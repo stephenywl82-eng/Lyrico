@@ -80,12 +80,12 @@ import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.sensor.rememberDeviceTilt
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.theme.LocalContentColor
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
+import androidx.compose.material3.MaterialTheme
 
 private val LocalReferenceBarSelection = staticCompositionLocalOf<(Int) -> Unit> { {} }
 private val LocalReferenceBarColor = staticCompositionLocalOf<Color?> { null }
@@ -151,7 +151,7 @@ private fun ReferenceHachimiBar(
     content: @Composable RowScope.() -> Unit,
 ) {
     val density = LocalDensity.current
-    val colors = MiuixTheme.colorScheme
+    val colors = MaterialTheme.colorScheme
     val isDark = colors.surface.luminance() < 0.5f
     val accent = colors.primary
     val surface = colors.surface.copy(alpha = 0.95f)
@@ -248,7 +248,7 @@ private fun ReferenceLiquidBar(
 ) {
     val density = LocalDensity.current
     val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
-    val colors = MiuixTheme.colorScheme
+    val colors = MaterialTheme.colorScheme
     val isDark = colors.surface.luminance() < 0.5f
     val accent = colors.primary
     val pillShape = CircleShape
@@ -552,7 +552,7 @@ internal fun RowScope.BlurNavigationBarItemV2(
     val overrideColor = LocalReferenceBarColor.current
     val selection = LocalReferenceBarSelection.current
     val scale = LocalReferenceBarScale.current
-    val onSurface = MiuixTheme.colorScheme.onSurfaceContainer
+    val onSurface = MaterialTheme.colorScheme.onSurface
     val baseColor = overrideColor ?: onSurface
     val tint = if (overrideColor != null || selected) baseColor else baseColor.copy(alpha = 0.5f)
     val haptic = LocalHapticFeedback.current

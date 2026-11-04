@@ -94,6 +94,7 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "local_search")
@@ -176,7 +177,7 @@ fun LocalSearchScreen(
             topBar = {
                 Column(
                     modifier = Modifier
-                        .background(MiuixTheme.colorScheme.surface)
+                        .background(MaterialTheme.colorScheme.surface)
                         // 与其它页面（BlurredTopBar 等）一致：顶部区域自己处理安全区
                         .scaffoldTopAppBarInsetsPadding()
                 ) {
@@ -408,7 +409,7 @@ private fun LocalSearchPillTabRow(
                 enabled = ready,
                 style = PillButtonDefaults.style(PillButtonSize.Medium),
                 colors = PillButtonDefaults.colors(
-                    containerColor = MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
                 ),
                 onClick = { onTabSelected(index) }
             )

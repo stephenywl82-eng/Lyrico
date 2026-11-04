@@ -15,6 +15,7 @@ import dev.jeziellago.compose.markdowntext.MarkdownText
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun UpdateDialog(
@@ -41,7 +42,7 @@ fun UpdateDialog(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 MarkdownText(

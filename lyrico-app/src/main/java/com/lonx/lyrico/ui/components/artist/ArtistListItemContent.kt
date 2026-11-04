@@ -23,6 +23,7 @@ import com.lonx.lyrico.ui.components.CoverCandidate
 import com.lonx.lyrico.ui.components.cover.CoverImage
 import com.lonx.lyrico.ui.components.library.LibraryItemText as Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun ArtistListItemContent(
@@ -73,7 +74,7 @@ fun ArtistListItemContent(
                         artist.albumCount,
                         artist.songCount
                     ),
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     maxLines = 1,
                     fontWeight = FontWeight.Bold,

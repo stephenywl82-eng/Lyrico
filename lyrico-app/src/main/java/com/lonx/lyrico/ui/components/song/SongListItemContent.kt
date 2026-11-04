@@ -40,6 +40,7 @@ import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.components.library.LibraryItemText as Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -68,7 +69,7 @@ fun SongListItemContent(
             Text(
                 text = song.discNumber?.let { "$trackNumber ($it)" } ?: trackNumber,
                 modifier = Modifier.widthIn(min = 36.dp, max = 72.dp),
-                color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -138,7 +139,7 @@ fun SongListItemContent(
                 Text(
                     text = song.artist.takeIf { !it.isNullOrBlank() }
                         ?: stringResource(R.string.unknown_artist),
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp,
                     maxLines = 1,
                     fontWeight = FontWeight.Bold,
@@ -149,7 +150,7 @@ fun SongListItemContent(
                 if (!song.album.isNullOrBlank()) {
                     Text(
                         text = " - ${song.album}",
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 13.sp,
                         maxLines = 1,
                         fontWeight = FontWeight.Bold,
@@ -165,9 +166,9 @@ fun SongListItemContent(
                             ?.let { stringResource(R.string.search_field_preview, it, preview) }
                             ?: preview,
                         query = previewMatchQuery.orEmpty(),
-                        highlightColor = MiuixTheme.colorScheme.primary
+                        highlightColor = MaterialTheme.colorScheme.primary
                     ),
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -184,7 +185,7 @@ fun SongListItemContent(
                 val seconds = (song.durationMilliseconds % 60000) / 1000
                 Text(
                     text = String.format("%d:%02d", minutes, seconds),
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -195,7 +196,7 @@ fun SongListItemContent(
                 Text(
                     text = "${song.bitrate}kbps",
                     fontSize = 10.sp,
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
                 )
             }

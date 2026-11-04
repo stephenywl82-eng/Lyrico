@@ -20,6 +20,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 /**
  * 页码圆点指示器：提示可左右滑动的分页区域，当前页的圆点更大且不透明。
@@ -41,7 +42,7 @@ fun PagerDotsIndicator(
     pageCount: Int,
     currentPage: Int,
     modifier: Modifier = Modifier,
-    activeColor: Color = MiuixTheme.colorScheme.onSurface,
+    activeColor: Color = MaterialTheme.colorScheme.onSurface,
     inactiveColor: Color = activeColor.copy(alpha = 0.4f),
     activeSize: Dp = 8.dp,
     inactiveSize: Dp = 5.dp,

@@ -67,6 +67,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -218,10 +219,10 @@ fun AlbumsPage(
                             alwaysShowScrollbar = true,
                             selectionMode = ScrollbarSelectionMode.Full,
                             thumbUnselectedColor = 
-                                MiuixTheme.colorScheme.onSurfaceVariantActions
+                                MaterialTheme.colorScheme.onSurfaceVariant
                             ,
                             thumbSelectedColor = 
-                                MiuixTheme.colorScheme.onSurfaceVariantActions
+                                MaterialTheme.colorScheme.onSurfaceVariant
                             ,
                         ),
                     )

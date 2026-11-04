@@ -16,6 +16,7 @@ import coil3.compose.AsyncImage
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
+import androidx.compose.material3.MaterialTheme
 
 /** Plugin artwork keeps its own contrast; only the placeholder follows the active theme. */
 @Composable
@@ -33,7 +34,7 @@ fun PluginIcon(
             .size(size)
             .clip(RoundedCornerShape(size * 0.22f))
             .background(
-                MiuixTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -48,7 +49,7 @@ fun PluginIcon(
             Icon(
                 imageVector = LucideIcons.Settings,
                 contentDescription = contentDescription,
-                tint = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(size * 0.62f)
             )
         }

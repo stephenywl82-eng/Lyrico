@@ -84,6 +84,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongsPage(
@@ -295,10 +296,10 @@ fun SongsPage(
                         alwaysShowScrollbar = true,
                         selectionMode = ScrollbarSelectionMode.Full,
                         thumbUnselectedColor = 
-                            MiuixTheme.colorScheme.onSurfaceVariantActions
+                            MaterialTheme.colorScheme.onSurfaceVariant
                         ,
                         thumbSelectedColor = 
-                            MiuixTheme.colorScheme.onSurfaceVariantActions
+                            MaterialTheme.colorScheme.onSurfaceVariant
                         ,
                     ),
                 )

@@ -51,6 +51,7 @@ import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.ui.res.painterResource
 import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 enum class TaskDetailTab(val labelRes: Int) {
     SUCCEEDED(R.string.batch_task_status_succeeded),
@@ -100,7 +101,7 @@ fun BatchTaskDetailScreen(
                             Icon(
                                 painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
                                 contentDescription = stringResource(R.string.action_close),
-                                tint = MiuixTheme.colorScheme.error
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     }

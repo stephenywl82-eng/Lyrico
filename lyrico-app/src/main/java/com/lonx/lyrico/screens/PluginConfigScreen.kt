@@ -76,6 +76,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import androidx.compose.foundation.overscroll
+import androidx.compose.material3.MaterialTheme
 @Composable
 @Destination<RootGraph>(route = "plugin_config")
 fun PluginConfigScreen(
@@ -169,7 +170,7 @@ fun PluginConfigScreen(
                         .fillMaxWidth()
                         .padding(12.dp),
                     textAlign = TextAlign.Center,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 return@LibraryDetailPage
             }
@@ -192,14 +193,14 @@ fun PluginConfigScreen(
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 8.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         if (uiState.sourceTypes.isNotEmpty()) {
                             Text(
                                 text = typeText,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -209,7 +210,7 @@ fun PluginConfigScreen(
 
                         Text(
                             text = apiText,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     }
@@ -232,13 +233,13 @@ fun PluginConfigScreen(
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 8.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     Text(
                         text = hint,
                         modifier = Modifier.padding(16.dp),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
                 }
@@ -438,16 +439,16 @@ private fun PluginConfigFormItem(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = it,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                            color = MiuixTheme.colorScheme.error
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                     field.summary?.let {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = it,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -468,16 +469,16 @@ private fun PluginConfigFormItem(
                     field.title.takeIf { it.isNotBlank() }?.let { markdownTitle ->
                         Text(
                             text = markdownTitle,
-                            style = MiuixTheme.textStyles.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
                     MarkdownText(
                         modifier = Modifier.fillMaxWidth(),
                         markdown = markdown,
-                        linkColor = MiuixTheme.colorScheme.primary,
-                        style = MiuixTheme.textStyles.body2.copy(
-                            color = MiuixTheme.colorScheme.onSurface
+                        linkColor = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }

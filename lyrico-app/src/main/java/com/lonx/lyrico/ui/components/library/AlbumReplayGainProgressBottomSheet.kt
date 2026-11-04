@@ -21,6 +21,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun AlbumReplayGainProgressBottomSheet(
@@ -62,7 +63,7 @@ fun AlbumReplayGainProgressBottomSheet(
                     }
                     Text(
                         text = statusText,
-                        style = MiuixTheme.textStyles.subtitle,
+                        style = MaterialTheme.typography.titleSmall,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -72,7 +73,7 @@ fun AlbumReplayGainProgressBottomSheet(
 
                     Text(
                         text = "${(progress * 100).toInt()}%",
-                        style = MiuixTheme.textStyles.main,
+                        style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.End
                     )
 
@@ -98,11 +99,11 @@ fun AlbumReplayGainProgressBottomSheet(
                                     R.string.batch_replay_gain_success,
                                     uiState.albumReplayGainWrittenCount
                                 ),
-                                style = MiuixTheme.textStyles.main
+                                style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
                                 text = "${uiState.albumReplayGainWrittenCount} / ${uiState.albumReplayGainSongCount}",
-                                style = MiuixTheme.textStyles.main,
+                                style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.End
                             )
                         }

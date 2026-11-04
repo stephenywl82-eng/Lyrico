@@ -27,6 +27,7 @@ import com.airbnb.lottie.compose.rememberLottieDynamicProperties
 import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.lonx.lyrico.ui.theme.LyricoColors
+import androidx.compose.material3.MaterialTheme
 
 enum class EmptyStateKind(internal val asset: String) {
     List("list"), Songs("songs"), Albums("albums"), Artists("artists"),
@@ -42,8 +43,8 @@ internal fun EmptyStateAnimation(kind: EmptyStateKind, compact: Boolean) = key(k
     )
     val composition by compositionResult
     val salt = false
-    val accent = MiuixTheme.colorScheme.primary
-    val surface = MiuixTheme.colorScheme.surfaceContainer
+    val accent = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surfaceContainer
     val warm = LyricoColors.emptyIllustrationWarm
     val fresh = LyricoColors.emptyIllustrationFresh
     val properties = rememberLottieDynamicProperties(

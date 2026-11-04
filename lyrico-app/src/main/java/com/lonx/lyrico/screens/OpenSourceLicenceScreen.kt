@@ -38,6 +38,7 @@ import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "opensource_licence")
@@ -82,8 +83,8 @@ fun OpenSourceLicenceScreen(
             state = listState,
             settings = ScrollbarSettings.Default.copy(
                 selectionMode = ScrollbarSelectionMode.Full,
-                thumbUnselectedColor = MiuixTheme.colorScheme.onSurfaceVariantActions,
-                thumbSelectedColor = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                thumbUnselectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                thumbSelectedColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         ) {
             LazyColumn(

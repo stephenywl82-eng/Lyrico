@@ -82,6 +82,7 @@ import com.lonx.lyrico.ui.components.library.LibraryDetailIconButton
 import com.lonx.lyrico.ui.components.library.LibraryDetailText
 import com.lonx.lyrico.ui.components.library.LibraryDetailTextTone
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "album_detail")
@@ -436,23 +437,23 @@ private fun AlbumDetailHeader(
             
                 Text(
                     text = album.ifBlank { stringResource(R.string.album_detail_title) },
-                    style = MiuixTheme.textStyles.title3,
-                    color = MiuixTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = albumArtist?.takeIf { it.isNotBlank() }
                         ?: stringResource(R.string.unknown_album_artist),
-                    style = MiuixTheme.textStyles.main,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = stringResource(R.string.song_count, songCount),
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             
         }

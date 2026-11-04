@@ -178,6 +178,7 @@ import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
 import com.lonx.lyrico.ui.components.base.PillButtonSize
+import androidx.compose.material3.MaterialTheme
 
 private const val LIMITED_LYRICS_INPUT_MAX_LINES = 30
 
@@ -917,9 +918,9 @@ Box(modifier = Modifier.fillMaxSize()) {
                                             androidx.compose.material3.CircularProgressIndicator(
                                                 progress = { replayGainCalculateProgress ?: 0f },
                                                 modifier = Modifier.size(20.dp),
-                                                color = MiuixTheme.colorScheme.primary,
+                                                color = MaterialTheme.colorScheme.primary,
                                                 strokeWidth = 2.5.dp,
-                                                trackColor = MiuixTheme.colorScheme.primary.copy(
+                                                trackColor = MaterialTheme.colorScheme.primary.copy(
                                                     alpha = 0.2f
                                                 )
                                             )
@@ -929,7 +930,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                             Text(
                                                 text = "${((replayGainCalculateProgress ?: 0f) * 100).toInt()}%",
                                                 fontSize = 12.sp,
-                                                color = MiuixTheme.colorScheme.primary,
+                                                color = MaterialTheme.colorScheme.primary,
                                                 fontWeight = FontWeight.Medium
                                             )
                                         }
@@ -938,7 +939,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                 Box(
                                     modifier = Modifier
                                         .clip(CircleShape)
-                                        .background(MiuixTheme.colorScheme.primary)
+                                        .background(MaterialTheme.colorScheme.primary)
                                         .clickable {
                                             if (!uiState.isReplayGainCalculating) {
                                                 viewModel.calculateReplayGain()
@@ -956,7 +957,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                             stringResource(R.string.action_calculate_replay_gain)
                                         },
                                         fontSize = 11.sp,
-                                        color = MiuixTheme.colorScheme.onPrimary,
+                                        color = MaterialTheme.colorScheme.onPrimary,
                                         fontWeight = FontWeight.Medium
                                     )
                                 }
@@ -1053,7 +1054,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                             Box(
                                                 modifier = Modifier
                                                     .clip(CircleShape)
-                                                    .background(MiuixTheme.colorScheme.primary)
+                                                    .background(MaterialTheme.colorScheme.primary)
                                                     .clickable {
                                                         showLyricsActionBottomSheet = true
                                                     }
@@ -1063,7 +1064,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                                                 Text(
                                                     text = stringResource(R.string.action_lyrics_options),
                                                     fontSize = 11.sp,
-                                                    color = MiuixTheme.colorScheme.onPrimary,
+                                                    color = MaterialTheme.colorScheme.onPrimary,
                                                     fontWeight = FontWeight.Medium
                                                 )
                                             }
@@ -1441,7 +1442,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                             .fillMaxWidth()
                     ) {
                         Text(
-                            style = MiuixTheme.textStyles.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             text = plainLyrics ?: stringResource(R.string.lyrics_empty),
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -1658,7 +1659,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                 .verticalScroll(rememberScrollState())
         ) {
             Card(
-                colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 Box(
                     modifier = Modifier
@@ -1669,14 +1670,14 @@ Box(modifier = Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = editingTagData?.lyrics ?: "",
-                        style = MiuixTheme.textStyles.footnote1
+                        style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
             Card(
-                colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
                 modifier = Modifier.padding(top = 12.dp)
             ) {
                 LyricsOffsetField(
@@ -1698,8 +1699,8 @@ Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = stringResource(R.string.label_artist_image_conflict_message),
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
@@ -1809,14 +1810,14 @@ private fun PlainLyricsToggleChip(
 ) {
 
     val background = if (selected) {
-        MiuixTheme.colorScheme.primary
+        MaterialTheme.colorScheme.primary
     } else {
-        MiuixTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.secondaryContainer
     }
     val contentColor = if (selected) {
-        MiuixTheme.colorScheme.onPrimary
+        MaterialTheme.colorScheme.onPrimary
     } else {
-        MiuixTheme.colorScheme.onSurfaceVariantActions
+        MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Box(
@@ -1830,7 +1831,7 @@ private fun PlainLyricsToggleChip(
     ) {
         Text(
             text = text,
-            style = MiuixTheme.textStyles.footnote1,
+            style = MaterialTheme.typography.bodySmall,
             color = contentColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1875,9 +1876,9 @@ private fun CoverSection(
     pages: List<PicturePagerItem>,
     pagerState: PagerState,
 ) {
-    val surfaceVariant = MiuixTheme.colorScheme.surfaceVariant
-    val onSurface = MiuixTheme.colorScheme.onSurface
-    val onSurfaceDim = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val surfaceVariant = MaterialTheme.colorScheme.surfaceVariant
+    val onSurface = MaterialTheme.colorScheme.onSurface
+    val onSurfaceDim = MaterialTheme.colorScheme.onSurfaceVariant
     val context = LocalContext.current
     val posterReader: ArtistPosterReader = org.koin.compose.koinInject()
     val picturePages = pages
@@ -2005,7 +2006,7 @@ private fun CoverSection(
                             modifier = Modifier
                                 .size(160.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(MiuixTheme.colorScheme.onSurfaceContainerVariant)
+                                .background(MaterialTheme.colorScheme.onSurfaceVariant)
                         ) { page ->
                             val item = picturePages[page]
                             Box(
@@ -2157,7 +2158,7 @@ private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
     
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
         ) {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -2196,7 +2197,7 @@ private fun MetadataInputField(
         borderColor = if (isModified) {
             LyricoColors.modifiedBorder
         } else {
-            MiuixTheme.colorScheme.primary
+            MaterialTheme.colorScheme.primary
         }
     )
 
@@ -2241,7 +2242,7 @@ private fun MetadataInputField(
 
             TextField(
                 state = state,
-                textStyle = MiuixTheme.textStyles.body2,
+                textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 label = fieldLabel,
                 colors = colors,
@@ -2329,7 +2330,7 @@ private fun CustomMetadataFieldEditor(
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(MiuixTheme.colorScheme.primary)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable {
                             onRemove()
                         }
@@ -2339,7 +2340,7 @@ private fun CustomMetadataFieldEditor(
                     Text(
                         text = stringResource(R.string.action_delete),
                         fontSize = 11.sp,
-                        color = MiuixTheme.colorScheme.onPrimary,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -2372,7 +2373,7 @@ private fun editedValue(data: AudioTagData?, field: SimpleTextField): String =
 
 @Composable
 private fun EditorMenuGroup(content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
         Column(content = content)
     }
 }

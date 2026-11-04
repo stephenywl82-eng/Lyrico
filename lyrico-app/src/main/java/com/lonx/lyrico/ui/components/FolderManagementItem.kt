@@ -20,6 +20,7 @@ import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun FolderManagementItem(
@@ -45,11 +46,11 @@ fun FolderManagementItem(
             enabled = enabled,
             onClick = onClick
         ) {
-            Text(name, color = MiuixTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
+            Text(name, color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium)
             Spacer(Modifier.height(3.dp))
-            Text(path, color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontSize = MiuixTheme.textStyles.body2.fontSize)
+            Text(path, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = MaterialTheme.typography.bodyMedium.fontSize)
             Spacer(Modifier.height(6.dp))
-            Text(status, color = MiuixTheme.colorScheme.onSurfaceVariantActions, fontSize = MiuixTheme.textStyles.body2.fontSize)
+            Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = MaterialTheme.typography.bodyMedium.fontSize)
         }
     }
 }

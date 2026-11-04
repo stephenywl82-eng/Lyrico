@@ -11,6 +11,7 @@ import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 internal fun LibraryDetailPageMiuix(
@@ -70,14 +71,14 @@ internal fun LibraryDetailTextMiuix(
         modifier = modifier,
         style =
             when (tone) {
-                LibraryDetailTextTone.Title -> MiuixTheme.textStyles.title3
-                LibraryDetailTextTone.Body -> MiuixTheme.textStyles.body1
-                LibraryDetailTextTone.Secondary -> MiuixTheme.textStyles.body2
+                LibraryDetailTextTone.Title -> MaterialTheme.typography.titleMedium
+                LibraryDetailTextTone.Body -> MaterialTheme.typography.bodyLarge
+                LibraryDetailTextTone.Secondary -> MaterialTheme.typography.bodyMedium
             },
         color =
             if (tone == LibraryDetailTextTone.Secondary)
-                MiuixTheme.colorScheme.onSurfaceVariantSummary
-            else MiuixTheme.colorScheme.onSurface,
+                MaterialTheme.colorScheme.onSurfaceVariant
+            else MaterialTheme.colorScheme.onSurface,
         maxLines = maxLines,
         overflow = overflow,
     )

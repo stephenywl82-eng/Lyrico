@@ -60,6 +60,7 @@ import com.lonx.lyrico.plugin.runtime.HostAppInfo
 import com.lonx.lyrico.plugin.runtime.QuickJsHostApi
 import com.lonx.lyrico.plugin.runtime.QuickJsRuntime
 import com.lonx.lyrico.utils.MediaScanner
+import com.lonx.lyrico.utils.MediaStoreScanner
 import com.lonx.lyrico.utils.ReplayGainScanner
 import com.lonx.lyrico.utils.LibraryScanManager
 import com.lonx.lyrico.utils.LibraryScanManagerImpl
@@ -192,6 +193,7 @@ val appModule = module {
 
     single<UpdateManager> { UpdateManagerImpl(get(), get()) }
     single { MediaScanner(androidContext()) }
+    single { MediaStoreScanner(androidContext()) }
     single { ReplayGainScanner(androidContext()) }
     // 数据库和存储库
     single {
@@ -249,7 +251,7 @@ val appModule = module {
     single<SongLibraryRepository> { SongLibraryRepositoryImpl(get()) }
     single<SongSearchRepository> { SongSearchRepositoryImpl(get()) }
     single<LibraryScanRepository> {
-        LibraryScanRepositoryImpl(androidContext(), get(), get(), get(), get(), get(), get(), get())
+        LibraryScanRepositoryImpl(androidContext(), get(), get(), get(), get(), get(), get(), get(), get())
     }
     single { ReadAudioTagsUseCase(get(), get()) }
     single { SaveAudioTagsUseCase(get(), get(), get(), get(), get(), get()) }

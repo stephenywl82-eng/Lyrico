@@ -46,6 +46,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.core.net.toUri
 import top.yukonga.miuix.kmp.preference.ArrowPreference
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun PlayerPickerBottomSheet(
@@ -92,7 +93,7 @@ fun PlayerPickerBottomSheet(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 playerStates.forEach { item ->
@@ -134,7 +135,7 @@ fun PlayerPickerBottomSheet(
 
             Card(
                 colors = CardDefaults.defaultColors(
-                    color = MiuixTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.secondaryContainer
                 )
             ) {
                 ArrowPreference(
@@ -180,7 +181,7 @@ private fun FriendlyPlayerItem(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(MiuixTheme.colorScheme.surfaceVariant),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (icon != null) {
@@ -194,7 +195,7 @@ private fun FriendlyPlayerItem(
                         imageVector = LucideIcons.Music,
                         contentDescription = displayName,
                         modifier = Modifier.size(24.dp),
-                        tint = MiuixTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -207,7 +208,7 @@ private fun FriendlyPlayerItem(
                     Icon(
                         imageVector = LucideIcons.Link,
                         contentDescription = stringResource(R.string.learn_more),
-                        tint = MiuixTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
             }
@@ -219,8 +220,8 @@ private fun FriendlyPlayerItem(
         ) {
             Text(
                 text = nameText,
-                style = MiuixTheme.textStyles.main,
-                color = MiuixTheme.colorScheme.onSurfaceContainer,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

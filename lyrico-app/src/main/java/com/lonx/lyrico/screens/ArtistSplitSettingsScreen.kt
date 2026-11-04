@@ -74,6 +74,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
@@ -227,19 +228,19 @@ fun ArtistSplitSettingsScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColorsPrimary()
                             ) {
-                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp), tint = MiuixTheme.colorScheme.onPrimary)
+                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.add_custom_separator), color = MiuixTheme.colorScheme.onPrimary,
-                                    style = MiuixTheme.textStyles.button)
+                                Text(stringResource(R.string.add_custom_separator), color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.labelLarge)
                             }
                             Button(
                                 onClick = viewModel::resetSeparators,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp), tint = MiuixTheme.colorScheme.onSecondaryContainer)
+                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.reset_to_default), color = MiuixTheme.colorScheme.onSecondaryContainer,
-                                    style = MiuixTheme.textStyles.button)
+                                Text(stringResource(R.string.reset_to_default), color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    style = MaterialTheme.typography.labelLarge)
                             }
                         }
                     }
@@ -403,14 +404,14 @@ private fun RuleChip(
     onDelete: () -> Unit
 ) {
     val background = if (checked) {
-        MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     } else {
-        MiuixTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.secondaryContainer
     }
     val borderColor = if (checked) {
-        MiuixTheme.colorScheme.primary.copy(alpha = 0.48f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
     } else {
-        MiuixTheme.colorScheme.onSurfaceVariantActions.copy(alpha = 0.16f)
+        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
     }
 
     Row(
@@ -428,9 +429,9 @@ private fun RuleChip(
                 .clip(CircleShape)
                 .background(
                     if (checked) {
-                        MiuixTheme.colorScheme.primary
+                        MaterialTheme.colorScheme.primary
                     } else {
-                        MiuixTheme.colorScheme.onSurfaceVariantActions.copy(alpha = 0.16f)
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
                     }
                 )
                 .clickable { onCheckedChange(!checked) },
@@ -439,15 +440,15 @@ private fun RuleChip(
             if (checked) {
                 Text(
                     text = "✓",
-                    color = MiuixTheme.colorScheme.onPrimary,
-                    fontSize = MiuixTheme.textStyles.footnote1.fontSize
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize
                 )
             }
         }
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 8.dp),
-            color = MiuixTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -458,7 +459,7 @@ private fun RuleChip(
                 .size(18.dp)
                 .clip(CircleShape)
                 .clickable(onClick = onDelete),
-            tint = MiuixTheme.colorScheme.onSurfaceVariantActions
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -490,8 +491,8 @@ private fun ArtistSplitInputDialog(
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = hint,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                fontSize = MiuixTheme.textStyles.footnote1.fontSize
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
@@ -538,7 +539,7 @@ private fun ConfirmRuleDeleteDialog(
                     R.string.artist_split_delete_rule_message,
                     pendingDelete?.label.orEmpty()
                 ),
-                color = MiuixTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {

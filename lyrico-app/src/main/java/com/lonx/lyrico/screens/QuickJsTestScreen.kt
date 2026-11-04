@@ -58,6 +58,7 @@ import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "quickjs_test")
@@ -470,24 +471,24 @@ private fun EvalTestCard(
         ) {
             Text(
                 text = title,
-                style = MiuixTheme.textStyles.title3,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = description,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "脚本内容",
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -499,8 +500,8 @@ private fun EvalTestCard(
                 BasicTextField(
                     state = scriptState,
                     enabled = !isRunning,
-                    textStyle = MiuixTheme.textStyles.body2.copy(
-                        color = MiuixTheme.colorScheme.onSurface,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontFamily = FontFamily.Monospace
                     ),
                     modifier = Modifier
@@ -508,7 +509,7 @@ private fun EvalTestCard(
                         .heightIn(min = 180.dp)
                         .border(
                             width = 1.dp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .padding(12.dp),
@@ -517,8 +518,8 @@ private fun EvalTestCard(
                             if (scriptState.text.isBlank()) {
                                 Text(
                                     text = "请输入 JavaScript 脚本，最后一个表达式会作为 eval 返回值",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontFamily = FontFamily.Monospace
                                 )
                             }
@@ -533,8 +534,8 @@ private fun EvalTestCard(
 
             Text(
                 text = "示例脚本",
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -594,16 +595,16 @@ private fun TestCard(
         ) {
             Text(
                 text = title,
-                style = MiuixTheme.textStyles.title3,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = description,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -641,12 +642,12 @@ private fun ResultText(result: String?) {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = it,
-            style = MiuixTheme.textStyles.body2,
+            style = MaterialTheme.typography.bodyMedium,
             color = when {
-                it.startsWith("✅") -> MiuixTheme.colorScheme.primary
-                it.startsWith("❌") -> MiuixTheme.colorScheme.error
-                it.startsWith("⚠️") -> MiuixTheme.colorScheme.tertiaryContainer
-                else -> MiuixTheme.colorScheme.onSurfaceVariantActions
+                it.startsWith("✅") -> MaterialTheme.colorScheme.primary
+                it.startsWith("❌") -> MaterialTheme.colorScheme.error
+                it.startsWith("⚠️") -> MaterialTheme.colorScheme.tertiaryContainer
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
             },
             fontFamily = FontFamily.Monospace,
             modifier = Modifier.fillMaxWidth()

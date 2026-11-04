@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 internal fun PreviewAction(icon: ImageVector, label: String, enabled: Boolean,
@@ -122,16 +123,16 @@ internal fun PosterInformation(item: PosterPreviewMedia, info: PosterMediaInfo?,
     onRetry: () -> Unit, headerGesture: Modifier) {
     val context = LocalContext.current
     val salt = false
-    val summaryColor = MiuixTheme.colorScheme.onSurfaceVariantSummary
+    val summaryColor = MaterialTheme.colorScheme.onSurfaceVariant
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 84.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.fillMaxWidth().then(headerGesture), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             info?.lastModified?.let { time ->
                 // Salt 侧走自身 main/sub 字号，不把 Miuix 的 fontSize 硬塞给 Salt 控件。
                 Text(java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
-                    .format(java.util.Date(time)), fontSize = MiuixTheme.textStyles.body1.fontSize)
+                    .format(java.util.Date(time)), fontSize = MaterialTheme.typography.bodyLarge.fontSize)
             }
-            Text(item.name, fontSize = MiuixTheme.textStyles.body2.fontSize)
+            Text(item.name, fontSize = MaterialTheme.typography.bodyMedium.fontSize)
         }
         HorizontalDivider()
         when {
@@ -146,8 +147,8 @@ internal fun PosterInformation(item: PosterPreviewMedia, info: PosterMediaInfo?,
                 InformationRow(stringResource(R.string.poster_preview_format), info.mime.substringAfter('/').uppercase(java.util.Locale.ROOT))
                 HorizontalDivider()
                 Text(stringResource(if (item.embedded) R.string.label_image_source_embedded else R.string.label_image_source_external),
-                    fontSize = MiuixTheme.textStyles.body2.fontSize)
-                Text(info.source, fontSize = MiuixTheme.textStyles.footnote1.fontSize, color = summaryColor)
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize)
+                Text(info.source, fontSize = MaterialTheme.typography.bodySmall.fontSize, color = summaryColor)
             }
         }
     }
@@ -158,9 +159,9 @@ private fun InformationRow(label: String, value: String) {
     // 标签=副文、取值=主文；Salt 用自身 sub/main，Miuix 保持原字号与色板。
     val salt = false
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(label, fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary, modifier = Modifier.weight(1f))
-        Text(value, fontSize = MiuixTheme.textStyles.footnote1.fontSize, modifier = Modifier.weight(2f))
+        Text(label, fontSize = MaterialTheme.typography.bodySmall.fontSize,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(value, fontSize = MaterialTheme.typography.bodySmall.fontSize, modifier = Modifier.weight(2f))
     }
 }
 

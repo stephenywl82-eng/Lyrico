@@ -76,6 +76,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -173,15 +174,15 @@ fun SearchLyricsScreen(
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(R.string.action_search),
-                            style = MiuixTheme.textStyles.main,
-                            color = MiuixTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                     IconButton(onClick = { showLyricRenderConfig = true }) {
                         Icon(
                             imageVector = LucideIcons.Settings,
                             contentDescription = stringResource(R.string.search_settings),
-                            tint = MiuixTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 
@@ -499,7 +500,7 @@ private fun LyricsSearchResultList(
                         Text(
                             text = stringResource(R.string.search_loading_more),
                             fontSize = 14.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

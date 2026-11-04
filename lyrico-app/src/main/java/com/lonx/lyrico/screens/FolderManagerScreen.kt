@@ -112,6 +112,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -417,15 +418,15 @@ fun FolderManagerScreen(
                         Text(
                             text = folder.path,
                             modifier = Modifier.fillMaxWidth(),
-                            color = MiuixTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onBackground
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
                             text = stringResource(R.string.dialog_remove_folder_content_tip),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -481,8 +482,8 @@ fun FolderManagerScreen(
                 uiState.error?.let { error ->
                     Text(
                         text = stringResource(R.string.folder_scan_failed, error),
-                        fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                        color = MiuixTheme.colorScheme.error,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
@@ -1117,8 +1118,8 @@ private fun FolderPathHeader(
 
             Text(
                 text = stringResource(R.string.folder_browser_count_format, folderCount, songCount),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                fontSize = MiuixTheme.textStyles.body2.fontSize
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize
             )
         }
     }

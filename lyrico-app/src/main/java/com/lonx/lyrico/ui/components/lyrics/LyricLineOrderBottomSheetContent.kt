@@ -36,6 +36,7 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun LyricLineOrderBottomSheetContent(
@@ -68,8 +69,8 @@ fun LyricLineOrderBottomSheetContent(
         
             Text(
                 text = stringResource(R.string.lyric_line_order_hint),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                style = MiuixTheme.textStyles.footnote1,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             )
         
@@ -101,7 +102,7 @@ fun LyricLineOrderBottomSheetContent(
                     
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+                            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
                         ) {
                             BasicComponent(
                                 modifier = dragModifier,

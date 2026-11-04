@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.MiuixPopupHost
+import androidx.compose.material3.MaterialTheme
 
 internal fun requiredStartupPermissions(
     sdkInt: Int,
@@ -187,7 +188,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
 
                 Scaffold(
                     popupHost = { MiuixPopupHost() },
-                    containerColor = MiuixTheme.colorScheme.background,
+                    containerColor = MaterialTheme.colorScheme.background,
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
                     LyricoApp(

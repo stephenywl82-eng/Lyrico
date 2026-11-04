@@ -25,6 +25,7 @@ import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongActionSheets(
@@ -159,7 +160,7 @@ private fun RenameSongDialog(
                     if (extensionDot.isNotEmpty()) {
                         Text(
                             text = extensionDot,
-                            style = MiuixTheme.textStyles.footnote1,
+                            style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(end = 12.dp)
                         )
                     }

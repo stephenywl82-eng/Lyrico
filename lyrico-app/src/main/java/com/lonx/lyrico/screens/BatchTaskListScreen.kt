@@ -66,6 +66,7 @@ import java.util.Locale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.ui.semantics.Role
+import androidx.compose.material3.MaterialTheme
 @Destination<RootGraph>(route = "batch_task_list")
 @Composable
 fun BatchTaskListScreen(
@@ -132,7 +133,7 @@ fun BatchTaskListScreen(
                 Text(
                     text = deleteMessage,
                     modifier = Modifier.fillMaxWidth(),
-                    color = MiuixTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(
@@ -235,9 +236,9 @@ fun BatchTaskListScreen(
                                 LucideIcons.Trash,
                                 contentDescription = stringResource(R.string.batch_task_clear_title),
                                 tint = if (canClearFinishedTasks) {
-                                    MiuixTheme.colorScheme.error
+                                    MaterialTheme.colorScheme.error
                                 } else {
-                                    MiuixTheme.colorScheme.onSurfaceVariantActions
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                                 }
                             )
                         }
@@ -350,7 +351,7 @@ private fun BatchTaskCard(
                         Icon(
                             painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
                             contentDescription = stringResource(R.string.action_close),
-                            tint = MiuixTheme.colorScheme.error
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 } else {
@@ -358,7 +359,7 @@ private fun BatchTaskCard(
                         Icon(
                             LucideIcons.Trash,
                             contentDescription = stringResource(R.string.common_delete),
-                            tint = MiuixTheme.colorScheme.error
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -400,20 +401,20 @@ private fun BatchTaskCardDetails(
                 Text(
                     text = formattedDate,
                     fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = stringResource(R.string.batch_task_type_label) + typeLabel,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = stringResource(R.string.batch_task_status_label) + statusLabel,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             if (finished) {
@@ -424,14 +425,14 @@ private fun BatchTaskCardDetails(
                         task.failureCount,
                         task.skippedCount
                     ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             } else if (isRunning) {
                 Text(
                     text = "${task.current}/${task.total}",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             if (durationSecs != null) {
@@ -441,8 +442,8 @@ private fun BatchTaskCardDetails(
                         R.string.batch_match_duration_format,
                         durationSecs
                     ),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurface
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -451,20 +452,20 @@ private fun BatchTaskCardDetails(
     Column {
         Text(
             text = formattedDate,
-            style = MiuixTheme.textStyles.main,
+            style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Medium,
-            color = MiuixTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(R.string.batch_task_type_label) + typeLabel,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = stringResource(R.string.batch_task_status_label) + statusLabel,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         if (finished) {
             Text(
@@ -474,14 +475,14 @@ private fun BatchTaskCardDetails(
                     task.failureCount,
                     task.skippedCount
                 ),
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else if (isRunning) {
             Text(
                 text = "${task.current}/${task.total}",
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         if (durationSecs != null) {
@@ -490,8 +491,8 @@ private fun BatchTaskCardDetails(
                     R.string.batch_match_duration_format,
                     durationSecs
                 ),
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

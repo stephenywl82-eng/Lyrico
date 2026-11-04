@@ -38,6 +38,7 @@ import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -106,7 +107,7 @@ fun BatchMatchConfigBottomSheet(
                     Card(
                         modifier = Modifier.padding(bottom = 12.dp),
                         colors = CardDefaults.defaultColors(
-                            color = MiuixTheme.colorScheme.secondaryContainer,
+                            color = MaterialTheme.colorScheme.secondaryContainer,
                         )
                     ) {
                         LazyColumn(
@@ -146,7 +147,7 @@ fun BatchMatchConfigBottomSheet(
                 }
                 Card(
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
                     )
                 ) {
                     if (singleTarget != null) {
@@ -239,7 +240,7 @@ private fun BatchMatchTargetItem(
                 if (isSelected) {
                     Text(
                         text = stringResource(mode.labelRes),
-                        style = MiuixTheme.textStyles.footnote2
+                        style = MaterialTheme.typography.bodySmall
                     )
                 }
 
@@ -253,11 +254,11 @@ private fun BatchMatchTargetItem(
     ) {
         Text(
             text = stringResource(target.labelRes),
-            style = MiuixTheme.textStyles.main,
+            style = MaterialTheme.typography.bodyLarge,
             color = if (isSelected) {
-                MiuixTheme.colorScheme.onSurfaceContainer
+                MaterialTheme.colorScheme.onSurface
             } else {
-                MiuixTheme.colorScheme.onSecondaryContainer
+                MaterialTheme.colorScheme.onSecondaryContainer
             }
         )
     }

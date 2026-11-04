@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun IllustratedEmptyState(
@@ -62,22 +63,22 @@ fun IllustratedEmptyState(
 
                 Text(
                     text = title,
-                    style = MiuixTheme.textStyles.title4,
+                    style = MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Center
                 )
 
                 if (!summary.isNullOrBlank()) {
                     Text(
                         text = summary,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 8.dp),
                     )
                 }
 
             val salt = false
-            val actionColor = MiuixTheme.colorScheme.primary
+            val actionColor = MaterialTheme.colorScheme.primary
             if (!actionText.isNullOrBlank()) {
                 Spacer(Modifier.height(if (compact) 10.dp else 16.dp))
                 Row(
@@ -95,7 +96,7 @@ fun IllustratedEmptyState(
                     
                         Text(
                             text = actionText,
-                            style = MiuixTheme.textStyles.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = actionColor,
                             fontWeight = FontWeight.Medium,
                         )

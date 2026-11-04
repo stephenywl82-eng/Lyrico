@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 data class ExpandableFabMenuStyle(
     val mainIcon: ImageVector = LucideIcons.Plus,
@@ -34,11 +35,11 @@ data class ExpandableFabMenuStyle(
         fun default(): ExpandableFabMenuStyle {
 
             return ExpandableFabMenuStyle(
-                mainContainerColor = MiuixTheme.colorScheme.primary,
-                mainContentColor = MiuixTheme.colorScheme.onPrimary,
-                expandedContainerColor = MiuixTheme.colorScheme.surfaceVariant,
-                itemContentColor = MiuixTheme.colorScheme.onSurface,
-                itemDisabledContentColor = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                mainContainerColor = MaterialTheme.colorScheme.primary,
+                mainContentColor = MaterialTheme.colorScheme.onPrimary,
+                expandedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                itemContentColor = MaterialTheme.colorScheme.onSurface,
+                itemDisabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             )
         }
     }

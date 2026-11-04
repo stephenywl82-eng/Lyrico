@@ -26,6 +26,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun BatchExportBottomSheet(
@@ -81,7 +82,7 @@ fun BatchExportBottomSheet(
                                         batchExportUiState.totalTimeMillis / 1000.0
                                     )
                                 },
-                                style = MiuixTheme.textStyles.subtitle,
+                                style = MaterialTheme.typography.titleSmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
@@ -91,7 +92,7 @@ fun BatchExportBottomSheet(
 
                             Text(
                                 text = "$current / $total",
-                                style = MiuixTheme.textStyles.main,
+                                style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.End
                             )
                         }
@@ -112,21 +113,21 @@ fun BatchExportBottomSheet(
                                 R.string.batch_replay_gain_success,
                                 batchExportUiState.successCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_skipped,
                                 batchExportUiState.skippedCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_failure,
                                 batchExportUiState.failureCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     
                 }

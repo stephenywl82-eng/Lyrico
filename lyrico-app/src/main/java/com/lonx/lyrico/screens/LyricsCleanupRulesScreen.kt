@@ -55,6 +55,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "lyrics_cleanup_rules")
@@ -124,8 +125,8 @@ fun LyricsCleanupRulesScreen(
                         }
                         Text(
                             text = stringResource(R.string.non_lyrics_cleanup_rules_hint),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                         Row(
@@ -142,19 +143,19 @@ fun LyricsCleanupRulesScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = MiuixButtonDefaults.buttonColorsPrimary()
                             ) {
-                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp), tint = MiuixTheme.colorScheme.onPrimary)
+                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.add_non_lyrics_cleanup_rule), color = MiuixTheme.colorScheme.onPrimary,
-                                    style = MiuixTheme.textStyles.button)
+                                Text(stringResource(R.string.add_non_lyrics_cleanup_rule), color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.labelLarge)
                             }
                             MiuixButton(
                                 onClick = viewModel::resetNonLyricsContentRules,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp), tint = MiuixTheme.colorScheme.onSecondaryContainer)
+                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.reset_to_default), color = MiuixTheme.colorScheme.onSecondaryContainer,
-                                    style = MiuixTheme.textStyles.button)
+                                Text(stringResource(R.string.reset_to_default), color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    style = MaterialTheme.typography.labelLarge)
                             }
                         }
                     }
@@ -213,7 +214,7 @@ fun LyricsCleanupRulesScreen(
                     R.string.non_lyrics_cleanup_delete_rule_message,
                     deletingRule.orEmpty()
                 ),
-                color = MiuixTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
@@ -265,11 +266,11 @@ private fun CleanupRuleInputDialog(
             Text(
                 text = errorMessage ?: stringResource(R.string.non_lyrics_cleanup_rule_input_hint),
                 color = if (errorMessage == null) {
-                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
-                    MiuixTheme.colorScheme.error
+                    MaterialTheme.colorScheme.error
                 },
-                fontSize = MiuixTheme.textStyles.footnote1.fontSize
+                fontSize = MaterialTheme.typography.bodySmall.fontSize
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {

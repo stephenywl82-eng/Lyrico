@@ -28,6 +28,7 @@ import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowListPopup
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun LyricsActionButton(text: String, enabled: Boolean = true, primary: Boolean = false, onCard: Boolean = false,
@@ -37,15 +38,15 @@ fun LyricsActionButton(text: String, enabled: Boolean = true, primary: Boolean =
         modifier = Modifier.minimumInteractiveComponentSize().semantics { role = Role.Button },
         style = PillButtonDefaults.style(PillButtonSize.Large),
         colors = PillButtonDefaults.colors(containerColor = if (onCard)
-            MiuixTheme.colorScheme.surface else MiuixTheme.colorScheme.secondaryContainer))
+            MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondaryContainer))
 }
 
 @Composable
 fun LyricsHint(text: String, modifier: Modifier = Modifier) {
 
     Text(text, modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-        style = MiuixTheme.textStyles.footnote1,
-        color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 /** Anchored menu shared by the metadata actions and selection toolbar. */
@@ -121,11 +122,11 @@ private fun LyricsColumnCountSettings(
     count: Int, mapping: LyricsColumnMapping, onMapping: (LyricsColumnMapping) -> Unit
 ) {
 
-    Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
         Text(
             text = stringResource(if (count == 2) R.string.lyrics_two_columns else R.string.lyrics_three_columns),
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
-            style = MiuixTheme.textStyles.subtitle,
+            style = MaterialTheme.typography.titleSmall,
         )
         LyricsHint(stringResource(R.string.lyrics_column_hint))
         repeat(count) { source ->
@@ -139,7 +140,7 @@ private fun LyricsColumnCountSettings(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(stringResource(R.string.lyrics_input_line, source + 1),
-                    modifier = Modifier.weight(1f), style = MiuixTheme.textStyles.body2)
+                    modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 LyricsChoice(
                     label = if (kept) positions[destination] else stringResource(R.string.lyrics_column_remove),
                     items = choices, selected = if (kept) destination else positions.size,
@@ -162,7 +163,7 @@ fun LyricsConcurrency(value: Int, onChange: (Int) -> Unit, header: (@Composable 
     
         Card(
             modifier = Modifier.padding(top = 12.dp),
-            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
         ) { field() }
     
 }
@@ -171,7 +172,7 @@ fun LyricsConcurrency(value: Int, onChange: (Int) -> Unit, header: (@Composable 
 fun LyricsOperationContent(operation: LyricsOperation, targetFormat: LyricFormat, onFormat: (LyricFormat) -> Unit) {
 
     when (operation) {
-        LyricsOperation.CONVERT -> Card(colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer)) {
+        LyricsOperation.CONVERT -> Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
             LyricFormat.entries.forEach { format ->
                 RadioButtonPreference(title = stringResource(format.labelRes), selected = format == targetFormat,
                     onClick = { onFormat(format) })

@@ -78,6 +78,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,8 +154,8 @@ fun SearchCoverScreen(
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
-                            style = MiuixTheme.textStyles.main,
-                            color = MiuixTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 
@@ -355,7 +356,7 @@ private fun SearchCoverContent(
                                         Text(
                                             text = stringResource(R.string.search_loading_more),
                                             fontSize = 14.sp,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -482,7 +483,7 @@ fun CoverGridItem(
                         .align(Alignment.TopStart)
                         .padding(4.dp)
                         .background(
-                            color = MiuixTheme.colorScheme.primary.copy(alpha = 0.8f),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                             shape = RoundedCornerShape(4.dp)
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
@@ -530,29 +531,29 @@ fun CoverGridItem(
                 
                     Text(
                         text = title,
-                        style = MiuixTheme.textStyles.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = artist,
-                        style = MiuixTheme.textStyles.footnote2,
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = album,
-                        style = MiuixTheme.textStyles.footnote2,
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = date,
-                        style = MiuixTheme.textStyles.footnote2,
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -564,7 +565,7 @@ fun CoverGridItem(
         Card(
             modifier = Modifier,
             colors = CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.secondaryContainer
+                color = MaterialTheme.colorScheme.secondaryContainer
             )
         ) { cardContent() }
     

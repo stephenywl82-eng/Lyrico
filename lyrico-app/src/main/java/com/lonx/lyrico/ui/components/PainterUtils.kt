@@ -23,6 +23,7 @@ import androidx.core.net.toUri
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.io.File
 import java.io.FileOutputStream
+import androidx.compose.material3.MaterialTheme
 
 /**
  * Creates a Painter that applies a tint color to the source painter.
@@ -123,7 +124,7 @@ fun getSystemWallpaperColor(context: Context): Color {
     } else {
         // API<31 无动态取色，Salt 下回退到 Salt 语义色。
         
-            MiuixTheme.colorScheme.primary
+            MaterialTheme.colorScheme.primary
         
     }
 }

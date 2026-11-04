@@ -88,6 +88,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme
 @Composable
 @Destination<RootGraph>(route = "app_logs")
 fun AppLogScreen(
@@ -211,7 +212,7 @@ fun AppLogScreen(
                             Icon(
                                 imageVector = LucideIcons.Trash,
                                 contentDescription = stringResource(R.string.action_delete),
-                                tint = MiuixTheme.colorScheme.error
+                                tint = MaterialTheme.colorScheme.error
                             )
                         }
                     },
@@ -374,29 +375,29 @@ private fun AppLogItem(
                     Text(
                         text = stringResource(log.type.labelRes),
                         fontWeight = FontWeight.Bold,
-                        color = MiuixTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
-                    style = MiuixTheme.textStyles.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     text = formatTime(log.createdAt),
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = log.message,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = log.tag,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -404,8 +405,8 @@ private fun AppLogItem(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = it,
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -418,16 +419,16 @@ private fun AppLogItem(
 private fun SeverityBadge(level: AppLogLevel) {
     val salt = false
     val background = when (level) {
-        AppLogLevel.ERROR -> MiuixTheme.colorScheme.error
-        AppLogLevel.WARNING -> MiuixTheme.colorScheme.tertiaryContainer
-        AppLogLevel.INFO -> MiuixTheme.colorScheme.primary
-        AppLogLevel.DEBUG -> MiuixTheme.colorScheme.secondaryContainer
+        AppLogLevel.ERROR -> MaterialTheme.colorScheme.error
+        AppLogLevel.WARNING -> MaterialTheme.colorScheme.tertiaryContainer
+        AppLogLevel.INFO -> MaterialTheme.colorScheme.primary
+        AppLogLevel.DEBUG -> MaterialTheme.colorScheme.secondaryContainer
     }
     val content = when (level) {
-        AppLogLevel.ERROR -> MiuixTheme.colorScheme.onError
-        AppLogLevel.WARNING -> MiuixTheme.colorScheme.onSurface
-        AppLogLevel.INFO -> MiuixTheme.colorScheme.onPrimary
-        AppLogLevel.DEBUG -> MiuixTheme.colorScheme.onSurfaceVariantActions
+        AppLogLevel.ERROR -> MaterialTheme.colorScheme.onError
+        AppLogLevel.WARNING -> MaterialTheme.colorScheme.onSurface
+        AppLogLevel.INFO -> MaterialTheme.colorScheme.onPrimary
+        AppLogLevel.DEBUG -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     Text(
@@ -504,21 +505,21 @@ private fun AppLogDetailContent(log: AppLogEntity) {
         Spacer(modifier = Modifier.height(12.dp))
         Text(
             text = stringResource(R.string.app_log_field_message),
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold
         )
         SelectionContainer {
             Text(
                 text = log.message,
                 modifier = Modifier.padding(top = 4.dp),
-                color = MiuixTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
         log.detail?.takeIf { it.isNotBlank() }?.let { detail ->
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(R.string.app_log_field_detail),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
             SelectionContainer {
@@ -527,7 +528,7 @@ private fun AppLogDetailContent(log: AppLogEntity) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 4.dp),
-                    color = MiuixTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = FontFamily.Monospace
                 )
             }
@@ -544,13 +545,13 @@ private fun DetailRow(
     Column(modifier = Modifier.padding(bottom = 8.dp)) {
         Text(
             text = label,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold
         )
         SelectionContainer {
             Text(
                 text = value,
-                color = MiuixTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )

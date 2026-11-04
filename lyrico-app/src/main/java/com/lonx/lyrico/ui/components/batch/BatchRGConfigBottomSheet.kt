@@ -13,6 +13,7 @@ import com.lonx.lyrico.ui.components.base.ConcurrencyDropdown
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun BatchRGConfigBottomSheet(
@@ -43,7 +44,7 @@ fun BatchRGConfigBottomSheet(
                 )
             }
             Card(
-                colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
             ) { field() }
         },
         onDismissRequest = { onDismissRequest(concurrency) },

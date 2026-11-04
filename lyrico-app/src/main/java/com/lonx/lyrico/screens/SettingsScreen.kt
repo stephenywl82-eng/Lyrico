@@ -78,6 +78,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @Composable
@@ -689,7 +690,7 @@ private fun ReplayGainTargetLoudnessSheet(
             Column {
                 Card(
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     presets.forEachIndexed { index, preset ->
@@ -716,7 +717,7 @@ private fun ReplayGainTargetLoudnessSheet(
                 AnimatedVisibility(visible = customSelected) {
                     Card(
                         colors = CardDefaults.defaultColors(
-                            color = MiuixTheme.colorScheme.secondaryContainer
+                            color = MaterialTheme.colorScheme.secondaryContainer
                         )
                     ) {
                         TextField(
@@ -730,8 +731,8 @@ private fun ReplayGainTargetLoudnessSheet(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = stringResource(R.string.replay_gain_target_invalid),
-                                style = MiuixTheme.textStyles.footnote1,
-                                color = MiuixTheme.colorScheme.error
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }

@@ -108,7 +108,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import top.yukonga.miuix.kmp.window.WindowDialog
@@ -123,6 +123,7 @@ import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
 import com.lonx.lyrico.ui.components.base.PillButtonSize
 import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
+import androidx.compose.material3.MaterialTheme
 @Composable
 private fun PluginMessage.localizedText(): String = when (this) {
     is PluginMessage.Failure -> stringResource(R.string.plugin_action_failed, reason)
@@ -313,8 +314,8 @@ fun PluginManagerScreen(
 
                 Text(
                     text = stringResource(R.string.search_source_priority_tip),
-                    fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                    color = colorScheme.onSurfaceVariantActions,
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                    color = colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(12.dp)
                 )
             
@@ -460,7 +461,7 @@ fun PluginManagerScreen(
                     pendingRenamePlugin?.name.orEmpty()
                 ),
                 fontSize = 12.sp,
-                color = colorScheme.onSurfaceVariantSummary
+                color = colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -645,7 +646,7 @@ private fun PluginImportCandidateItem(
             Text(
                 text = manifest.id,
                 fontSize = 12.sp,
-                color = colorScheme.onSurfaceVariantSummary,
+                color = colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -653,21 +654,21 @@ private fun PluginImportCandidateItem(
             Text(
                 text = stringResource(R.string.plugin_import_version, versionText),
                 fontSize = 12.sp,
-                color = colorScheme.onSurfaceVariantSummary,
+                color = colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = stringResource(R.string.plugin_type_with_value, pluginTypeText),
                 fontSize = 12.sp,
-                color = colorScheme.onSurfaceVariantSummary,
+                color = colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = stringResource(R.string.plugin_import_path,locationText),
                 fontSize = 12.sp,
-                color = colorScheme.onSurfaceVariantSummary,
+                color = colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -676,7 +677,7 @@ private fun PluginImportCandidateItem(
                 Text(
                     text = stringResource(R.string.plugin_import_description,manifest.description),
                     fontSize = 12.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -950,7 +951,7 @@ fun PluginItem(
                 Text(
                     text = pluginTypeText,
                     fontSize = 12.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -960,7 +961,7 @@ fun PluginItem(
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 2.dp),
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -973,7 +974,7 @@ fun PluginItem(
                     ),
                     fontSize = 12.sp,
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -983,7 +984,7 @@ fun PluginItem(
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 1.dp),
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1013,7 +1014,7 @@ fun PluginItem(
                 Text(
                     text = pluginDescription,
                     fontSize = 14.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
                     maxLines = if (expanded) Int.MAX_VALUE else 3
                 )
@@ -1109,7 +1110,7 @@ private fun CompactPluginItem(
                 Text(
                     text = pluginTypeText,
                     fontSize = 11.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1117,7 +1118,7 @@ private fun CompactPluginItem(
                 Text(
                     text = stringResource(R.string.plugin_version_with_value, plugin.versionName),
                     fontSize = 11.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1129,7 +1130,7 @@ private fun CompactPluginItem(
                         plugin.minHostApiVersion
                     ),
                     fontSize = 11.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

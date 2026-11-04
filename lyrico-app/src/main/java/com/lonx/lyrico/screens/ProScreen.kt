@@ -45,6 +45,7 @@ import com.lonx.lyrico.ui.components.pro.SponsorQrCodeSheet
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 internal fun AboutProEntry(onClick: () -> Unit) {
@@ -164,8 +165,8 @@ private fun ProIdentityContent() {
     val goldSecondary = if (dark) Color(0xFFD9C69E) else Color(0xFF705C38)
     val goldStops = if (dark) listOf(Color(0xFF493E2B), Color(0xFF302B23), Color(0xFF3D3528))
         else listOf(Color(0xFFE4C689), Color(0xFFF5E5BF), Color(0xFFEDD7A7))
-    val titleStyle = MiuixTheme.textStyles.title3
-    val bodyStyle = MiuixTheme.textStyles.body1
+    val titleStyle = MaterialTheme.typography.titleMedium
+    val bodyStyle = MaterialTheme.typography.bodyLarge
     Box(
         Modifier.fillMaxWidth().background(Brush.linearGradient(goldStops)),
     ) {

@@ -17,13 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 /** Neutral list illustration for pages without a domain-specific illustration. */
 @Composable
 internal fun EmptyStateIllustration(compact: Boolean) {
     val salt = false
-    val accent = MiuixTheme.colorScheme.primary
-    val surface = MiuixTheme.colorScheme.surfaceContainer
+    val accent = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surfaceContainer
     val scale = if (compact) 0.45f else 1f
     val shape = RoundedCornerShape((16 * scale).dp)
     Box(Modifier.size((188 * scale).dp, (152 * scale).dp), contentAlignment = Alignment.Center) {

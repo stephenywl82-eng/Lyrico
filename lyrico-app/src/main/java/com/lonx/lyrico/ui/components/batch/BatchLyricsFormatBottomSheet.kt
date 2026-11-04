@@ -25,6 +25,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun BatchLyricsFormatBottomSheet(
@@ -68,8 +69,8 @@ fun BatchLyricsFormatBottomSheet(
                         )
                         Text(
                             text = targetFormatText,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceContainerVariant
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -91,7 +92,7 @@ fun BatchLyricsFormatBottomSheet(
                                         batchLyricsFormatUiState.totalTimeMillis / 1000.0
                                     )
                                 },
-                                style = MiuixTheme.textStyles.subtitle,
+                                style = MaterialTheme.typography.titleSmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
@@ -101,7 +102,7 @@ fun BatchLyricsFormatBottomSheet(
 
                             Text(
                                 text = "$current / $total",
-                                style = MiuixTheme.textStyles.main,
+                                style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.End
                             )
                         }
@@ -122,21 +123,21 @@ fun BatchLyricsFormatBottomSheet(
                                 R.string.batch_replay_gain_success,
                                 batchLyricsFormatUiState.successCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_skipped,
                                 batchLyricsFormatUiState.skippedCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_replay_gain_failure,
                                 batchLyricsFormatUiState.failureCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     
                 }

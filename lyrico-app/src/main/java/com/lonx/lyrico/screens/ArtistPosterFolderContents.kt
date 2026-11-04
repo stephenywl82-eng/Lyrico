@@ -32,6 +32,7 @@ import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 internal fun ArtistPosterFolderContents(
@@ -113,8 +114,8 @@ internal fun ArtistPosterFolderContents(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Text(
                     stringResource(R.string.artist_poster_folder_error),
-                    color = MiuixTheme.colorScheme.error,
-                    fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
@@ -132,16 +133,16 @@ internal fun ArtistPosterFolderContents(
                             file.artistName ?: stringResource(R.string.label_artist_image_unmatched),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            fontSize = MiuixTheme.textStyles.body2.fontSize,
-                            color = MiuixTheme.colorScheme.onSurfaceContainer,
+                            fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
                             file.name,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            style = MiuixTheme.textStyles.footnote1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
@@ -174,12 +175,12 @@ private fun ArtistPosterDirectoryCard(
         ) {
             Text(
                 text = folder.name,
-                style = MiuixTheme.textStyles.footnote1,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = folder.path,
-                style = MiuixTheme.textStyles.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
@@ -199,7 +200,7 @@ private fun PosterImage(file: ArtistPosterFile, revision: Long, modifier: Modifi
     }
     var failed by remember(file, revision) { mutableStateOf(false) }
     var loading by remember(file, revision) { mutableStateOf(true) }
-    val background = MiuixTheme.colorScheme.surfaceVariant
+    val background = MaterialTheme.colorScheme.surfaceVariant
     Box(modifier.background(background), contentAlignment = Alignment.Center) {
         AsyncImage(request, file.name, Modifier.fillMaxSize(), contentScale = scale,
             onSuccess = { loading = false; failed = false }, onError = { loading = false; failed = true })
@@ -209,7 +210,7 @@ private fun PosterImage(file: ArtistPosterFile, revision: Long, modifier: Modifi
         if (failed) Column(horizontalAlignment = Alignment.CenterHorizontally) {
             
                 Icon(LucideIcons.Image, null)
-                Text(stringResource(R.string.artist_poster_preview_error), fontSize = MiuixTheme.textStyles.body2.fontSize)
+                Text(stringResource(R.string.artist_poster_preview_error), fontSize = MaterialTheme.typography.bodyMedium.fontSize)
             
         }
     }

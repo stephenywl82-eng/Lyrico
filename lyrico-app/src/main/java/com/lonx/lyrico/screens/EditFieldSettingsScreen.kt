@@ -99,6 +99,7 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.material3.MaterialTheme
 @Composable
 @Destination<RootGraph>(route = "edit_field_settings")
 fun EditFieldSettingsScreen(
@@ -198,15 +199,15 @@ fun EditFieldSettingsScreen(
                     ) {
                         Text(
                             text = hintText,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
                             modifier = Modifier.weight(1f),
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
                             text = countText,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
                             maxLines = 1,
                         )
                     }
@@ -514,8 +515,8 @@ private fun ComponentFieldsSheetContent(
         Text(
             stringResource(R.string.edit_field_component_hint),
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            style = MiuixTheme.textStyles.footnote1,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(8.dp))
         val listContent: @Composable () -> Unit = {
@@ -547,7 +548,7 @@ private fun ComponentFieldsSheetContent(
         Card(
             modifier = Modifier.fillMaxWidth(),
             insideMargin = PaddingValues(0.dp),
-            colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
         ) { listContent() }
     }
 }
@@ -558,11 +559,11 @@ private fun FieldTagChip(text: String) {
 
     Text(
         text = text,
-        fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-        color = MiuixTheme.colorScheme.primary,
+        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+        color = MaterialTheme.colorScheme.primary,
         modifier = Modifier
             .clip(RoundedCornerShape(50))
-            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.12f))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
             .padding(horizontal = 8.dp, vertical = 2.dp),
     )
 }
@@ -596,8 +597,8 @@ private fun AddCustomTagDialog(
                         R.string.custom_tag_library_section
                     }
                 ),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
             )
 
             if (availableKeys.isNotEmpty()) {
@@ -632,11 +633,11 @@ private fun AddCustomTagDialog(
                     CustomTagKeyError.DUPLICATE -> stringResource(R.string.duplicate_item)
                 },
                 color = if (error == null) {
-                    MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
-                    MiuixTheme.colorScheme.error
+                    MaterialTheme.colorScheme.error
                 },
-                fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                fontSize = MaterialTheme.typography.bodySmall.fontSize,
             )
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {

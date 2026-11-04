@@ -15,7 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.ui.components.cover.CoverImage
 import com.lonx.lyrico.ui.components.library.LibraryItemText as Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 data class AlbumGridTextStyle(
     val title: TextStyle,
@@ -24,25 +24,25 @@ data class AlbumGridTextStyle(
 )
 @Composable
 fun rememberAlbumGridTextStyle(columns: Int): AlbumGridTextStyle {
-    val textStyles = MiuixTheme.textStyles
+    val textStyles = MaterialTheme.typography
 
     return remember(columns, textStyles) {
         when (columns) {
             2 -> AlbumGridTextStyle(
-                title = textStyles.body2,
-                summary = textStyles.footnote1,
+                title = textStyles.bodyMedium,
+                summary = textStyles.bodySmall,
                 titleMaxLines = 1
             )
 
             3 -> AlbumGridTextStyle(
-                title = textStyles.body2,
-                summary = textStyles.footnote1,
+                title = textStyles.bodyMedium,
+                summary = textStyles.bodySmall,
                 titleMaxLines = 1
             )
 
             else -> AlbumGridTextStyle(
-                title = textStyles.subtitle,
-                summary = textStyles.footnote2,
+                title = textStyles.titleSmall,
+                summary = textStyles.bodySmall,
                 titleMaxLines = 1
             )
         }

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
+import androidx.compose.material3.MaterialTheme
 
 /** Shared song/artist selection gestures, reveal labels, and selected-row styling. */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -53,8 +54,8 @@ fun SelectableLibraryItem(
     val revealWidth = with(density) { abs(displayedSwipeOffsetX).toDp() }
 
     val salt = false
-    val selectionColor = MiuixTheme.colorScheme.primary
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val selectionColor = MaterialTheme.colorScheme.primary
+    val surfaceColor = MaterialTheme.colorScheme.surface
     val backgroundColor =
         if (isSelected) {
             selectionColor.copy(alpha = 0.1f)

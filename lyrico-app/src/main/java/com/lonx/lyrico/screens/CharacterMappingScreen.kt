@@ -32,6 +32,7 @@ import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "character_mapping")
@@ -94,7 +95,7 @@ private fun CharacterMappingRuleSection(
         ) {
             Text(
                 text = stringResource(R.string.no_character_mappings),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         return

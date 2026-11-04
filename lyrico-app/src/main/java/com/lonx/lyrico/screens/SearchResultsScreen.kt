@@ -112,6 +112,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.net.URL
 import androidx.compose.material3.CircularProgressIndicator as MaterialCircularProgressIndicator
 import androidx.compose.material3.TextButton as MaterialTextButton
+import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -176,8 +177,8 @@ fun SearchResultsScreen(
                     MaterialTextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
-                            style = MiuixTheme.textStyles.main,
-                            color = MiuixTheme.colorScheme.primary
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 
@@ -196,7 +197,7 @@ fun SearchResultsScreen(
                         Icon(
                             imageVector = LucideIcons.Settings,
                             contentDescription = null,
-                            tint = MiuixTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -472,7 +473,7 @@ private fun PaginatedSearchResultList(
                         Text(
                             text = stringResource(R.string.search_loading_more),
                             fontSize = 14.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -592,7 +593,7 @@ fun SearchResultItem(
                                         colors = listOf(
                                             Color.Transparent,
                                             // Salt 取卡片的前景色，浅色主题下压暗才衬得住白色尺寸文字。
-                                            MiuixTheme.colorScheme.onSecondaryContainer
+                                            MaterialTheme.colorScheme.onSecondaryContainer
                                         ),
                                     )
                                 )
@@ -666,7 +667,7 @@ fun SearchResultItem(
                         Text(
                             text = artistAlbum,
                             style = searchResultSecondaryStyle(),
-                            color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -724,13 +725,13 @@ fun SearchResultItem(
 @Composable
 private fun searchResultTitleStyle(): TextStyle {
     val salt = false
-    return MiuixTheme.textStyles.body1
+    return MaterialTheme.typography.bodyLarge
 }
 
 @Composable
 private fun searchResultSecondaryStyle(): TextStyle {
     val salt = false
-    return MiuixTheme.textStyles.footnote2
+    return MaterialTheme.typography.bodySmall
 }
 
 @Composable
@@ -742,7 +743,7 @@ private fun SearchResultMetadataText(
     Text(
         text = text,
         style = searchResultSecondaryStyle(),
-        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis
     )
@@ -774,7 +775,7 @@ private fun SearchResultBadge(
         modifier = modifier
             .clip(RoundedCornerShape(999.dp))
             .background(
-                MiuixTheme.colorScheme.primary.copy(alpha = 0.12f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
             .padding(horizontal = 8.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center
@@ -783,7 +784,7 @@ private fun SearchResultBadge(
             text = text,
             fontSize = 10.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MiuixTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.primary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -1016,7 +1017,7 @@ private fun SearchResultApplyBottomSheet(
                             {
                                 MaterialCircularProgressIndicator(
                                     modifier = Modifier.size(14.dp),
-                                    color = MiuixTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                     strokeWidth = 2.dp,
                                 )
                             }
@@ -1091,11 +1092,11 @@ private fun ApplySheetPillTabs(
                 selected = selected,
                 onClick = { onTabSelected(index) },
                 style = PillButtonDefaults.style(PillButtonSize.Medium).copy(
-                    textStyle = MiuixTheme.textStyles.body2.copy(
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     ),
-                    selectedTextStyle = MiuixTheme.textStyles.body2.copy(
+                    selectedTextStyle = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -1178,14 +1179,14 @@ private fun SearchResultApplyLyricsPage(
                 
                     Text(
                         text = stringResource(R.string.label_lyrics),
-                        style = MiuixTheme.textStyles.main,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.SemiBold,
-                        color = MiuixTheme.colorScheme.onSurfaceContainer
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = option?.value ?: stringResource(R.string.lyrics_empty),
-                        style = MiuixTheme.textStyles.footnote2,
-                        color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1271,7 +1272,7 @@ private fun SearchResultApplyOptionItem(
                                 Brush.verticalGradient(
                                     colors = listOf(
                                         Color.Transparent,
-                                        MiuixTheme.colorScheme.onSecondaryContainer
+                                        MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                 )
                             )
@@ -1295,18 +1296,18 @@ private fun SearchResultApplyOptionItem(
             
                 Text(
                     text = labelText,
-                    style = MiuixTheme.textStyles.main,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = if (option.enabled) {
-                        MiuixTheme.colorScheme.onSurfaceContainer
+                        MaterialTheme.colorScheme.onSurface
                     } else {
-                        MiuixTheme.colorScheme.onSurfaceContainerVariant
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     }
                 )
                 Text(
                     text = option.value,
-                    style = MiuixTheme.textStyles.footnote2,
-                    color = MiuixTheme.colorScheme.onSurfaceContainerVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = if (option.target == MetadataFieldTarget.LYRICS) 4 else 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1414,8 +1415,8 @@ fun SourcePillTabRow(
             val showText = tabStyle != SearchSourceTabStyle.ICON_ONLY || !showIcon
 
             val iconTint = when {
-                selected -> MiuixTheme.colorScheme.onPrimary
-                else -> MiuixTheme.colorScheme.onSurface
+                selected -> MaterialTheme.colorScheme.onPrimary
+                else -> MaterialTheme.colorScheme.onSurface
             }
 
             PillButton(
@@ -1427,7 +1428,7 @@ fun SourcePillTabRow(
                     bringIntoViewRequesters[index]
                 ),
                 colors = PillButtonDefaults.colors(
-                    containerColor = MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
                 ),
                 onClick = {
                     onTabSelected(index)

@@ -17,6 +17,7 @@ import com.lonx.lyrico.data.song.search.LyricFtsIndexer
 import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.utils.MediaScanner
+import com.lonx.lyrico.utils.MediaStoreScanner
 import com.lonx.lyrico.utils.LyricsSearchTextExtractor
 import com.lonx.lyrico.utils.UriUtils
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +34,8 @@ class LibraryScanRepositoryImpl(
     private val audioTagRepository: AudioTagRepository,
     private val songMetadataMapper: SongMetadataMapper,
     private val libraryIndexRepository: LibraryIndexRepository,
-    private val appLogRepository: AppLogRepository
+    private val appLogRepository: AppLogRepository,
+    private val mediaStoreScanner: MediaStoreScanner
 ) : LibraryScanRepository {
 
     private val songDao = database.songDao()
@@ -84,11 +86,23 @@ class LibraryScanRepositoryImpl(
             val safScanResult = mediaScanner.querySongsFromSafFolders(safFolders)
             val deviceSongs = safScanResult.songs
 
+            // 全量扫描（未指定文件夹）时，额外用 MediaStore 扫描整机音频，
+            // 无需先手动添加自定义文件夹 —— 与 Moto Music / SDWMP3_CN 行为一致。
+            val isFullScan = request.folderIds == null
+            val mediaStoreSongs = if (isFullScan) {
+                runCatching { mediaStoreScanner.queryAllAudio() }.getOrDefault(emptyList())
+            } else {
+                emptyList()
+            }
+            val mediaStoreUriSet = mediaStoreSongs.map { it.songFile.uri.toString() }.toSet()
+            val seenFilePaths = deviceSongs.map { it.songFile.filePath }.toMutableSet()
+            val totalFiles = deviceSongs.size + mediaStoreSongs.size
+
             onProgress(
                 LibraryScanProgress(
                     stage = LibraryScanStage.READING_METADATA,
                     current = 0,
-                    total = deviceSongs.size
+                    total = totalFiles
                 )
             )
 
@@ -164,7 +178,90 @@ class LibraryScanRepositoryImpl(
                         LibraryScanProgress(
                             stage = LibraryScanStage.READING_METADATA,
                             current = index + 1,
-                            total = deviceSongs.size,
+                            total = totalFiles,
+                            currentFile = deviceSong.fileName
+                        )
+                    )
+                }
+            }
+
+            // —— MediaStore 整机音频扫描（无需自定义文件夹）——
+            mediaStoreSongs.forEachIndexed { msIndex, ms ->
+                val deviceSong = ms.songFile
+                try {
+                    val deviceUriString = deviceSong.uri.toString()
+                    // 与已扫描的 SAF 歌曲按路径去重，避免同一文件产生两条记录
+                    if (deviceSong.filePath.isNotBlank() && !seenFilePaths.add(deviceSong.filePath)) {
+                        return@forEachIndexed
+                    }
+                    val dbInfo = dbSongMap[deviceUriString]
+                    val needsUpdate = request.fullRescan ||
+                        dbInfo == null ||
+                        dbInfo.fileLastModified != deviceSong.lastModified ||
+                        dbInfo.fileSize != deviceSong.fileSize ||
+                        dbInfo.filePath != deviceSong.filePath
+                    val knownDuration = when {
+                        deviceSong.duration > 0L -> deviceSong.duration
+                        !needsUpdate -> dbInfo.durationMilliseconds.toLong()
+                        else -> 0L
+                    }
+
+                    if (
+                        request.ignoreShortAudio &&
+                        knownDuration > 0L &&
+                        knownDuration <= minDuration
+                    ) {
+                        return@forEachIndexed
+                    }
+
+                    if (needsUpdate) {
+                        val folderId = folderDao.upsertScannedFolderTreeAndGetLeafId(
+                            rootPath = ms.volumeRoot,
+                            folderPath = ms.folderPath,
+                            isIgnored = false
+                        )
+                        impactedFolderIds.add(folderId)
+
+                        val metadata = extractSongMetadata(
+                            songFile = deviceSong,
+                            folderId = folderId,
+                            existingId = dbInfo?.id ?: 0L,
+                            source = "MEDIA_STORE",
+                            indexLyrics = indexLyrics
+                        )
+
+                        if (
+                            request.ignoreShortAudio &&
+                            metadata != null &&
+                            metadata.entity.durationMilliseconds > 0 &&
+                            metadata.entity.durationMilliseconds <= minDuration
+                        ) {
+                            return@forEachIndexed
+                        }
+
+                        metadata?.let(songsToUpsert::add)
+                    } else if (indexLyrics) {
+                        unchangedSongUris.add(deviceUriString)
+                    }
+
+                    deviceUris.add(deviceUriString)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to process MediaStore song: ${deviceSong.fileName}", e)
+                    failures.add(
+                        LibraryScanFailure(
+                            uri = deviceSong.uri.toString(),
+                            fileName = deviceSong.fileName,
+                            stage = LibraryScanFailureStage.ReadingMetadata,
+                            message = e.message ?: e::class.java.simpleName,
+                            throwable = e
+                        )
+                    )
+                } finally {
+                    onProgress(
+                        LibraryScanProgress(
+                            stage = LibraryScanStage.READING_METADATA,
+                            current = deviceSongs.size + msIndex + 1,
+                            total = totalFiles,
                             currentFile = deviceSong.fileName
                         )
                     )
@@ -190,7 +287,16 @@ class LibraryScanRepositoryImpl(
                 .map { it.uri }
                 .toSet()
 
-            val allDeletedUris = deletedUris + missingFolderSongUris
+            val mediaStoreDeletedUris = if (isFullScan) {
+                dbSyncInfos
+                    .filter { info -> info.source == "MEDIA_STORE" && info.uri !in mediaStoreUriSet }
+                    .map { it.uri }
+                    .toSet()
+            } else {
+                emptySet()
+            }
+
+            val allDeletedUris = deletedUris + missingFolderSongUris + mediaStoreDeletedUris
             if (allDeletedUris.isNotEmpty()) {
                 impactedFolderIds.addAll(
                     dbSyncInfos

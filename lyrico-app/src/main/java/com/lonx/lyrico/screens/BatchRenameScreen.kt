@@ -86,6 +86,7 @@ import com.lonx.lyrico.ui.components.base.SheetProgressAction
 import com.lonx.lyrico.ui.components.base.SheetStatisticsRow
 import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import com.ramcosta.composedestinations.generated.destinations.CharacterMappingDestination
+import androidx.compose.material3.MaterialTheme
 
 private enum class BatchRenameTab(val labelRes: Int) {
     Config(R.string.batch_rename_tab_config),
@@ -263,7 +264,7 @@ private fun BatchRenameProgressContent(
                             uiState.renameTimeMillis / 1000.0
                         )
                     },
-                    style = MiuixTheme.textStyles.subtitle,
+                    style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
@@ -271,7 +272,7 @@ private fun BatchRenameProgressContent(
 
                 Text(
                     text = "$current / $total",
-                    style = MiuixTheme.textStyles.main,
+                    style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.End
                 )
             }
@@ -286,15 +287,15 @@ private fun BatchRenameProgressContent(
     ) {
         Text(
             text = stringResource(R.string.batch_matching_success, uiState.successCount),
-            style = MiuixTheme.textStyles.main
+            style = MaterialTheme.typography.bodyLarge
         )
         Text(
             text = stringResource(R.string.batch_replay_gain_skipped, uiState.skippedCount),
-            style = MiuixTheme.textStyles.main
+            style = MaterialTheme.typography.bodyLarge
         )
         Text(
             text = stringResource(R.string.batch_matching_failure, uiState.failureCount),
-            style = MiuixTheme.textStyles.main
+            style = MaterialTheme.typography.bodyLarge
         )
     }
 
@@ -372,8 +373,8 @@ private fun BatchRenameConfigTab(
                     Text(
                         modifier = Modifier.padding(12.dp),
                         text = stringResource(id = R.string.format_hint),
-                        fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     SwitchPreference(
                         title = stringResource(id = R.string.format_preset_show_placeholders),
@@ -407,8 +408,8 @@ private fun BatchRenameConfigTab(
                     ) {
                         Text(
                             text = text,
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantActions,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(12.dp)
                         )
                     }
@@ -483,14 +484,14 @@ private fun BatchRenamePreviewTab(
                         ) {
                             Text(
                                 text = oldName,
-                                style = MiuixTheme.textStyles.body1,
+                                style = MaterialTheme.typography.bodyLarge,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
 
                             Text(
                                 text = newName,
-                                style = MiuixTheme.textStyles.body1.copy(if (preview.conflict) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary),
+                                style = MaterialTheme.typography.bodyLarge.copy(if (preview.conflict) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -499,7 +500,7 @@ private fun BatchRenamePreviewTab(
                                 Text(
                                     text = stringResource(R.string.rename_conflict_warning),
                                     fontSize = 11.sp,
-                                    color = MiuixTheme.colorScheme.error,
+                                    color = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.padding(top = 2.dp)
                                 )
                             }
@@ -512,16 +513,16 @@ private fun BatchRenamePreviewTab(
                                 ) {
                                     Text(
                                         text = stringResource(R.string.label_old_path, preview.originalPath),
-                                        style = MiuixTheme.textStyles.footnote1,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
                                         text = stringResource(R.string.label_new_path, preview.newPath),
-                                        style = MiuixTheme.textStyles.footnote1,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = if (preview.conflict) {
-                                            MiuixTheme.colorScheme.error
+                                            MaterialTheme.colorScheme.error
                                         } else {
-                                            MiuixTheme.colorScheme.onSurfaceVariantActions
+                                            MaterialTheme.colorScheme.onSurfaceVariant
                                         }
                                     )
                                 }
@@ -559,12 +560,12 @@ private fun PlaceholderInfoContent() {
                         text = placeholder,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MiuixTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = stringResource(description),
                         fontSize = 13.sp,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantActions
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 
             }

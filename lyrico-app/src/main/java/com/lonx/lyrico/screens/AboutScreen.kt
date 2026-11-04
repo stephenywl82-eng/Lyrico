@@ -86,6 +86,7 @@ import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "about")
@@ -314,9 +315,9 @@ fun AboutScreen(
 @Composable
 private fun ContributorGridItem(name: String, avatarUrl: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val salt = false
-    val style = MiuixTheme.textStyles.body2
-    val color = MiuixTheme.colorScheme.onSurface
-    val background = MiuixTheme.colorScheme.surfaceContainer
+    val style = MaterialTheme.typography.bodyMedium
+    val color = MaterialTheme.colorScheme.onSurface
+    val background = MaterialTheme.colorScheme.surfaceContainer
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))

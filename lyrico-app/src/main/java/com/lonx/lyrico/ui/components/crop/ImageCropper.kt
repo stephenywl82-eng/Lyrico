@@ -48,6 +48,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
+import androidx.compose.material3.MaterialTheme
 
 // ============================================================
 // 裁剪状态持有者 —— 供外部读取和触发裁剪
@@ -209,7 +210,7 @@ fun ImageCropper(
                 Card(
                     modifier = Modifier.padding(bottom = 8.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MiuixTheme.colorScheme.secondaryContainer
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     WindowSpinnerPreference(

@@ -22,6 +22,7 @@ import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.SliderDefaults
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 internal fun SettingsPageMiuix(
@@ -107,8 +108,8 @@ internal object MiuixSettingsItems : SettingsItemPresentation {
                 value?.let {
                     top.yukonga.miuix.kmp.basic.Text(
                         text = it,
-                        fontSize = top.yukonga.miuix.kmp.theme.MiuixTheme.textStyles.body2.fontSize,
-                        color = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.onSurfaceVariantActions,
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             },

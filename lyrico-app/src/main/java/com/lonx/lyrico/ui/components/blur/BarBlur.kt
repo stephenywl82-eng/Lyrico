@@ -19,6 +19,7 @@ import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.blur.textureBlur
 import top.yukonga.miuix.kmp.shader.isRenderEffectSupported
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 // A host can share its preference subscription with all child pages.
 internal val LocalBarBlurEnabled = staticCompositionLocalOf<Boolean?> { null }
@@ -49,7 +50,7 @@ internal fun BlurredTopBar(
 
 @Composable
 internal fun rememberBlurBackdrop(enableBlur: Boolean = true): LayerBackdrop? {
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = MaterialTheme.colorScheme.surface
     // Keep the backdrop stable when the preference changes.
     val backdrop = rememberLayerBackdrop {
         drawRect(surfaceColor)
@@ -73,7 +74,7 @@ internal fun BlurredBar(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val surfaceColor = MiuixTheme.colorScheme.surface
+    val surfaceColor = MaterialTheme.colorScheme.surface
     Box(
         // Paint behind the supplied padding too, including the top bar's safe area.
         modifier = (if (backdrop != null) {

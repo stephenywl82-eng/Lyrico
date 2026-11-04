@@ -25,6 +25,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun BatchMatchBottomSheet(
@@ -75,7 +76,7 @@ fun BatchMatchBottomSheet(
                                         uiState.batchTimeMillis / 1000.0
                                     )
                                 },
-                                style = MiuixTheme.textStyles.subtitle,
+                                style = MaterialTheme.typography.titleSmall,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f)
@@ -85,7 +86,7 @@ fun BatchMatchBottomSheet(
 
                             Text(
                                 text = "$current / $total",
-                                style = MiuixTheme.textStyles.main,
+                                style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.End
                             )
                         }
@@ -109,8 +110,8 @@ fun BatchMatchBottomSheet(
                                     ) {
                                         Text(
                                             text = fileName,
-                                            style = MiuixTheme.textStyles.footnote1,
-                                            color = MiuixTheme.colorScheme.onSurfaceContainer,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
                                             modifier = Modifier.weight(1f)
@@ -118,8 +119,8 @@ fun BatchMatchBottomSheet(
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "$progressPercent%",
-                                            style = MiuixTheme.textStyles.footnote1,
-                                            color = MiuixTheme.colorScheme.onSurfaceContainer
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                     AppLinearProgressIndicator(
@@ -141,21 +142,21 @@ fun BatchMatchBottomSheet(
                                 R.string.batch_matching_success,
                                 uiState.successCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_matching_skipped,
                                 uiState.skippedCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
                             text = stringResource(
                                 R.string.batch_matching_failure,
                                 uiState.failureCount
                             ),
-                            style = MiuixTheme.textStyles.main
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     
                 }

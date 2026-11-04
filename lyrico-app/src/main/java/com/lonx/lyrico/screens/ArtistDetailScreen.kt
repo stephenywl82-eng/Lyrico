@@ -89,6 +89,7 @@ import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 @Destination<RootGraph>(route = "artist_detail")
@@ -596,13 +597,13 @@ private fun ArtistDetailHeader(
             val badgeModifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(MiuixTheme.colorScheme.secondaryContainer)
+                .background(MaterialTheme.colorScheme.secondaryContainer)
                 .padding(5.dp)
             
                 Icon(
                     imageVector = LucideIcons.Image,
                     contentDescription = null,
-                    tint = MiuixTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = badgeModifier
                 )
             
@@ -614,14 +615,14 @@ private fun ArtistDetailHeader(
             
                 Text(
                     text = title,
-                    style = MiuixTheme.textStyles.title3,
+                    style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = summary,
-                    style = MiuixTheme.textStyles.main,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )

@@ -50,6 +50,7 @@ import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongSelectionTopAppBar(
@@ -116,7 +117,7 @@ fun SelectionTopAppBar(
                                     R.string.action_select_all
                                 }
                             ),
-                            color = MiuixTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1
                         )
                     }
@@ -127,7 +128,7 @@ fun SelectionTopAppBar(
                 ) {
                     Text(
                         text = stringResource(R.string.action_close),
-                        color = MiuixTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1
                     )
                 }

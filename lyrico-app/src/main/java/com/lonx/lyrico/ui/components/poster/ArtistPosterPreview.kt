@@ -40,6 +40,7 @@ import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 private data class PreviewCrop(val key: String, val media: PosterPreviewMedia, val bitmap: android.graphics.Bitmap)
 
@@ -143,11 +144,11 @@ internal fun ArtistPosterPreview(
             val progress = infoProgress.value
             // 压在图片上的黑底/白字渐变与海报合成，不随引擎取色。
             val salt = false
-            val panelColor = MiuixTheme.colorScheme.surface
+            val panelColor = MaterialTheme.colorScheme.surface
             val actionBackground = lerp(Color(0xFF202020),
-                MiuixTheme.colorScheme.surfaceVariant, progress)
+                MaterialTheme.colorScheme.surfaceVariant, progress)
             val actionTint = lerp(Color.White.copy(alpha = 0.9f),
-                MiuixTheme.colorScheme.onSurface, progress)
+                MaterialTheme.colorScheme.onSurface, progress)
             Column(Modifier.fillMaxSize()) {
                 Box(Modifier.fillMaxWidth().weight(1f).clipToBounds().then(verticalGesture)) {
                     HorizontalPager(pager, modifier = Modifier.fillMaxSize(), key = { items[it].key },
@@ -190,10 +191,10 @@ internal fun ArtistPosterPreview(
                     }
                     Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                         Text(title(currentPage), color = Color.White,
-                            fontSize = MiuixTheme.textStyles.body1.fontSize,
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                         if (items.size > 1) Text("${currentPage + 1} / ${items.size}", color = Color.White.copy(alpha = 0.6f),
-                            fontSize = MiuixTheme.textStyles.footnote1.fontSize,
+                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
                             modifier = Modifier.padding(top = 2.dp))
                     }
                     menuActions?.let { provideActions ->
@@ -243,7 +244,7 @@ internal fun ArtistPosterPreview(
                         }
                         PreviewAction(LucideIcons.Info, stringResource(R.string.poster_preview_info), !busy,
                             if (infoOpen) lerp(Color(0xFF202020),
-                                MiuixTheme.colorScheme.onSurface,
+                                MaterialTheme.colorScheme.onSurface,
                                 progress) else actionBackground,
                             if (infoOpen) lerp(Color.White, panelColor, progress) else actionTint) { setInfo(!infoOpen) }
                     }

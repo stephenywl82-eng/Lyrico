@@ -6,6 +6,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongListItemActions(
@@ -24,7 +25,7 @@ fun SongListItemActions(
             Icon(
                 imageVector = LucideIcons.EllipsisVertical,
                 contentDescription = "More",
-                tint = MiuixTheme.colorScheme.onSurfaceContainerVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
