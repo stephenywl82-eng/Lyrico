@@ -219,7 +219,6 @@ fun SongsPage(
                     isRefreshing = scanState.isScanning,
                     onRefresh = { viewModel.refreshSongs() },
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
                 ) {
                     LazyColumn(
                         modifier = Modifier

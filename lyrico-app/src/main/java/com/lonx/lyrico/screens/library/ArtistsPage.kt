@@ -196,7 +196,6 @@ fun ArtistsPage(
                     isRefreshing = scanState.isScanning,
                     onRefresh = { viewModel.refreshSongs() },
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
                 ) {
                     BoxWithConstraints {
                         val targetColumns = if (maxWidth >= 600.dp) 2 else 1

@@ -150,9 +150,6 @@ fun AlbumsPage(
                     isRefreshing = scanState.isScanning,
                     onRefresh = { viewModel.refreshSongs() },
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = paddingValues.calculateTopPadding() + 12.dp,
-                    )
                 ) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(albumGridColumns),
