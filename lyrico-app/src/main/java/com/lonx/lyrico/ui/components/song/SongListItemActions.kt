@@ -5,6 +5,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun SongListItemActions(
@@ -22,7 +23,8 @@ fun SongListItemActions(
         IconButton(onClick = onShowMenu) {
             Icon(
                 imageVector = LucideIcons.EllipsisVertical,
-                contentDescription = "More"
+                contentDescription = "More",
+                tint = MiuixTheme.colorScheme.onSurfaceContainerVariant
             )
         }
     }

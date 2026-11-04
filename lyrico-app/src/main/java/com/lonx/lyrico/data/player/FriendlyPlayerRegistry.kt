@@ -1,5 +1,6 @@
 package com.lonx.lyrico.data.player
 
+import com.lonx.lyrico.App
 import com.lonx.lyrico.R
 
 object FriendlyPlayerRegistry {
@@ -9,7 +10,7 @@ object FriendlyPlayerRegistry {
             id = "moto_music",
             displayNameRes = R.string.friendly_player_moto_music,
             packageNames = listOf("com.sdw.music.player.cn"),
-            websiteUrl = ""
+            websiteUrl = App.MOTO_MUSIC_GITHUB_URL
         )
     )
 }
