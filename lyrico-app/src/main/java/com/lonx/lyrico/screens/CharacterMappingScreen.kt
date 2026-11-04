@@ -24,15 +24,28 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 
 @Composable
 @Destination<RootGraph>(route = "character_mapping")
@@ -41,14 +54,14 @@ fun CharacterMappingScreen(
 ) {
     val viewModel: CharacterMappingViewModel = koinViewModel()
     val characterMappingConfig by viewModel.characterMappingConfig.collectAsState()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val salt = false
     LibraryDetailPage(
         title = stringResource(R.string.configure_character_mapping),
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(R.string.configure_character_mapping),
+            TopAppBar(
+                title = { Text(stringResource(R.string.configure_character_mapping), style = MaterialTheme.typography.titleLarge) },
                 navigationIcon = {
                     IconButton(
                         onClick = { navigator.popBackStack() }) {
@@ -58,14 +71,15 @@ fun CharacterMappingScreen(
                         )
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                windowInsets = WindowInsets(0.dp),
                 scrollBehavior = topAppBarScrollBehavior
             )
         }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().libraryDetailScroll(topAppBarScrollBehavior),
-            contentPadding = scaffoldContentPadding(paddingValues, bottomExtra = 12.dp),
-            overscrollEffect = null
+            contentPadding = scaffoldContentPadding(paddingValues, bottomExtra = 12.dp)
         ) {
             val config = characterMappingConfig
             if (config != null && config.rules.isNotEmpty()) {
@@ -92,9 +106,11 @@ private fun CharacterMappingRuleSection(
 
         Card(
             modifier = Modifier.padding(horizontal = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Text(
                 text = stringResource(R.string.no_character_mappings),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -115,7 +131,7 @@ private fun CharacterMappingRuleSection(
                 val replacementValue = if (index == 0) null else ReplacementCharOption.entries[index - 1].value
                 onCharacterMappingChanged(character, replacementValue)
             }
-            WindowDropdownPreference(
+            DropdownPreferenceRow(
                 title = stringResource(R.string.character_to_replace, character),
                 summary = stringResource(R.string.character_replacement_selector_subtitle),
                 items = optionLabels,
@@ -124,5 +140,58 @@ private fun CharacterMappingRuleSection(
             )
         }
     }
-    Card(modifier = Modifier.padding(horizontal = 12.dp).padding(top = 12.dp)) { rows() }
+    Card(modifier = Modifier.padding(horizontal = 12.dp).padding(top = 12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) { rows() }
+}
+
+@Composable
+private fun DropdownPreferenceRow(
+    title: String,
+    summary: String,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { expanded = true }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Box {
+            Text(
+                text = items.getOrNull(selectedIndex).orEmpty(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                items.forEachIndexed { index, label ->
+                    DropdownMenuItem(
+                        text = { Text(label) },
+                        onClick = {
+                            onSelectedIndexChange(index)
+                            expanded = false
+                        },
+                        trailingIcon = if (index == selectedIndex) {
+                            { Icon(LucideIcons.Check, contentDescription = null) }
+                        } else null,
+                    )
+                }
+            }
+        }
+    }
 }
