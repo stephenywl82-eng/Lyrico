@@ -15,7 +15,7 @@ internal fun SettingsPage(
     onBack: () -> Unit,
     content: SettingsItemsScope.() -> Unit,
 ) {
-    SettingsPageMiuix(initialized, onBack, content)
+    SettingsPageMaterial(initialized, onBack, content)
 }
 
 internal data class PaletteOption(val title: String, val color: Color)

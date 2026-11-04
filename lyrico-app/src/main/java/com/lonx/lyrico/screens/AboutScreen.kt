@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -49,9 +50,6 @@ import com.lonx.lyrico.App.Companion.TELEGRAM_GROUP_LINK
 import com.lonx.lyrico.App.Companion.MOTO_MUSIC_GITHUB_URL
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.BuildConfig
-import com.lonx.lyrico.ui.components.blur.BlurredTopBar
-import com.lonx.lyrico.ui.components.blur.blurSource
-import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
@@ -72,20 +70,18 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.launch
 import java.io.IOException
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import com.lonx.lyrico.screens.library.libraryScrollFeedback
 import androidx.compose.material3.MaterialTheme
 
 @Composable
@@ -125,31 +121,28 @@ fun AboutScreen(
         UiError.LoadFailed -> stringResource(R.string.load_failed)
         is UiError.Message -> e.text
     }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val topBarBackdrop = rememberBarBlurBackdrop()
-    val salt = false
+    val aboutScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     LibraryDetailPage(
         title = stringResource(R.string.about_title),
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
-            BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    title = stringResource(R.string.about_title),
-                    navigationIcon = {
-                        IconButton(
-                            onClick = { navigator.popBackStack() }
-                        ) {
-                            Icon(
-                                LucideIcons.ArrowLeft,
-                                contentDescription = stringResource(R.string.action_back)
-                            )
-                        }
-                    },
-                    scrollBehavior = topAppBarScrollBehavior
-                )
-            }
+            TopAppBar(
+                title = { Text(stringResource(R.string.about_title)) },
+                navigationIcon = {
+                    IconButton(onClick = { navigator.popBackStack() }) {
+                        Icon(
+                            LucideIcons.ArrowLeft,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
+                windowInsets = WindowInsets(0.dp),
+                scrollBehavior = aboutScrollBehavior
+            )
         }
     ) { paddingValues ->
         val outerMargin = 12.dp
@@ -162,32 +155,38 @@ fun AboutScreen(
             val columnCount = ((availableWidth + 8.dp) / (minCellWidth + 8.dp)).toInt().coerceAtLeast(1)
             val contributorRows = remember(contributors, columnCount) { contributors.chunked(columnCount) }
             LazyColumn(
-                modifier = (Modifier
-                    .blurSource(topBarBackdrop)
-                    .scrollEndHaptic()
-                    .overScrollVertical()
-                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
+                modifier = Modifier
+                    .libraryScrollFeedback(aboutScrollBehavior)
                     .fillMaxHeight(),
                 contentPadding = pagePadding,
                 overscrollEffect = null,
             ) {
                 item {
                     
-                        SmallTitle(text = stringResource(R.string.about_app_info))
+                        AboutSectionTitle(text = stringResource(R.string.about_app_info))
                         Card(
-                            modifier = Modifier.padding(horizontal = 12.dp)
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
                         ) {
-                            BasicComponent(
-                                startAction = { PreferenceIcon(LucideIcons.Info, PreferenceIconTone.Appearance) },
+                            AboutRow(
+                                icon = LucideIcons.Info,
+                                tone = PreferenceIconTone.Appearance,
                                 title = stringResource(R.string.about_app_version),
                                 summary = version,
+                                showChevron = false,
                                 onClick = onVersionClick,
                             )
                             if (proActivated) {
-                                AboutProEntry(onClick = { navigator.navigate(ProDestination()) })
+                                AboutRow(
+                                    icon = LucideIcons.Crown,
+                                    tone = PreferenceIconTone.Gold,
+                                    title = "Lyrico Pro",
+                                    summary = stringResource(R.string.pro_about_summary),
+                                    onClick = { navigator.navigate(ProDestination()) },
+                                )
                             }
-                            ArrowPreference(
-                                startAction = { PreferenceIcon(LucideIcons.CodeXml, PreferenceIconTone.Tools) },
+                            AboutRow(
+                                icon = LucideIcons.CodeXml,
+                                tone = PreferenceIconTone.Tools,
                                 title = stringResource(R.string.about_project_url),
                                 summary = stringResource(R.string.about_project_url_sub),
                                 onClick = {
@@ -195,53 +194,58 @@ fun AboutScreen(
                                         context,
                                         "https://github.com/$OWNER_ID/$REPO_NAME"
                                     )
-                                }
+                                },
                             )
-                            ArrowPreference(
-                                startAction = { PreferenceIcon(LucideIcons.Music, PreferenceIconTone.Tools) },
+                            AboutRow(
+                                icon = LucideIcons.Music,
+                                tone = PreferenceIconTone.Tools,
                                 title = stringResource(R.string.about_moto_music_url),
                                 summary = stringResource(R.string.about_moto_music_url_sub),
                                 onClick = {
                                     viewModel.openBrowser(context, MOTO_MUSIC_GITHUB_URL)
-                                }
+                                },
                             )
-                            ArrowPreference(
-                                startAction = { PreferenceIcon(LucideIcons.Send, PreferenceIconTone.Library) },
+                            AboutRow(
+                                icon = LucideIcons.Send,
+                                tone = PreferenceIconTone.Library,
                                 title = "Telegram",
                                 summary = TELEGRAM_GROUP_LINK,
                                 onClick = {
                                     viewModel.openBrowser(context, TELEGRAM_GROUP_LINK)
-                                }
+                                },
                             )
-                            ArrowPreference(
-                                startAction = { PreferenceIcon(LucideIcons.Scale, PreferenceIconTone.Lyrics) },
+                            AboutRow(
+                                icon = LucideIcons.Scale,
+                                tone = PreferenceIconTone.Lyrics,
                                 title = stringResource(R.string.title_opensource_licence),
                                 onClick = {
                                     navigator.navigate(OpensourceLicenceDestination())
-                                }
+                                },
                             )
-                            SwitchPreference(
-                                startAction = { PreferenceIcon(LucideIcons.CloudDownload, PreferenceIconTone.Pink) },
+                            AboutSwitchRow(
+                                icon = LucideIcons.CloudDownload,
+                                tone = PreferenceIconTone.Pink,
                                 title = stringResource(R.string.about_auto_check_update),
                                 summary = stringResource(R.string.about_auto_check_update_sub),
                                 checked = checkUpdateEnabled,
-                                onCheckedChange = viewModel::setCheckUpdateEnabled
+                                onCheckedChange = viewModel::setCheckUpdateEnabled,
                             )
-                            ArrowPreference(
-                                startAction = { PreferenceIcon(LucideIcons.Download, PreferenceIconTone.Teal) },
+                            AboutRow(
+                                icon = LucideIcons.Download,
+                                tone = PreferenceIconTone.Teal,
                                 title = stringResource(R.string.about_check_update),
                                 summary = stringResource(
                                     updateEffect.messageRes,
                                     *updateEffect.formatArgs.toTypedArray()
                                 ),
-                                onClick = viewModel::checkUpdate
+                                onClick = viewModel::checkUpdate,
                             )
                         }
                     
                 }
 
                 item {
-                    SmallTitle(text = stringResource(R.string.about_contributors))
+                    AboutSectionTitle(text = stringResource(R.string.about_contributors))
                 }
 
                 when {
@@ -253,7 +257,7 @@ fun AboutScreen(
                                     .padding(vertical = 32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CircularProgressIndicator(size = 32.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(32.dp))
                             }
                         }
                     }
@@ -343,5 +347,102 @@ private fun ContributorGridItem(name: String, avatarUrl: String, onClick: () -> 
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+@Composable
+private fun AboutSectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun AboutRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    showChevron: Boolean = true,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        if (showChevron) {
+            Icon(
+                LucideIcons.ArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AboutSwitchRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { onCheckedChange(!checked) })
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Switch(checked = checked, onCheckedChange = null, enabled = true)
     }
 }

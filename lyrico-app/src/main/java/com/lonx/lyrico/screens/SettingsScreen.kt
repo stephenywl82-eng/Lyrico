@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
@@ -67,12 +70,13 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
@@ -641,7 +645,6 @@ private fun ReplayGainTargetLoudnessSheet(
     val customState = remember(show, currentLoudness) {
         TextFieldState(if (currentLoudness in presets) "" else formatLoudnessNumber(currentLoudness))
     }
-    val customText = customState.text.toString()
     var invalid by remember(show) { mutableStateOf(false) }
     val clearInputError = InputTransformation { invalid = false }
 
@@ -651,7 +654,7 @@ private fun ReplayGainTargetLoudnessSheet(
         onDismissRequest = onDismiss,
         onConfirm = {
             if (customSelected) {
-                val customValue = customText.trim().toDoubleOrNull()
+                val customValue = customState.text.toString().trim().toDoubleOrNull()
                 if (customValue != null && customValue in -60.0..0.0) {
                     onSave(customValue)
                     onDismiss()
@@ -666,12 +669,13 @@ private fun ReplayGainTargetLoudnessSheet(
         content = {
             Column {
                 Card(
-                    colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
                     )
                 ) {
                     presets.forEachIndexed { index, preset ->
-                        RadioButtonPreference(
+                        RadioRow(
                             title = stringResource(presetLabels[index]),
                             selected = !customSelected && selectedPreset == preset,
                             onClick = {
@@ -681,7 +685,7 @@ private fun ReplayGainTargetLoudnessSheet(
                             }
                         )
                     }
-                    RadioButtonPreference(
+                    RadioRow(
                         title = stringResource(R.string.replay_gain_target_preset_custom),
                         selected = customSelected,
                         onClick = {
@@ -692,29 +696,46 @@ private fun ReplayGainTargetLoudnessSheet(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 AnimatedVisibility(visible = customSelected) {
-                    Card(
-                        colors = CardDefaults.defaultColors(
-                            color = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        TextField(
-                            state = customState,
-                            inputTransformation = clearInputError,
-                            label = stringResource(R.string.replay_gain_target_custom_hint),
-                            modifier = Modifier.fillMaxWidth(),
-                            lineLimits = TextFieldLineLimits.SingleLine,
-                        )
-                        if (invalid) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = stringResource(R.string.replay_gain_target_invalid),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    )
+                ) {
+                    SdwTextInput(
+                        state = customState,
+                        inputTransformation = clearInputError,
+                        label = stringResource(R.string.replay_gain_target_custom_hint),
+                        error = if (invalid) stringResource(R.string.replay_gain_target_invalid) else null,
+                        modifier = Modifier.fillMaxWidth(),
+                        lineLimits = TextFieldLineLimits.SingleLine,
+                    )
+                }
                 }
             }
         }
     )
+}
+
+@Composable
+private fun RadioRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(selected = selected, onClick = null)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
