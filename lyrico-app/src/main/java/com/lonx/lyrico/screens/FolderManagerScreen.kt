@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -47,6 +49,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
@@ -54,6 +57,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
 import com.lonx.lyrico.ui.components.library.SelectableLibraryItem
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
@@ -80,26 +84,23 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.BreadcrumbBar
-import top.yukonga.miuix.kmp.basic.BreadcrumbItem
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
@@ -109,11 +110,6 @@ import com.lonx.lyrico.screens.library.LibrarySelectionState
 import com.lonx.lyrico.viewmodel.SortBy
 import com.lonx.lyrico.viewmodel.SortInfo
 import com.lonx.lyrico.viewmodel.SortOrder
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import androidx.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -226,7 +222,7 @@ fun FolderManagerScreen(
         }
     }
 
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     fun navigateToFolder(folderId: Long, forward: Boolean) {
@@ -318,15 +314,24 @@ fun FolderManagerScreen(
                             onClose = selectionViewModel::exitSelectionMode
                         )
                     } else {
-                        SmallTopAppBar(
-                            title = if (currentFolderId == ROOT_FOLDER_ID) {
-                                stringResource(R.string.folder_manager_title)
-                            } else {
-                                currentFolder?.path
-                                    ?.substringAfterLast("/")
-                                    ?.ifBlank { currentFolder.path }
-                                    ?: stringResource(R.string.folder_manager_title)
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    if (currentFolderId == ROOT_FOLDER_ID) {
+                                        stringResource(R.string.folder_manager_title)
+                                    } else {
+                                        currentFolder?.path
+                                            ?.substringAfterLast("/")
+                                            ?.ifBlank { currentFolder.path }
+                                            ?: stringResource(R.string.folder_manager_title)
+                                    }
+                                )
                             },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Color.Transparent
+                            ),
+                            windowInsets = WindowInsets(0.dp),
                             navigationIcon = {
                                 IconButton(
                                     onClick = navigateUpAction
@@ -354,25 +359,27 @@ fun FolderManagerScreen(
                                     pagerState.currentPage == 1 &&
                                     currentSongs.isNotEmpty()
                                 ) {
+                                    var sortMenuExpanded by remember { mutableStateOf(false) }
                                     val sortTypes = SortBy.entries.toList()
-                                    val sortEntries = DropdownEntry(
-                                        items = sortTypes.map { sortType ->
+                                    IconButton(onClick = { sortMenuExpanded = true }) {
+                                        Icon(
+                                            imageVector = LucideIcons.Sort,
+                                            contentDescription = stringResource(R.string.cd_sort)
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = sortMenuExpanded,
+                                        onDismissRequest = { sortMenuExpanded = false }
+                                    ) {
+                                        sortTypes.forEach { sortType ->
                                             val isSelected = sortInfo.sortBy == sortType
-
-                                            DropdownItem(
-                                                text = stringResource(sortType.labelRes),
-                                                selected = isSelected,
-                                                summary = if (isSelected) {
-                                                    stringResource(
-                                                        when (sortInfo.order) {
-                                                            SortOrder.ASC -> R.string.sort_ascending
-                                                            SortOrder.DESC -> R.string.sort_descending
-                                                        }
-                                                    )
-                                                } else {
-                                                    null
-                                                },
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(sortType.labelRes)) },
+                                                trailingIcon = if (isSelected) {
+                                                    { Icon(LucideIcons.Check, contentDescription = null) }
+                                                } else null,
                                                 onClick = {
+                                                    sortMenuExpanded = false
                                                     val newOrder = if (isSelected) {
                                                         if (sortInfo.order == SortOrder.ASC) {
                                                             SortOrder.DESC
@@ -382,25 +389,12 @@ fun FolderManagerScreen(
                                                     } else {
                                                         SortOrder.ASC
                                                     }
-
                                                     viewModel.onSortChange(
-                                                        SortInfo(
-                                                            sortBy = sortType,
-                                                            order = newOrder
-                                                        )
+                                                        SortInfo(sortBy = sortType, order = newOrder)
                                                     )
                                                 }
                                             )
                                         }
-                                    )
-
-                                    OverlayIconDropdownMenu(
-                                        entries = listOf(sortEntries)
-                                    ) {
-                                        Icon(
-                                            imageVector = LucideIcons.Sort,
-                                            contentDescription = stringResource(R.string.cd_sort)
-                                        )
                                     }
                                 }
                             },
@@ -411,60 +405,52 @@ fun FolderManagerScreen(
             }
         ) { paddingValues ->
             selectedFolder?.let { folder ->
-                WindowDialog(
-                    title = stringResource(R.string.dialog_remove_folder_title),
-                    show = showConfirmDialog.value,
-                    onDismissRequest = { showConfirmDialog.value = false }
-                ) {
-                    Column {
-                        Text(
-                            text = folder.path,
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = stringResource(R.string.dialog_remove_folder_content_tip),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                AlertDialog(
+                    onDismissRequest = { showConfirmDialog.value = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showConfirmDialog.value = false
+                                viewModel.deleteFolder(folder)
+                                selectedFolderId = ROOT_FOLDER_ID
+                                if (folder.id == currentFolderId) {
+                                    navigateToFolder(
+                                        parentFolder?.id ?: ROOT_FOLDER_ID,
+                                        forward = false
+                                    )
+                                }
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
                         ) {
-                            TextButton(
-                                text = stringResource(R.string.cancel),
-                                onClick = {
-                                    showConfirmDialog.value = false
-                                },
-                                modifier = Modifier.weight(1f),
+                            Text(stringResource(R.string.confirm))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showConfirmDialog.value = false }) {
+                            Text(stringResource(R.string.cancel))
+                        }
+                    },
+                    title = { Text(stringResource(R.string.dialog_remove_folder_title)) },
+                    text = {
+                        Column {
+                            Text(
+                                text = folder.path,
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.onBackground
                             )
 
-                            Spacer(Modifier.width(20.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            TextButton(
-                                text = stringResource(R.string.confirm),
-                                onClick = {
-                                    showConfirmDialog.value = false
-                                    viewModel.deleteFolder(folder)
-                                    selectedFolderId = ROOT_FOLDER_ID
-                                    if (folder.id == currentFolderId) {
-                                        navigateToFolder(
-                                            parentFolder?.id ?: ROOT_FOLDER_ID,
-                                            forward = false
-                                        )
-                                    }
-                                },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.textButtonColorsPrimary(),
+                            Text(
+                                text = stringResource(R.string.dialog_remove_folder_content_tip),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize
                             )
                         }
                     }
-                }
+                )
             }
 
             Column(
@@ -490,25 +476,18 @@ fun FolderManagerScreen(
                     )
                 }
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 8.dp)
-                ) {
-                    TabRowWithContour(
-                        tabs = listOf(
-                            "${stringResource(R.string.folder_tab_folders)} (${currentChildFolders.size})",
-                            "${stringResource(R.string.folder_tab_songs)} (${currentSongs.size})"
-                        ),
-                        selectedTabIndex = pagerState.currentPage,
-                        onTabSelected = { index ->
-                            scope.launch {
-                                pagerState.animateScrollToPage(index)
-                            }
+                LibraryDetailTabs(
+                    tabs = listOf(
+                        "${stringResource(R.string.folder_tab_folders)} (${currentChildFolders.size})",
+                        "${stringResource(R.string.folder_tab_songs)} (${currentSongs.size})"
+                    ),
+                    selectedIndex = pagerState.currentPage,
+                    onSelected = { index ->
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
                         }
-                    )
-                }
+                    }
+                )
 
                 FolderPagerSlideContent(
                     currentFolderId = currentFolderId,
@@ -625,7 +604,7 @@ private fun FolderPagerSlideContent(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     navigator: DestinationsNavigator,
     selectionViewModel: SongSelectionViewModel,
     onFolderClick: (FolderEntity) -> Unit,
@@ -753,7 +732,7 @@ private fun FolderPageSlideContent(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     navigator: DestinationsNavigator,
     selectionViewModel: SongSelectionViewModel,
     onFolderClick: (FolderEntity) -> Unit,
@@ -873,7 +852,7 @@ private fun FolderPage(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     navigator: DestinationsNavigator,
     selectionViewModel: SongSelectionViewModel,
     onFolderClick: (FolderEntity) -> Unit,
@@ -956,7 +935,7 @@ private fun FolderChildrenPage(
     scanningFolderIds: Set<Long>,
     queuedFolderIds: Set<Long>,
     isSelectionMode: Boolean,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     onFolderClick: (FolderEntity) -> Unit,
     onDeleteFolder: (FolderEntity) -> Unit,
     onRefreshFolder: (FolderEntity) -> Unit,
@@ -1016,7 +995,7 @@ private fun FolderCurrentSongsPage(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     onSongClick: (SongEntity) -> Unit,
     onToggleSelection: (SongEntity) -> Unit,
     onSwipeSelection: (SongEntity) -> Unit,
@@ -1103,18 +1082,34 @@ private fun FolderPathHeader(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            BreadcrumbBar(
-                items = breadcrumbs.map { breadcrumb ->
-                    BreadcrumbItem(path = breadcrumb.folderId.toString(), text = breadcrumb.label)
-                },
-                onItemClick = { index ->
-                    if (index != breadcrumbs.lastIndex) {
-                        onBreadcrumbClick(breadcrumbs[index].folderId)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                breadcrumbs.forEachIndexed { index, breadcrumb ->
+                    if (index > 0) {
+                        Icon(
+                            LucideIcons.ArrowRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                insideMargin = PaddingValues(vertical = 4.dp)
-            )
+                    val isCurrent = index == breadcrumbs.lastIndex
+                    Text(
+                        text = breadcrumb.label,
+                        style = if (isCurrent) MaterialTheme.typography.labelLarge else MaterialTheme.typography.bodyMedium,
+                        color = if (isCurrent) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .clickable(enabled = !isCurrent) { onBreadcrumbClick(breadcrumb.folderId) }
+                            .padding(vertical = 4.dp, horizontal = 2.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -1168,55 +1163,81 @@ private fun FolderListItem(
         }
     }
 
-    val actionItems = buildList {
-        add(
-            DropdownItem(
-                icon = { modifier -> PreferenceIcon(if (folder.isIgnored) LucideIcons.Eye else LucideIcons.EyeOff, PreferenceIconTone.Appearance, modifier = modifier) },
-                text = if (folder.isIgnored) {
-                    stringResource(R.string.folder_action_show)
-                } else {
-                    stringResource(R.string.folder_action_hide)
-                },
-                onClick = {
-                    onIgnoredChange(!folder.isIgnored)
-                }
-            )
-        )
-
-        add(
-            DropdownItem(
-                icon = { modifier -> PreferenceIcon(LucideIcons.RefreshCw, PreferenceIconTone.Tools, modifier = modifier) },
-                text = stringResource(R.string.action_refresh_folder),
-                onClick = {
-                    if (!isBusy) {
-                        onRefresh()
-                    }
-                }
-            )
-        )
-
-        if (canRemove) {
-            add(
-                DropdownItem(
-                    icon = { modifier -> PreferenceIcon(LucideIcons.Folder, PreferenceIconTone.Library, modifier = modifier) },
-                    text = stringResource(R.string.folder_action_remove),
-                    onClick = {
-                        if (!isBusy) {
-                            onDelete()
-                        }
-                    }
-                )
-            )
-        }
-    }
-
-    val actionEntry = DropdownEntry(items = actionItems)
+    var folderMenuExpanded by remember { mutableStateOf(false) }
 
     com.lonx.lyrico.ui.components.FolderManagementItem(
         name = folderName,
         path = folder.path,
         status = statusText,
-        actions = actionEntry,
+        actions = {
+            Box {
+                IconButton(
+                    enabled = !isBusy,
+                    onClick = { folderMenuExpanded = true }
+                ) {
+                    Icon(LucideIcons.EllipsisVertical, stringResource(R.string.cd_more_actions))
+                }
+                DropdownMenu(
+                    expanded = folderMenuExpanded,
+                    onDismissRequest = { folderMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                if (folder.isIgnored) {
+                                    stringResource(R.string.folder_action_show)
+                                } else {
+                                    stringResource(R.string.folder_action_hide)
+                                }
+                            )
+                        },
+                        leadingIcon = {
+                            PreferenceIcon(
+                                if (folder.isIgnored) LucideIcons.Eye else LucideIcons.EyeOff,
+                                PreferenceIconTone.Appearance,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        onClick = {
+                            folderMenuExpanded = false
+                            onIgnoredChange(!folder.isIgnored)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.action_refresh_folder)) },
+                        leadingIcon = {
+                            PreferenceIcon(
+                                LucideIcons.RefreshCw,
+                                PreferenceIconTone.Tools,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        enabled = !isBusy,
+                        onClick = {
+                            folderMenuExpanded = false
+                            if (!isBusy) onRefresh()
+                        }
+                    )
+                    if (canRemove) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.folder_action_remove)) },
+                            leadingIcon = {
+                                PreferenceIcon(
+                                    LucideIcons.Folder,
+                                    PreferenceIconTone.Library,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            },
+                            enabled = !isBusy,
+                            onClick = {
+                                folderMenuExpanded = false
+                                if (!isBusy) onDelete()
+                            }
+                        )
+                    }
+                }
+            }
+        },
         enabled = !isBusy,
         isLoading = isScanning,
         onClick = onClick

@@ -1,12 +1,14 @@
 package com.lonx.lyrico.ui.components.library
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import com.lonx.lyrico.screens.library.LibrarySelectionState
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 
 /** Detail pages share layout and actions; single unified (Miuix-based) implementation, themed by SDW. */
 @Composable
@@ -20,6 +22,10 @@ internal fun LibraryDetailPage(
 ) {
     LibraryDetailPageMiuix(miuixTopBar, snackbarHost, content)
 }
+
+@Composable
+internal fun Modifier.libraryDetailScroll(behavior: TopAppBarScrollBehavior): Modifier =
+    this.nestedScroll(behavior.nestedScrollConnection)
 
 @Composable
 internal fun Modifier.libraryDetailScroll(behavior: ScrollBehavior): Modifier =

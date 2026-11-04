@@ -36,16 +36,15 @@ import com.lonx.lyrico.ui.components.CoverRequest
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SongDetailBottomSheet(
@@ -160,8 +159,8 @@ fun SongDetailBottomSheet(
 
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
-                colors = CardDefaults.defaultColors(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 )
             ) {
                 rows.forEach { (label, value) ->

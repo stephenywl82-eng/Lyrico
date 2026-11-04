@@ -67,22 +67,21 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.lonx.lyrico.ui.components.library.LibraryDetailIconButton
 import com.lonx.lyrico.ui.components.library.LibraryDetailText
 import com.lonx.lyrico.ui.components.library.LibraryDetailTextTone
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import androidx.compose.material3.MaterialTheme
 
 @Composable
@@ -121,7 +120,7 @@ fun AlbumDetailScreen(
     } else {
         null
     }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     val context = LocalContext.current
@@ -203,8 +202,8 @@ fun AlbumDetailScreen(
                             onClose = selectionViewModel::exitSelectionMode
                         )
                     } else {
-                        SmallTopAppBar(
-                            title = albumName.ifBlank { stringResource(R.string.album_detail_title) },
+                        TopAppBar(
+                            title = { Text(albumName.ifBlank { stringResource(R.string.album_detail_title) }) },
                             navigationIcon = {
                                 IconButton(onClick = { navigator.popBackStack() }) {
                                     Icon(
@@ -214,28 +213,39 @@ fun AlbumDetailScreen(
                                 }
                             },
                             actions = {
-                                OverlayIconDropdownMenu(
-                                    entries = listOf(
-                                        albumActionsDropdownEntry(
-                                            isCalculatingReplayGain = albumActionsUiState.isCalculatingAlbumReplayGain,
-                                            onShare = {
-                                                albumActionsViewModel.shareAlbum(context, songs)
-                                            },
-                                            onDelete = {
-                                                showDeleteAlbumDialog = true
-                                            },
-                                            onCalculateReplayGain = {
-                                                albumActionsViewModel.calculateAlbumReplayGain(songs)
-                                            }
-                                        )
-                                    )
-                                ) {
+                                var albumMenuExpanded by remember { mutableStateOf(false) }
+                                IconButton(onClick = { albumMenuExpanded = true }) {
                                     Icon(
                                         imageVector = LucideIcons.EllipsisVertical,
                                         contentDescription = stringResource(R.string.album_action_more)
                                     )
                                 }
+                                DropdownMenu(
+                                    expanded = albumMenuExpanded,
+                                    onDismissRequest = { albumMenuExpanded = false }
+                                ) {
+                                    AlbumActionsDropdownItems(
+                                        isCalculatingReplayGain = albumActionsUiState.isCalculatingAlbumReplayGain,
+                                        onShare = {
+                                            albumMenuExpanded = false
+                                            albumActionsViewModel.shareAlbum(context, songs)
+                                        },
+                                        onDelete = {
+                                            albumMenuExpanded = false
+                                            showDeleteAlbumDialog = true
+                                        },
+                                        onCalculateReplayGain = {
+                                            albumMenuExpanded = false
+                                            albumActionsViewModel.calculateAlbumReplayGain(songs)
+                                        }
+                                    )
+                                }
                             },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Color.Transparent
+                            ),
+                            windowInsets = WindowInsets(0.dp),
                             scrollBehavior = topAppBarScrollBehavior
                         )
                     }
@@ -383,35 +393,27 @@ fun AlbumDetailScreen(
 }
 
 @Composable
-private fun albumActionsDropdownEntry(
+private fun AlbumActionsDropdownItems(
     isCalculatingReplayGain: Boolean,
     onShare: () -> Unit,
     onDelete: () -> Unit,
-    onCalculateReplayGain: () -> Unit
-): DropdownEntry {
-    return DropdownEntry(
-        items = listOf(
-            DropdownItem(
-                icon = { modifier -> PreferenceIcon(LucideIcons.Volume2, PreferenceIconTone.Appearance, modifier = modifier, enabled = !isCalculatingReplayGain) },
-                text = stringResource(R.string.menu_action_calculate_album_replay_gain),
-                enabled = !isCalculatingReplayGain,
-                onClick = {
-                    if (!isCalculatingReplayGain) {
-                        onCalculateReplayGain()
-                    }
-                }
-            ),
-            DropdownItem(
-                icon = { modifier -> PreferenceIcon(LucideIcons.Share2, PreferenceIconTone.Tools, modifier = modifier) },
-                text = stringResource(R.string.menu_action_share_album),
-                onClick = onShare
-            ),
-            DropdownItem(
-                icon = { modifier -> PreferenceIcon(LucideIcons.Trash, PreferenceIconTone.Danger, modifier = modifier) },
-                text = stringResource(R.string.menu_action_delete_album),
-                onClick = onDelete
-            )
-        )
+    onCalculateReplayGain: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.menu_action_calculate_album_replay_gain)) },
+        leadingIcon = { PreferenceIcon(LucideIcons.Volume2, PreferenceIconTone.Appearance, modifier = Modifier.size(24.dp), enabled = !isCalculatingReplayGain) },
+        enabled = !isCalculatingReplayGain,
+        onClick = onCalculateReplayGain
+    )
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.menu_action_share_album)) },
+        leadingIcon = { PreferenceIcon(LucideIcons.Share2, PreferenceIconTone.Tools, modifier = Modifier.size(24.dp)) },
+        onClick = onShare
+    )
+    DropdownMenuItem(
+        text = { Text(stringResource(R.string.menu_action_delete_album)) },
+        leadingIcon = { PreferenceIcon(LucideIcons.Trash, PreferenceIconTone.Danger, modifier = Modifier.size(24.dp)) },
+        onClick = onDelete
     )
 }
 

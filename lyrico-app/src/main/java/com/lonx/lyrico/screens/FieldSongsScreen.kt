@@ -67,22 +67,19 @@ import com.ramcosta.composedestinations.generated.destinations.EditMetadataDesti
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
+import kotlinx.coroutines.launch
 
 @Composable
 @Destination<RootGraph>(route = "field_songs")
@@ -101,7 +98,7 @@ fun FieldSongsScreen(
     val scope = rememberCoroutineScope()
     val selectedTab = pagerState.targetPage
     val songs = if (selectedTab == 0) uiState.songsWithField else uiState.songsWithoutField
-    val scrollBehavior = MiuixScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val backdrop = rememberBarBlurBackdrop()
     val context = LocalContext.current
@@ -173,10 +170,13 @@ fun FieldSongsScreen(
                                     },
                                 )
                             } else {
-                                SmallTopAppBar(
-                                    title = title,
-                                    color = Color.Transparent,
-                                    defaultWindowInsetsPadding = false,
+                                TopAppBar(
+                                    title = { Text(title) },
+                                    colors = TopAppBarDefaults.topAppBarColors(
+                                        containerColor = Color.Transparent,
+                                        scrolledContainerColor = Color.Transparent
+                                    ),
+                                    windowInsets = WindowInsets(0.dp),
                                     scrollBehavior = scrollBehavior,
                                     navigationIcon = {
                                         IconButton(onClick = { navigator.popBackStack() }) {
@@ -191,15 +191,11 @@ fun FieldSongsScreen(
                             enter = expandVertically(tween(300, easing = FastOutSlowInEasing)) + fadeIn(tween(300)),
                             exit = shrinkVertically(tween(300, easing = FastOutSlowInEasing)) + fadeOut(tween(300)),
                         ) {
-                            Card(
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 8.dp),
-                            ) {
-                                TabRowWithContour(
-                                    tabs = tabLabels,
-                                    selectedTabIndex = pagerState.currentPage,
-                                    onTabSelected = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
-                                )
-                            }
+                            LibraryDetailTabs(
+                                tabs = tabLabels,
+                                selectedIndex = pagerState.currentPage,
+                                onSelected = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
+                            )
                         }
                     }
                 }
@@ -296,7 +292,7 @@ private fun FieldSongsPageContent(
             Modifier.fillMaxSize().padding(padding),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(size = 32.dp)
+            CircularProgressIndicator(modifier = Modifier.size(32.dp))
         }
 
         songs.isEmpty() -> IllustratedEmptyState(
@@ -312,8 +308,6 @@ private fun FieldSongsPageContent(
         else -> LazyColumn(
             state = listState,
             modifier = (Modifier
-                .scrollEndHaptic()
-                .overScrollVertical()
                 .nestedScroll(scrollConnection))
                 .fillMaxSize(),
             contentPadding = padding,
@@ -333,10 +327,13 @@ private fun FieldSongsPageContent(
                             modifier = Modifier.weight(1f),
                         )
                         TextButton(
-                            text = stringResource(R.string.edit_field_songs_retry),
                             onClick = onRefresh,
-                            colors = ButtonDefaults.textButtonColorsPrimary(),
-                        )
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(stringResource(R.string.edit_field_songs_retry))
+                        }
                     }
                 }
             }

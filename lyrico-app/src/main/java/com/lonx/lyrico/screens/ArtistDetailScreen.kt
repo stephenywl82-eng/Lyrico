@@ -82,15 +82,15 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.Color
 
 @Composable
 @Destination<RootGraph>(route = "artist_detail")
@@ -131,7 +131,7 @@ fun ArtistDetailScreen(
     } else {
         null
     }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -218,8 +218,8 @@ fun ArtistDetailScreen(
                             onClose = selectionViewModel::exitSelectionMode
                         )
                     } else {
-                        SmallTopAppBar(
-                            title = artistName.ifBlank { stringResource(R.string.artist_detail_title) },
+                        TopAppBar(
+                            title = { Text(artistName.ifBlank { stringResource(R.string.artist_detail_title) }) },
                             navigationIcon = {
                                 IconButton(onClick = { navigator.popBackStack() }) {
                                     Icon(
@@ -228,6 +228,11 @@ fun ArtistDetailScreen(
                                     )
                                 }
                             },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Color.Transparent
+                            ),
+                            windowInsets = WindowInsets(0.dp),
                             scrollBehavior = topAppBarScrollBehavior
                         )
                     }
@@ -452,7 +457,7 @@ private fun ArtistSongsPage(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     bottomPadding: Dp,
     onSongClick: (SongEntity) -> Unit,
     onToggleSelection: (SongEntity) -> Unit,
@@ -514,7 +519,7 @@ private fun ArtistSongsPage(
 @Composable
 private fun ArtistAlbumsPage(
     albums: List<AlbumEntity>,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     bottomPadding: Dp,
     onAlbumClick: (AlbumEntity) -> Unit,
     onAlbumActionClick: (AlbumEntity) -> Unit

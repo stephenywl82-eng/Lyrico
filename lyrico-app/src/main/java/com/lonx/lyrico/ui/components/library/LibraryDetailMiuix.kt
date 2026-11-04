@@ -1,18 +1,25 @@
 package com.lonx.lyrico.ui.components.library
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.utils.overScrollVertical
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import androidx.compose.material3.MaterialTheme
 
+/** Detail pages share layout and actions; M3 Expressive implementation, themed by SDW. */
 @Composable
 internal fun LibraryDetailPageMiuix(
     topBar: @Composable () -> Unit,
@@ -36,8 +43,8 @@ internal fun LibraryDetailIconButtonMiuix(
     description: String?,
     onClick: () -> Unit,
 ) {
-    top.yukonga.miuix.kmp.basic.IconButton(onClick = onClick) {
-        top.yukonga.miuix.kmp.basic.Icon(icon, description)
+    IconButton(onClick = onClick) {
+        Icon(icon, description)
     }
 }
 
@@ -48,13 +55,28 @@ internal fun LibraryDetailTabsMiuix(
     onSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val outer = modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 8.dp)
-    top.yukonga.miuix.kmp.basic.Card(outer) {
-        top.yukonga.miuix.kmp.basic.TabRowWithContour(
-            tabs = tabs,
+    val outer = modifier
+        .fillMaxWidth()
+        .padding(horizontal = 12.dp)
+        .padding(bottom = 8.dp)
+    Surface(tonalElevation = 0.dp, modifier = outer) {
+        PrimaryTabRow(
             selectedTabIndex = selectedIndex,
-            onTabSelected = onSelected,
-        )
+            divider = {},
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = index == selectedIndex,
+                    onClick = { onSelected(index) },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -66,7 +88,7 @@ internal fun LibraryDetailTextMiuix(
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
 ) {
-    top.yukonga.miuix.kmp.basic.Text(
+    Text(
         text,
         modifier = modifier,
         style =
