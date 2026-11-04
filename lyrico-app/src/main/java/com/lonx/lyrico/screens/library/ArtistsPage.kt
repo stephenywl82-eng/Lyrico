@@ -43,7 +43,7 @@ import com.lonx.lyrico.domain.poster.ResolvedArtistPoster
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -80,16 +80,18 @@ import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -144,7 +146,7 @@ fun ArtistsPage(
         CoverCandidate(uri = it.uri.toUri(), lastUpdate = it.lastModified)
     }
     val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
     val gridState = rememberLazyGridState()
     val alphabetScrollController = rememberAlphabetSideBarScrollController(gridState)
@@ -167,12 +169,6 @@ fun ArtistsPage(
         map
     }
     val enableIndex = artists.isNotEmpty() && sortInfo.sortBy.supportsIndex
-    val refreshTexts = listOf(
-        stringResource(R.string.pull_to_refresh),
-        stringResource(R.string.release_to_refresh),
-        stringResource(R.string.refreshing),
-        stringResource(R.string.refresh_success)
-    )
     val pageContent: @Composable (PaddingValues) -> Unit = { paddingValues ->
         Box(
             modifier = Modifier
@@ -200,9 +196,7 @@ fun ArtistsPage(
                     isRefreshing = scanState.isScanning,
                     onRefresh = { viewModel.refreshSongs() },
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding()),
-                    topAppBarScrollBehavior = topAppBarScrollBehavior,
-                    refreshTexts = refreshTexts
+                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
                 ) {
                     BoxWithConstraints {
                         val targetColumns = if (maxWidth >= 600.dp) 2 else 1
@@ -317,12 +311,15 @@ fun ArtistsPage(
                             onToggleAll = { if (selectedIds.size == artists.size) selectionViewModel.deselectAll() else selectionViewModel.selectAll(artists) },
                             onClose = selectionViewModel::exitSelectionMode
                         )
-                    } else SmallTopAppBar(
-                        title = stringResource(R.string.artist_list_title, artists.size),
-                        color = Color.Transparent,
+                    } else TopAppBar(
+                        title = { Text(stringResource(R.string.artist_list_title, artists.size)) },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent,
+                            scrolledContainerColor = Color.Transparent
+                        ),
                         modifier = Modifier,
+                        windowInsets = WindowInsets(0.dp),
                         scrollBehavior = topAppBarScrollBehavior,
-                        defaultWindowInsetsPadding = false,
                         navigationIcon = {
                             IconButton(onClick = { navigator.navigate(SettingsDestination()) }) {
                                 Icon(

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -75,16 +76,16 @@ import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 
 @Composable
 fun SongsPage(
@@ -170,14 +171,8 @@ fun SongsPage(
     }
     val enableIndex = sections.isNotEmpty() && sortInfo.sortBy.supportsIndex
 
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
-    val refreshTexts = listOf(
-        stringResource(R.string.pull_to_refresh),
-        stringResource(R.string.release_to_refresh),
-        stringResource(R.string.refreshing),
-        stringResource(R.string.refresh_success)
-    )
     val pageContent: @Composable (PaddingValues) -> Unit = { paddingValues ->
         Box(
             modifier = Modifier
@@ -224,9 +219,7 @@ fun SongsPage(
                     isRefreshing = scanState.isScanning,
                     onRefresh = { viewModel.refreshSongs() },
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding()),
-                    topAppBarScrollBehavior = topAppBarScrollBehavior,
-                    refreshTexts = refreshTexts
+                    contentPadding = PaddingValues(top = paddingValues.calculateTopPadding())
                 ) {
                     LazyColumn(
                         modifier = Modifier
@@ -378,12 +371,15 @@ fun SongsPage(
                         }
 
                         TopBarState.Default -> {
-                            SmallTopAppBar(
-                                title = stringResource(R.string.song_list_title, songs.size),
-                                color = Color.Transparent,
+                            TopAppBar(
+                                title = { Text(stringResource(R.string.song_list_title, songs.size)) },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor = Color.Transparent
+                                ),
                                 modifier = Modifier,
+                                windowInsets = WindowInsets(0.dp),
                                 scrollBehavior = topAppBarScrollBehavior,
-                                defaultWindowInsetsPadding = false,
                                 navigationIcon = {
                                     IconButton(
                                         onClick = { navigator.navigate(SettingsDestination()) }

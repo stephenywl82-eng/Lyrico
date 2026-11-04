@@ -89,6 +89,7 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
@@ -226,6 +227,7 @@ fun FolderManagerScreen(
     }
 
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     fun navigateToFolder(folderId: Long, forward: Boolean) {
         if (folderId != currentFolderId) {
@@ -310,7 +312,7 @@ fun FolderManagerScreen(
                         SongSelectionTopAppBar(
                             songs = currentSongs,
                             selectedSongUris = selectedSongUris,
-                            scrollBehavior = topAppBarScrollBehavior,
+                            scrollBehavior = selectionScrollBehavior,
                             onSelectAll = selectionViewModel::selectAll,
                             onDeselectAll = selectionViewModel::deselectAll,
                             onClose = selectionViewModel::exitSelectionMode

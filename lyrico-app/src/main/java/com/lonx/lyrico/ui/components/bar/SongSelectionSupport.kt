@@ -46,17 +46,18 @@ import com.ramcosta.composedestinations.generated.destinations.BatchEditDestinat
 import com.ramcosta.composedestinations.generated.destinations.BatchRenameDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 
 @Composable
 fun SongSelectionTopAppBar(
     songs: List<SongEntity>,
     selectedSongUris: Set<String>,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: TopAppBarScrollBehavior,
     color: Color = Color.Unspecified,
     applyInsets: Boolean = true,
     onSelectAll: (List<SongEntity>) -> Unit,
@@ -77,7 +78,7 @@ fun SongSelectionTopAppBar(
 fun SelectionTopAppBar(
     selectedCount: Int,
     allSelected: Boolean,
-    scrollBehavior: ScrollBehavior,
+    scrollBehavior: TopAppBarScrollBehavior,
     color: Color = Color.Unspecified,
     applyInsets: Boolean = true,
     onToggleAll: () -> Unit,
@@ -86,24 +87,31 @@ fun SelectionTopAppBar(
     BoxWithConstraints {
         val compactTopBar = maxWidth < 360.dp
 
-        SmallTopAppBar(
-            title = "",
-            color = color,
+        TopAppBar(
+            title = {
+                Text(
+                    text = stringResource(
+                        R.string.selection_mode_selected_count,
+                        selectedCount
+                    ),
+                    maxLines = 1,
+                )
+            },
             modifier = if (applyInsets) {
                 Modifier.scaffoldTopAppBarInsetsPadding()
             } else {
                 Modifier
             },
-            scrollBehavior = scrollBehavior,
-            defaultWindowInsetsPadding = false,
-            navigationIcon = {
-                Text(
-                    text = stringResource(
-                        R.string.selection_mode_selected_count,
-                        selectedCount
-                    )
-                )
+            windowInsets = if (applyInsets) {
+                TopAppBarDefaults.windowInsets
+            } else {
+                WindowInsets(0.dp)
             },
+            scrollBehavior = scrollBehavior,
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                scrolledContainerColor = Color.Transparent
+            ),
             actions = {
                 if (!compactTopBar) {
                     TextButton(

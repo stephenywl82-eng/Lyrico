@@ -72,6 +72,7 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -121,6 +122,7 @@ fun AlbumDetailScreen(
         null
     }
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val listState = rememberLazyListState()
     val context = LocalContext.current
     var isFabMenuExpanded by remember { mutableStateOf(false) }
@@ -195,7 +197,7 @@ fun AlbumDetailScreen(
                         SongSelectionTopAppBar(
                             songs = songs,
                             selectedSongUris = selectedSongUris,
-                            scrollBehavior = topAppBarScrollBehavior,
+                            scrollBehavior = selectionScrollBehavior,
                             onSelectAll = selectionViewModel::selectAll,
                             onDeselectAll = selectionViewModel::deselectAll,
                             onClose = selectionViewModel::exitSelectionMode

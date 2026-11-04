@@ -88,6 +88,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
@@ -124,6 +125,7 @@ fun LocalSearchScreen(
         null
     }
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val searchTabs = LocalSearchTab.entries.filter {
@@ -210,7 +212,7 @@ fun LocalSearchScreen(
                             SongSelectionTopAppBar(
                                 songs = visibleSongs,
                                 selectedSongUris = selectedSongUris,
-                                scrollBehavior = topAppBarScrollBehavior,
+                                scrollBehavior = selectionScrollBehavior,
                                 onSelectAll = selectionViewModel::selectAll,
                                 onDeselectAll = selectionViewModel::deselectAll,
                                 onClose = selectionViewModel::exitSelectionMode

@@ -58,17 +58,18 @@ import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.Text
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -87,7 +88,7 @@ fun AlbumsPage(
     val sortInfo by viewModel.sortInfo.collectAsStateWithLifecycle()
     val albumGridColumns by viewModel.gridColumns.collectAsStateWithLifecycle()
     val albumTextStyle = rememberAlbumGridTextStyle(albumGridColumns)
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop(enabled = com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled())
     val gridState = rememberLazyGridState()
     val alphabetScrollController = rememberAlphabetSideBarScrollController(gridState)
@@ -122,12 +123,6 @@ fun AlbumsPage(
         map
     }
     val enableIndex = albums.isNotEmpty() && sortInfo.sortBy.supportsIndex
-    val refreshTexts = listOf(
-        stringResource(R.string.pull_to_refresh),
-        stringResource(R.string.release_to_refresh),
-        stringResource(R.string.refreshing),
-        stringResource(R.string.refresh_success)
-    )
     val pageContent: @Composable (PaddingValues) -> Unit = { paddingValues ->
         Box(
             modifier = Modifier
@@ -157,9 +152,7 @@ fun AlbumsPage(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         top = paddingValues.calculateTopPadding() + 12.dp,
-                    ),
-                    topAppBarScrollBehavior = topAppBarScrollBehavior,
-                    refreshTexts = refreshTexts
+                    )
                 ) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(albumGridColumns),
@@ -252,12 +245,15 @@ fun AlbumsPage(
         modifier = modifier.fillMaxSize(),
         topBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    title = stringResource(R.string.album_list_title, albums.size),
-                    color = Color.Transparent,
+                TopAppBar(
+                    title = { Text(stringResource(R.string.album_list_title, albums.size)) },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent
+                    ),
                     modifier = Modifier,
+                    windowInsets = WindowInsets(0.dp),
                     scrollBehavior = topAppBarScrollBehavior,
-                    defaultWindowInsetsPadding = false,
                     navigationIcon = {
                         IconButton(onClick = { navigator.navigate(SettingsDestination()) }) {
                             Icon(

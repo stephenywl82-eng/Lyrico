@@ -71,6 +71,7 @@ import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -101,6 +102,7 @@ fun FieldSongsScreen(
     val selectedTab = pagerState.targetPage
     val songs = if (selectedTab == 0) uiState.songsWithField else uiState.songsWithoutField
     val scrollBehavior = MiuixScrollBehavior()
+    val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val backdrop = rememberBarBlurBackdrop()
     val context = LocalContext.current
     val salt = false
@@ -160,7 +162,7 @@ fun FieldSongsScreen(
                                 SongSelectionTopAppBar(
                                     songs = songs,
                                     selectedSongUris = selectedSongUris,
-                                    scrollBehavior = scrollBehavior,
+                                    scrollBehavior = selectionScrollBehavior,
                                     color = Color.Transparent,
                                     applyInsets = false,
                                     onSelectAll = selectionViewModel::selectAll,

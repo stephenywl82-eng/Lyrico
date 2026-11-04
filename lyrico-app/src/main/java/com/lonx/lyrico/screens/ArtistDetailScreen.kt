@@ -85,6 +85,7 @@ import org.koin.core.parameter.parametersOf
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import androidx.compose.material3.TopAppBarDefaults
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
 import top.yukonga.miuix.kmp.basic.Text
@@ -131,6 +132,7 @@ fun ArtistDetailScreen(
         null
     }
     val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -210,7 +212,7 @@ fun ArtistDetailScreen(
                         SongSelectionTopAppBar(
                             songs = songs,
                             selectedSongUris = selectedSongUris,
-                            scrollBehavior = topAppBarScrollBehavior,
+                            scrollBehavior = selectionScrollBehavior,
                             onSelectAll = selectionViewModel::selectAll,
                             onDeselectAll = selectionViewModel::deselectAll,
                             onClose = selectionViewModel::exitSelectionMode
