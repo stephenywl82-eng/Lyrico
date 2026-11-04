@@ -51,11 +51,12 @@ internal fun LyricoMiuixTheme(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
+    val isDark = isSystemInDarkTheme()
     val controller = remember(colorMode, keyColor) {
         val effectiveLight = when (colorMode) {
             ThemeMode.LIGHT -> true
             ThemeMode.DARK -> false
-            ThemeMode.AUTO -> !isSystemInDarkTheme()
+            ThemeMode.AUTO -> !isDark
         }
         val mode = when (colorMode) {
             ThemeMode.LIGHT -> ColorSchemeMode.Light

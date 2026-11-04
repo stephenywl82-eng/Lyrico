@@ -12,12 +12,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 
-/** Shared text semantics, rendered with the SDW (Material3) typography and palette. */
+/** Shared text semantics, rendered with the SDW (Material3) typography and palette.
+ *  Defaults to [MaterialTheme.colorScheme.onSurface] so library items stay legible in both
+ *  light and dark themes (the list rows use a plain `.background()` instead of a Material3
+ *  `Surface`, so `LocalContentColor` is not derived from the surface color). */
 @Composable
 internal fun LibraryItemText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = Color.Unspecified,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontWeight: FontWeight? = null,
     textAlign: TextAlign? = null,
@@ -30,7 +33,7 @@ internal fun LibraryItemText(
 internal fun LibraryItemText(
     text: AnnotatedString,
     modifier: Modifier = Modifier,
-    color: Color = Color.Unspecified,
+    color: Color = MaterialTheme.colorScheme.onSurface,
     fontSize: TextUnit = TextUnit.Unspecified,
     fontWeight: FontWeight? = null,
     textAlign: TextAlign? = null,

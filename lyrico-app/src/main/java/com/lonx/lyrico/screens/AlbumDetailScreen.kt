@@ -437,6 +437,7 @@ private fun AlbumDetailHeader(
                 Text(
                     text = album.ifBlank { stringResource(R.string.album_detail_title) },
                     style = MiuixTheme.textStyles.title3,
+                    color = MiuixTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
