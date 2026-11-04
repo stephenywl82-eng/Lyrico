@@ -153,24 +153,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.SnackbarDuration
-import top.yukonga.miuix.kmp.basic.SnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.SnackbarResult
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.basic.TextFieldDefaults
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.lonx.lyrico.ui.components.icons.PreferenceIcon
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.FlowRow
@@ -840,7 +840,7 @@ fun EditMetadataScreen(
     }
 
     val fieldBlocks = remember(visibleFields) { visibleFields.toEditFieldBlocks() }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
 Box(modifier = Modifier.fillMaxSize()) {
     LibraryDetailPage(
@@ -853,10 +853,18 @@ Box(modifier = Modifier.fillMaxSize()) {
                 ?: stringResource(R.string.edit_metadata_default_title)
 
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    title = titleText,
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Text(
+                            titleText,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    },
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -1377,8 +1385,9 @@ Box(modifier = Modifier.fillMaxSize()) {
                         }
                     )
                 }
-                SwitchPreference(
-                    startAction = { com.lonx.lyrico.ui.components.icons.PreferenceIcon(LucideIcons.Captions, PreferenceIconTone.Appearance) },
+                ToggleRow(
+                    icon = LucideIcons.Captions,
+                    tone = PreferenceIconTone.Appearance,
                     title = stringResource(R.string.limit_lyrics_input_lines),
                     summary = stringResource(R.string.limit_lyrics_input_lines_hint),
                     checked = limitLyricsInputLines,
@@ -1659,7 +1668,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                 .verticalScroll(rememberScrollState())
         ) {
             Card(
-                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
             ) {
                 Box(
                     modifier = Modifier
@@ -1677,7 +1686,7 @@ Box(modifier = Modifier.fillMaxSize()) {
             }
 
             Card(
-                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 modifier = Modifier.padding(top = 12.dp)
             ) {
                 LyricsOffsetField(
@@ -1705,23 +1714,25 @@ Box(modifier = Modifier.fillMaxSize()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(
-                        text = stringResource(R.string.label_artist_image_swap),
                         onClick = {
                             pendingRebind = null
                             applyRebind(pending.target, pending.artistName, swap = true)
                         },
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        Text(stringResource(R.string.label_artist_image_swap))
+                    }
                     Spacer(Modifier.width(20.dp))
                     TextButton(
-                        text = stringResource(R.string.label_artist_image_replace),
                         onClick = {
                             pendingRebind = null
                             applyRebind(pending.target, pending.artistName)
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(stringResource(R.string.label_artist_image_replace))
+                    }
                 }
             }
         }
@@ -1738,7 +1749,7 @@ Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
-            TextField(
+            SdwTextInput(
                 state = newCustomTagKeyState,
                 label = stringResource(R.string.label_custom_tag_name),
                 modifier = Modifier.fillMaxWidth(),
@@ -1747,7 +1758,7 @@ Box(modifier = Modifier.fillMaxSize()) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextField(
+            SdwTextInput(
                 state = newCustomTagValueState,
                 label = stringResource(R.string.label_custom_tag_value),
                 modifier = Modifier.fillMaxWidth(),
@@ -1760,17 +1771,17 @@ Box(modifier = Modifier.fillMaxSize()) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = {
                         showAddCustomTagDialog = false
                     },
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
 
                 Spacer(Modifier.width(20.dp))
 
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = {
                         val key = newCustomTagKeyState.text.toString()
                         val value = newCustomTagValueState.text.toString()
@@ -1784,8 +1795,10 @@ Box(modifier = Modifier.fillMaxSize()) {
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
             }
         }
     }
@@ -2158,7 +2171,7 @@ private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
     
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         ) {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -2168,7 +2181,7 @@ private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
                     stringResource(R.string.label_rating),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium,
-                    color = TextFieldDefaults.textFieldColors().labelColor,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 com.lonx.lyrico.ui.components.editor.RatingStars(rating, onRatingChange)
             }
@@ -2192,14 +2205,6 @@ private fun MetadataInputField(
     } else {
         ""
     }
-
-    val colors = TextFieldDefaults.textFieldColors(
-        borderColor = if (isModified) {
-            LyricoColors.modifiedBorder
-        } else {
-            MaterialTheme.colorScheme.primary
-        }
-    )
 
     if (isMultiline) {
         Column(
@@ -2240,12 +2245,11 @@ private fun MetadataInputField(
                 actionButtons()
             }
 
-            TextField(
+            SdwTextInput(
                 state = state,
                 textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 label = fieldLabel,
-                colors = colors,
                 lineLimits = TextFieldLineLimits.MultiLine(
                     minHeightInLines = 10,
                     maxHeightInLines = if (limitMultilineLines) {
@@ -2257,14 +2261,13 @@ private fun MetadataInputField(
             )
         }
     } else {
-        TextField(
+        SdwTextInput(
             state = state,
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             label = fieldLabel,
-            colors = colors,
-            trailingIcon = if (isModified) {
+            actionContent = if (isModified) {
                 {
                     IconButton(onClick = onRevert) {
                         Icon(
@@ -2373,7 +2376,49 @@ private fun editedValue(data: AudioTagData?, field: SimpleTextField): String =
 
 @Composable
 private fun EditorMenuGroup(content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
         Column(content = content)
+    }
+}
+
+@Composable
+private fun ToggleRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+        )
     }
 }

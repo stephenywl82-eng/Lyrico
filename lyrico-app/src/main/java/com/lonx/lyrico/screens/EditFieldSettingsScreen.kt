@@ -75,26 +75,23 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.DropdownImpl
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.ListPopupDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Switch
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import com.lonx.lyrico.ui.components.library.libraryDetailScroll
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import top.yukonga.miuix.kmp.window.WindowDialog
-import top.yukonga.miuix.kmp.window.WindowListPopup
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -119,7 +116,7 @@ fun EditFieldSettingsScreen(
     val blocks = remember(uiState.items) { uiState.items.map { it.field }.toEditFieldBlocks() }
     val selectedComponent = blocks.firstOrNull { it.key == componentKey }
 
-    val scrollBehavior = MiuixScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
     val lazyListState = rememberLazyListState()
     val haptic = LocalHapticFeedback.current
@@ -141,10 +138,18 @@ fun EditFieldSettingsScreen(
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    title = stringResource(R.string.edit_field_settings_title),
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Text(
+                            stringResource(R.string.edit_field_settings_title),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navigator.popBackStack() }) {
                             Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
@@ -173,9 +178,7 @@ fun EditFieldSettingsScreen(
             state = lazyListState,
             modifier = (Modifier
                 .blurSource(topBarBackdrop)
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection))
+                .libraryDetailScroll(scrollBehavior))
                 .fillMaxHeight(),
             contentPadding = scaffoldContentPadding(
                 paddingValues = paddingValues,
@@ -392,32 +395,25 @@ private fun EditFieldRow(
                     onClick = { showMenu = true },
                     leading = { Icon(LucideIcons.EllipsisVertical, stringResource(R.string.cd_more_actions), Modifier.size(20.dp)) },
                 )
-                WindowListPopup(
-                    show = showMenu,
-                    popupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
+                DropdownMenu(
+                    expanded = showMenu,
                     onDismissRequest = { showMenu = false },
-                    alignment = PopupPositionProvider.Align.End,
                 ) {
-                    ListPopupColumn {
-                        menuItems.forEachIndexed { index, (label, icon, action) ->
-                            DropdownImpl(
-                                item = top.yukonga.miuix.kmp.basic.DropdownItem(
-                                    text = label,
-                                    icon = { modifier ->
-                                        PreferenceIcon(icon,
-                                            if (icon == LucideIcons.Trash) PreferenceIconTone.Danger else PreferenceIconTone.at(index),
-                                            modifier = modifier)
-                                    },
-                                ),
-                                isSelected = false,
-                                optionSize = menuItems.size,
-                                index = index,
-                                onSelectedIndexChange = {
-                                    showMenu = false
-                                    action()
-                                },
-                            )
-                        }
+                    menuItems.forEachIndexed { index, (label, icon, action) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            leadingIcon = {
+                                PreferenceIcon(
+                                    icon,
+                                    if (icon == LucideIcons.Trash) PreferenceIconTone.Danger else PreferenceIconTone.at(index),
+                                    Modifier.size(24.dp),
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                action()
+                            },
+                        )
                     }
                 }
             }
@@ -426,7 +422,6 @@ private fun EditFieldRow(
     }
     if (inSheet) content() else Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
-        insideMargin = PaddingValues(0.dp),
     ) { content() }
 }
 
@@ -547,8 +542,7 @@ private fun ComponentFieldsSheetContent(
         }
         Card(
             modifier = Modifier.fillMaxWidth(),
-            insideMargin = PaddingValues(0.dp),
-            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
         ) { listContent() }
     }
 }
@@ -618,7 +612,7 @@ private fun AddCustomTagDialog(
             }
 
             Spacer(Modifier.height(16.dp))
-            TextField(
+            SdwTextInput(
                 state = inputState,
                 label = stringResource(R.string.custom_tag_key),
                 modifier = Modifier.fillMaxWidth(),
@@ -642,17 +636,19 @@ private fun AddCustomTagDialog(
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
                 Spacer(Modifier.width(20.dp))
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = { onConfirm(typed) },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
             }
         }
     }

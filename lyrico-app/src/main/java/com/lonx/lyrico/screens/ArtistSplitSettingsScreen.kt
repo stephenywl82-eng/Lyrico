@@ -6,8 +6,8 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,27 +30,43 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.R
-import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.library.libraryDetailScroll
-
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import com.lonx.lyrico.data.model.artist.ArtistSplitDefaults
 import com.lonx.lyrico.data.model.artist.CustomArtistSeparator
 import com.lonx.lyrico.data.model.artist.CustomNoSplitArtist
+import com.lonx.lyrico.ui.components.library.LibraryDetailPage
+import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.viewmodel.ArtistSplitSettingsViewModel
 import com.lonx.lyrico.viewmodel.ArtistSplitValidationError
@@ -57,24 +74,7 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.window.WindowDialog
-import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 @OptIn(ExperimentalLayoutApi::class)
@@ -133,20 +133,31 @@ fun ArtistSplitSettingsScreen(
             )
         }
 
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
     LibraryDetailPage(
         title = stringResource(R.string.artist_split_settings_title),
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    title = stringResource(R.string.artist_split_settings_title),
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Text(
+                            text = stringResource(R.string.artist_split_settings_title),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = { navigator.popBackStack() }) {
-                            Icon(LucideIcons.ArrowLeft, contentDescription = stringResource(R.string.action_back))
+                            Icon(
+                                LucideIcons.ArrowLeft,
+                                contentDescription = stringResource(R.string.action_back),
+                            )
                         }
                     },
                     scrollBehavior = topAppBarScrollBehavior
@@ -164,19 +175,21 @@ fun ArtistSplitSettingsScreen(
             ),
             overscrollEffect = null
         ) {
-            
+
                 item(key = "config") {
-                    SmallTitle(text = stringResource(R.string.artist_split_general_section))
+                    SectionTitle(text = stringResource(R.string.artist_split_general_section))
                     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-                        SwitchPreference(
-                            startAction = { PreferenceIcon(LucideIcons.Split, PreferenceIconTone.Appearance) },
+                        ToggleRow(
+                            icon = LucideIcons.Split,
+                            tone = PreferenceIconTone.Appearance,
                             title = stringResource(R.string.artist_split_enabled),
                             summary = stringResource(R.string.artist_split_enabled_summary),
                             checked = uiState.config.enabled,
                             onCheckedChange = viewModel::setEnabled
                         )
-                        ArrowPreference(
-                            startAction = { PreferenceIcon(LucideIcons.RefreshCw, PreferenceIconTone.Tools) },
+                        ArrowRow(
+                            icon = LucideIcons.RefreshCw,
+                            tone = PreferenceIconTone.Tools,
                             title = stringResource(
                                 if (uiState.hasPendingIndexRebuild) {
                                     R.string.rebuild_artist_index_now
@@ -184,18 +197,18 @@ fun ArtistSplitSettingsScreen(
                                     R.string.rebuild_artist_index
                                 }
                             ),
-                            onClick = viewModel::rebuildArtistIndex,
                             summary = when {
                                 uiState.isRebuildingIndex -> stringResource(R.string.artist_index_rebuilding)
                                 uiState.hasPendingIndexRebuild -> stringResource(R.string.artist_index_rebuild_pending)
                                 else -> stringResource(R.string.artist_index_current)
-                            }
+                            },
+                            onClick = viewModel::rebuildArtistIndex
                         )
                     }
                 }
 
                 item(key = "separators") {
-                    SmallTitle(text = stringResource(R.string.section_artist_separators))
+                    SectionTitle(text = stringResource(R.string.section_artist_separators))
                     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
                         ChipGrid(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)
@@ -225,29 +238,32 @@ fun ArtistSplitSettingsScreen(
                         ) {
                             Button(
                                 onClick = { addingSeparator = true },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColorsPrimary()
+                                modifier = Modifier.weight(1f)
                             ) {
-                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onPrimary)
+                                Icon(LucideIcons.Plus, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.add_custom_separator), color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.labelLarge)
+                                Text(
+                                    stringResource(R.string.add_custom_separator),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
-                            Button(
+                            FilledTonalButton(
                                 onClick = viewModel::resetSeparators,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                                Icon(LucideIcons.RotateCcw, null, Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
-                                Text(stringResource(R.string.reset_to_default), color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    style = MaterialTheme.typography.labelLarge)
+                                Text(
+                                    stringResource(R.string.reset_to_default),
+                                    style = MaterialTheme.typography.labelLarge
+                                )
                             }
                         }
                     }
                 }
 
                 item(key = "custom_no_split") {
-                    SmallTitle(text = stringResource(R.string.section_no_split_artists))
+                    SectionTitle(text = stringResource(R.string.section_no_split_artists))
                     Card(modifier = Modifier.padding(horizontal = 12.dp)) {
                         if (uiState.config.customNoSplitArtists.isNotEmpty()) {
                             ChipGrid(
@@ -268,14 +284,15 @@ fun ArtistSplitSettingsScreen(
                                 }
                             }
                         }
-                        ArrowPreference(
-                            startAction = { PreferenceIcon(LucideIcons.UserPlus, PreferenceIconTone.Library) },
+                        ArrowRow(
+                            icon = LucideIcons.UserPlus,
+                            tone = PreferenceIconTone.Library,
                             title = stringResource(R.string.add_no_split_artist),
                             onClick = { addingNoSplitArtist = true }
                         )
                     }
                 }
-            
+
         }
     }
 
@@ -356,6 +373,103 @@ fun ArtistSplitSettingsScreen(
             pendingDelete = null
         }
     )
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ToggleRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+        )
+    }
+}
+
+@Composable
+private fun ArrowRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Icon(
+            LucideIcons.ArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp),
+        )
+    }
 }
 
 private data class ArtistSplitChipItem(
@@ -484,38 +598,44 @@ private fun ArtistSplitInputDialog(
         onDismissRequest = onDismiss
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            TextField(
+            SdwTextInput(
                 state = inputState,
+                hint = hint,
                 lineLimits = TextFieldLineLimits.SingleLine,
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = hint,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = MaterialTheme.typography.bodySmall.fontSize
             )
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 if (showDelete) {
                     TextButton(
-                        text = stringResource(R.string.common_delete),
                         onClick = onDelete,
-                        modifier = Modifier.weight(1f)
-                    )
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Text(stringResource(R.string.common_delete))
+                    }
                     Spacer(Modifier.width(12.dp))
                 }
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                )
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
                 Spacer(Modifier.width(12.dp))
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = { onSave(text) },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
             }
         }
     }
@@ -544,19 +664,26 @@ private fun ConfirmRuleDeleteDialog(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                )
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
                 Spacer(Modifier.width(12.dp))
                 TextButton(
-                    text = stringResource(R.string.common_delete),
                     onClick = {
                         pendingDelete?.let(onConfirm)
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(stringResource(R.string.common_delete))
+                }
             }
         }
     }

@@ -37,7 +37,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ColumnScope
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 
 import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
@@ -94,23 +93,23 @@ import com.ramcosta.composedestinations.generated.destinations.EditFieldSettings
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import top.yukonga.miuix.kmp.window.WindowDialog
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -278,7 +277,7 @@ fun BatchEditScreen(
     }
 
     val salt = false
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     BackHandler(
         enabled = !uiState.isSaving
@@ -298,33 +297,43 @@ Box(
         title = stringResource(R.string.batch_edit_title),
         onBack = { if (!uiState.isSaving) navigator.popBackStack() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(R.string.batch_edit_title),
-                navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            if (!uiState.isSaving) navigator.popBackStack()
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Text(
+                            stringResource(R.string.batch_edit_title),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                if (!uiState.isSaving) navigator.popBackStack()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = LucideIcons.ArrowLeft,
+                                contentDescription = stringResource(R.string.action_back)
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = LucideIcons.ArrowLeft,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { viewModel.saveBatchEdit() },
-                        enabled = !uiState.isSaving
-                    ) {
-                        Icon(
-                            imageVector = LucideIcons.Check,
-                            contentDescription = null
-                        )
-                    }
-                },
-                scrollBehavior = topAppBarScrollBehavior
-            )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = { viewModel.saveBatchEdit() },
+                            enabled = !uiState.isSaving
+                        ) {
+                            Icon(
+                                imageVector = LucideIcons.Check,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    scrollBehavior = topAppBarScrollBehavior
+                )
         }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -337,9 +346,23 @@ Box(
                     if (tab == BatchEditTab.Preview) stringResource(tab.labelRes, editPreviews.size)
                     else stringResource(tab.labelRes)
                 }
-                LibraryDetailTabs(tabLabels, pagerState.currentPage, { index ->
-                    scope.launch { expandedFabMenu = false; pagerState.animateScrollToPage(index) }
-                })
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    tabLabels.forEachIndexed { index, label ->
+                        Tab(
+                            selected = index == pagerState.currentPage,
+                            onClick = {
+                                scope.launch {
+                                    expandedFabMenu = false
+                                    pagerState.animateScrollToPage(index)
+                                }
+                            },
+                            text = { Text(label) },
+                        )
+                    }
+                }
 
                 HorizontalPager(
                     state = pagerState,
@@ -358,7 +381,7 @@ Box(
                                 ),
                             ) {
                                 item(key = "song_count") {
-                                    SmallTitle(stringResource(R.string.batch_edit_song_count, uiState.songCount))
+                                    SectionTitle(stringResource(R.string.batch_edit_song_count, uiState.songCount))
                                 }
 
                                 fieldBlocks.forEach { block ->
@@ -514,17 +537,16 @@ Box(
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .scrollEndHaptic()
-                .overScrollVertical(),
+                .fillMaxWidth(),
             overscrollEffect = null
         ) {
             item {
                 Card(
-                    colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
-                    ArrowPreference(
-                        startAction = { PreferenceIcon(LucideIcons.ImageAdd, PreferenceIconTone.Appearance) },
+                    ArrowRow(
+                        icon = LucideIcons.ImageAdd,
+                        tone = PreferenceIconTone.Appearance,
                         title = stringResource(R.string.batch_edit_cover_change),
                         onClick = {
                             showCoverOptionsSheet = false
@@ -535,24 +557,27 @@ Box(
                             )
                         }
                     )
-                    ArrowPreference(
-                        startAction = { PreferenceIcon(LucideIcons.ImageLibrary, PreferenceIconTone.Tools) },
+                    ArrowRow(
+                        icon = LucideIcons.ImageLibrary,
+                        tone = PreferenceIconTone.Tools,
                         title = stringResource(R.string.batch_edit_select_cover_from_selected_songs),
                         onClick = {
                             showCoverOptionsSheet = false
                             openSelectedCoverSheet()
                         }
                     )
-                    ArrowPreference(
-                        startAction = { PreferenceIcon(LucideIcons.Disc, PreferenceIconTone.Library) },
+                    ArrowRow(
+                        icon = LucideIcons.Disc,
+                        tone = PreferenceIconTone.Library,
                         title = stringResource(R.string.label_select_same_album_cover),
                         onClick = {
                             showCoverOptionsSheet = false
                             loadSameAlbumCovers()
                         }
                     )
-                    ArrowPreference(
-                        startAction = { PreferenceIcon(LucideIcons.Trash, PreferenceIconTone.Danger) },
+                    ArrowRow(
+                        icon = LucideIcons.Trash,
+                        tone = PreferenceIconTone.Danger,
                         title = stringResource(R.string.batch_edit_cover_remove),
                         onClick = {
                             showCoverOptionsSheet = false
@@ -560,14 +585,15 @@ Box(
                         }
                     )
                     if (uiState.coverUri != null || uiState.removeCover) {
-                        ArrowPreference(
-                            startAction = { PreferenceIcon(LucideIcons.Undo, PreferenceIconTone.Lyrics) },
-                            title = stringResource(R.string.batch_edit_cover_revert),
-                            onClick = {
-                                showCoverOptionsSheet = false
-                                viewModel.revertCover()
-                            }
-                        )
+                    ArrowRow(
+                        icon = LucideIcons.Undo,
+                        tone = PreferenceIconTone.Lyrics,
+                        title = stringResource(R.string.batch_edit_cover_revert),
+                        onClick = {
+                            showCoverOptionsSheet = false
+                            viewModel.revertCover()
+                        }
+                    )
                     }
                 }
             }
@@ -588,8 +614,8 @@ Box(
 
                 when {
                     selectedValueOptionsLoading -> {
-                        Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
-                            BasicComponent(title = stringResource(R.string.batch_edit_loading_selected_values))
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                            Text(text = stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     selectedValueOptions.isEmpty() -> {
@@ -603,9 +629,7 @@ Box(
                     else -> {
                         LazyColumn(
                             modifier = Modifier
-                                .heightIn(max = 420.dp)
-                                .scrollEndHaptic()
-                                .overScrollVertical(),
+                                .heightIn(max = 420.dp),
                             overscrollEffect = null
                         ) {
                             items(
@@ -641,9 +665,7 @@ Box(
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 96.dp),
             modifier = Modifier
-                .fillMaxWidth()
-                .scrollEndHaptic()
-                .overScrollVertical(),
+                .fillMaxWidth(),
             contentPadding = PaddingValues(vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -652,8 +674,8 @@ Box(
             if (selectedCoverOptionsLoading || selectedCoverOptions.isEmpty()) {
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                     if (selectedCoverOptionsLoading) {
-                        Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
-                            BasicComponent(title = stringResource(R.string.batch_edit_loading_selected_values))
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                            Text(text = stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     } else {
                         IllustratedEmptyState(
@@ -705,11 +727,12 @@ Box(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             TextButton(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.confirm),
                 onClick = { showInfoDialog = false },
-                colors = ButtonDefaults.textButtonColorsPrimary()
-            )
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+            ) {
+                Text(stringResource(R.string.confirm))
+            }
         }
     }
 
@@ -728,9 +751,6 @@ Box(
         title = stringResource(R.string.batch_edit_title),
         footer = {
             TextButton(
-                text = if (uiState.isSaving) stringResource(R.string.action_abort) else stringResource(
-                    R.string.confirm
-                ),
                 onClick = {
                     if (uiState.isSaving) {
                         viewModel.abortSave()
@@ -739,8 +759,14 @@ Box(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColorsPrimary(),
-            )
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+            ) {
+                Text(
+                    if (uiState.isSaving) stringResource(R.string.action_abort) else stringResource(
+                        R.string.confirm
+                    )
+                )
+            }
         },
     ) {
         Column(
@@ -781,9 +807,11 @@ Box(
                 }
 
                 LinearProgressIndicator(
-                    progress = if (uiState.saveTotal > 0)
-                        uiState.saveProgress.toFloat() / uiState.saveTotal
-                    else 0f
+                    progress = {
+                        if (uiState.saveTotal > 0)
+                            uiState.saveProgress.toFloat() / uiState.saveTotal
+                        else 0f
+                    }
                 )
             }
 
@@ -827,14 +855,14 @@ Box(
         val newCustomTagValueState = rememberTextFieldState()
         val newCustomTagValue = newCustomTagValueState.text.toString()
         Column(modifier = Modifier.fillMaxWidth()) {
-            TextField(
+            SdwTextInput(
                 state = newCustomTagKeyState,
                 label = stringResource(R.string.label_custom_tag_name),
                 modifier = Modifier.fillMaxWidth(),
                 lineLimits = TextFieldLineLimits.MultiLine(),
             )
             Spacer(modifier = Modifier.height(12.dp))
-            TextField(
+            SdwTextInput(
                 state = newCustomTagValueState,
                 label = stringResource(R.string.label_custom_tag_value),
                 modifier = Modifier.fillMaxWidth(),
@@ -844,13 +872,13 @@ Box(
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = { showAddCustomTagDialog = false },
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
                 Spacer(Modifier.width(20.dp))
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = {
                         if (newCustomTagKey.isNotBlank()) {
                             viewModel.addCustomFieldAndShow(
@@ -861,8 +889,10 @@ Box(
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary(),
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
             }
         }
     }
@@ -927,7 +957,7 @@ private fun BatchEditValueOptionItem(
 ) {
     Card(
         modifier = Modifier.padding(vertical = 6.dp),
-        colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Box(
             modifier = Modifier
@@ -962,76 +992,74 @@ private fun BatchEditRatingItem(
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        BasicComponent(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            insideMargin = PaddingValues(0.dp),
-            endActions = {
-                if (isModified) {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
-                            .clickable { onRevert() }
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.action_undo_changes),
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "<keep>",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            },
-            content = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    for (i in 1..5) {
-                        val isFilled = i <= rating
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                for (i in 1..5) {
+                    val isFilled = i <= rating
 
-                        Icon(
-                            painter = painterResource(
-                                if (isFilled)
-                                    R.drawable.ic_filled_star_24dp
-                                else
-                                    R.drawable.ic_outline_star_24dp
-                            ),
-                            contentDescription = null,
-                            tint = if (isFilled)
-                                MaterialTheme.colorScheme.primary
+                    Icon(
+                        painter = painterResource(
+                            if (isFilled)
+                                R.drawable.ic_filled_star_24dp
                             else
-                                onSurfaceDim.copy(alpha = 0.4f),
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    onRatingChange(
-                                        if (rating == i) 0 else i
-                                    )
-                                }
-                        )
-                    }
+                                R.drawable.ic_outline_star_24dp
+                        ),
+                        contentDescription = null,
+                        tint = if (isFilled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            onSurfaceDim.copy(alpha = 0.4f),
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                onRatingChange(
+                                    if (rating == i) 0 else i
+                                )
+                            }
+                    )
                 }
             }
-        )
+            Spacer(Modifier.weight(1f))
+            if (isModified) {
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.1f))
+                        .clickable { onRevert() }
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.action_undo_changes),
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "<keep>",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -1106,8 +1134,6 @@ private fun BatchEditPreviewTab(
 
     LazyColumn(
         modifier = Modifier
-            .scrollEndHaptic()
-            .overScrollVertical()
             .nestedScroll(topAppBarNestedScrollConnection)
             .fillMaxHeight(),
         contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
@@ -1132,59 +1158,62 @@ private fun BatchEditPreviewTab(
                         .padding(horizontal = 12.dp, vertical = 3.dp)
                         .animateContentSize()
                 ) {
-                    BasicComponent(
-                        onClick = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
                             expandedPreviewKey =
                                 if (expandedPreviewKey == preview.songUri) null else preview.songUri
                         }
-                    ) {
-                        Text(
-                            text = preview.fileName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = stringResource(R.string.batch_edit_preview_change_count, preview.changes.size),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                ) {
+                    Text(
+                        text = preview.fileName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = stringResource(R.string.batch_edit_preview_change_count, preview.changes.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-                        AnimatedVisibility(visible = expandedPreviewKey == preview.songUri) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                preview.changes.forEach { change ->
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                        Text(
-                                            text = change.labelResId?.let { stringResource(it) } ?: change.customLabel.orEmpty(),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                        Text(
-                                            text = stringResource(
-                                                R.string.batch_edit_preview_old_value,
-                                                displayBatchEditPreviewValue(change.oldValue)
-                                            ),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        Text(
-                                            text = stringResource(
-                                                R.string.batch_edit_preview_new_value,
-                                                displayBatchEditPreviewValue(change.newValue)
-                                            ),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+                    AnimatedVisibility(visible = expandedPreviewKey == preview.songUri) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            preview.changes.forEach { change ->
+                                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(
+                                        text = change.labelResId?.let { stringResource(it) } ?: change.customLabel.orEmpty(),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            R.string.batch_edit_preview_old_value,
+                                            displayBatchEditPreviewValue(change.oldValue)
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = stringResource(
+                                            R.string.batch_edit_preview_new_value,
+                                            displayBatchEditPreviewValue(change.newValue)
+                                        ),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
                         }
                     }
+                }
                 }
 
             }
@@ -1269,7 +1298,7 @@ private fun BatchEditFieldItem(
                     )
                 }
             }
-            TextField(
+            SdwTextInput(
                 textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 state = fieldState,
@@ -1278,13 +1307,13 @@ private fun BatchEditFieldItem(
             )
         }
     } else {
-        TextField(
+        SdwTextInput(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             state = fieldState,
             label = if (isKeep) stringResource(R.string.batch_edit_unchanged_field_label, stringResource(field.labelResId)) else stringResource(field.labelResId),
-            trailingIcon = {
+            actionContent = {
                 Row {
                     IconButton(onClick = {
                         onValueChange(if (isKeep) "" else "<keep>")
@@ -1326,13 +1355,13 @@ private fun BatchEditCustomFieldItem(
 
     val isKeep = value == "<keep>"
 
-    TextField(
+    SdwTextInput(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         state = fieldState,
         label = if (isKeep) stringResource(R.string.batch_edit_unchanged_field_label, keyName) else keyName,
-        trailingIcon = {
+        actionContent = {
             Row {
                 IconButton(onClick = {
                     if (isKeep) {
@@ -1418,5 +1447,60 @@ private fun BatchEditField.applyTo(viewModel: BatchEditViewModel, value: String)
 private fun BatchEditorGroup(content: @Composable ColumnScope.() -> Unit) {
     Card(Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
         Column(Modifier.padding(vertical = 6.dp), content = content)
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ArrowRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Icon(
+            LucideIcons.ArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }

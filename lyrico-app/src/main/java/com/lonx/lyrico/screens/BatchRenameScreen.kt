@@ -54,29 +54,25 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.DropdownImpl
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.basic.ListPopupColumn
-import top.yukonga.miuix.kmp.basic.ListPopupDefaults
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.PopupPositionProvider
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.overlay.OverlayListPopup
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberOverscrollEffect
@@ -111,7 +107,7 @@ fun BatchRenameScreen(
 
     var showPlaceholderInfo by remember { mutableStateOf(false) }
 
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val tabLabels = tabs.map { tab ->
         when (tab) {
             BatchRenameTab.Config -> stringResource(tab.labelRes)
@@ -123,33 +119,43 @@ fun BatchRenameScreen(
         title = stringResource(id = R.string.batch_rename_title),
         onBack = { if (!uiState.isRenamingInProgress) navigator.popBackStack() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(id = R.string.batch_rename_title),
-                navigationIcon = {
-                    IconButton(
-                        onClick = { if (!uiState.isRenamingInProgress) navigator.popBackStack() }) {
-                        Icon(
-                            imageVector = LucideIcons.ArrowLeft,
-                            contentDescription = stringResource(R.string.action_back)
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent,
+                    ),
+                    windowInsets = WindowInsets(0.dp),
+                    title = {
+                        Text(
+                            stringResource(id = R.string.batch_rename_title),
+                            style = MaterialTheme.typography.titleLarge,
                         )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = {
-                            if (!uiState.isRenamingInProgress) {
-                                navigator.navigate(CharacterMappingDestination)
-                            }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { if (!uiState.isRenamingInProgress) navigator.popBackStack() }) {
+                            Icon(
+                                imageVector = LucideIcons.ArrowLeft,
+                                contentDescription = stringResource(R.string.action_back)
+                            )
                         }
-                    ) {
-                        Icon(
-                            imageVector = LucideIcons.List,
-                            contentDescription = null
-                        )
-                    }
-                },
-                scrollBehavior = topAppBarScrollBehavior,
-            )
+                    },
+                    actions = {
+                        IconButton(
+                            onClick = {
+                                if (!uiState.isRenamingInProgress) {
+                                    navigator.navigate(CharacterMappingDestination)
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = LucideIcons.List,
+                                contentDescription = null
+                            )
+                        }
+                    },
+                    scrollBehavior = topAppBarScrollBehavior,
+                )
         }
     ) { paddingValues ->
         Column(
@@ -164,13 +170,18 @@ fun BatchRenameScreen(
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 8.dp)
                 ) {
-                    TabRowWithContour(
-                        tabs = tabLabels,
+                    TabRow(
                         selectedTabIndex = pagerState.currentPage,
-                        onTabSelected = { index ->
-                            scope.launch { pagerState.animateScrollToPage(index) }
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        tabLabels.forEachIndexed { index, label ->
+                            Tab(
+                                selected = index == pagerState.currentPage,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                text = { Text(label) },
+                            )
                         }
-                    )
+                    }
                 }
             
             HorizontalPager(
@@ -211,14 +222,15 @@ fun BatchRenameScreen(
                 title = stringResource(R.string.batch_rename_title),
                 footer = {
                     TextButton(
-                        text = stringResource(if (uiState.isRenamingInProgress) R.string.action_abort else R.string.confirm),
                         onClick = {
                             if (uiState.isRenamingInProgress) viewModel.abortRename()
                             else viewModel.closeRenameDialog()
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.textButtonColorsPrimary(),
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(stringResource(if (uiState.isRenamingInProgress) R.string.action_abort else R.string.confirm))
+                    }
                 },
             ) {
                 Column(
@@ -277,7 +289,7 @@ private fun BatchRenameProgressContent(
                 )
             }
 
-            LinearProgressIndicator(progress = progress)
+            LinearProgressIndicator(progress = { progress })
         }
     }
 
@@ -318,65 +330,66 @@ private fun BatchRenameConfigTab(
     val salt = false
     val formatState = rememberEditorTextFieldState(renameFormat, onFormatChange)
     LazyColumn(
-        modifier = (Modifier
-            .scrollEndHaptic()
-            .overScrollVertical()
-            .nestedScroll(topAppBarNestedScrollConnection))
+        modifier = Modifier
+            .nestedScroll(topAppBarNestedScrollConnection)
             .fillMaxHeight(),
         contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
         overscrollEffect = null,
     ) {
         item {
             
-                SmallTitle(text = stringResource(id = R.string.rename_format))
+                SectionTitle(text = stringResource(id = R.string.rename_format))
                 Card(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
-                    TextField(
-                        modifier = Modifier.padding(12.dp),
-                        state = formatState,
-                        trailingIcon = {
-                            Box {
-                                IconButton(
-                                    modifier = Modifier.padding(end = 12.dp),
-                                    onClick = { onDropdownVisibleChange(true) }) {
-                                    Icon(
-                                        imageVector = LucideIcons.FileMusic,
-                                        contentDescription = null
-                                    )
-                                }
-                                OverlayListPopup(
-                                    show = showDropdowns,
-                                    popupPositionProvider = ListPopupDefaults.DropdownPositionProvider,
-                                    onDismissRequest = { onDropdownVisibleChange(false) },
-                                    alignment = PopupPositionProvider.Align.TopEnd
-                                ) {
-                                    ListPopupColumn {
-                                        uiState.presetFormats.forEach { format ->
-                                            DropdownImpl(
-                                                text = format,
-                                                isSelected = renameFormat == format,
-                                                optionSize = uiState.presetFormats.size,
-                                                index = uiState.presetFormats.indexOf(format),
-                                                onSelectedIndexChange = {
-                                                    onFormatChange(format)
-                                                    onDropdownVisibleChange(false)
-                                                }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        SdwTextInput(
+                            state = formatState,
+                            lineLimits = TextFieldLineLimits.MultiLine(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp)
+                                .padding(end = 40.dp),
+                        )
+                        IconButton(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 12.dp),
+                            onClick = { onDropdownVisibleChange(true) },
+                        ) {
+                            Icon(LucideIcons.FileMusic, contentDescription = null)
+                        }
+                        DropdownMenu(
+                            expanded = showDropdowns,
+                            onDismissRequest = { onDropdownVisibleChange(false) },
+                        ) {
+                            uiState.presetFormats.forEach { format ->
+                                DropdownMenuItem(
+                                    text = { Text(format) },
+                                    trailingIcon = if (renameFormat == format) {
+                                        {
+                                            Icon(
+                                                LucideIcons.Check,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
                                             )
                                         }
-                                    }
-                                }
+                                    } else null,
+                                    onClick = {
+                                        onFormatChange(format)
+                                        onDropdownVisibleChange(false)
+                                    },
+                                )
                             }
-                        },
-                        lineLimits = TextFieldLineLimits.MultiLine(),
-                    )
+                        }
+                    }
                     Text(
                         modifier = Modifier.padding(12.dp),
                         text = stringResource(id = R.string.format_hint),
                         fontSize = MaterialTheme.typography.bodySmall.fontSize,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    SwitchPreference(
+                    ToggleRow(
                         title = stringResource(id = R.string.format_preset_show_placeholders),
                         checked = showPlaceholderInfo,
                         onCheckedChange = onShowPlaceholderInfoChange
@@ -390,10 +403,11 @@ private fun BatchRenameConfigTab(
                             .padding(12.dp)
                             .fillMaxWidth(),
                         onClick = onExecuteRename,
-                        text = stringResource(id = R.string.action_rename),
                         enabled = uiState.previews.isNotEmpty() && !uiState.isRenamingInProgress,
-                        colors = ButtonDefaults.textButtonColorsPrimary()
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(stringResource(id = R.string.action_rename))
+                    }
                 }
             
         }
@@ -429,10 +443,8 @@ private fun BatchRenamePreviewTab(
     val salt = false
 
     LazyColumn(
-        modifier = (Modifier
-            .scrollEndHaptic()
-            .overScrollVertical()
-            .nestedScroll(topAppBarNestedScrollConnection))
+        modifier = Modifier
+            .nestedScroll(topAppBarNestedScrollConnection)
             .fillMaxHeight(),
         contentPadding = PaddingValues(bottom = bottomPadding + 12.dp),
         overscrollEffect = null,
@@ -445,7 +457,7 @@ private fun BatchRenamePreviewTab(
                     R.string.preview_title,
                 uiState.previews.size
             )
-            SmallTitle(text = title)
+            SectionTitle(text = title)
         }
 
         if (uiState.previews.isEmpty()) {
@@ -477,10 +489,12 @@ private fun BatchRenamePreviewTab(
                             .padding(horizontal = 12.dp, vertical = 3.dp)
                             .animateContentSize()
                     ) {
-                        BasicComponent(
-                            onClick = {
-                                expandedPreviewKey = if (expandedPreviewKey == previewKey) null else previewKey
-                            }
+                        Column(
+                            modifier = Modifier
+                                .clickable(onClick = {
+                                    expandedPreviewKey = if (expandedPreviewKey == previewKey) null else previewKey
+                                })
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
                         ) {
                             Text(
                                 text = oldName,
@@ -532,6 +546,41 @@ private fun BatchRenamePreviewTab(
                 
             }
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+@Composable
+private fun ToggleRow(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
