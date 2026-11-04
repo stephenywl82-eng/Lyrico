@@ -75,14 +75,14 @@ import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.viewmodel.koinActivityViewModel
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
 
@@ -403,46 +403,35 @@ fun SongsPage(
                                             contentDescription = stringResource(R.string.cd_search)
                                         )
                                     }
-                                    val sortTypes = SortBy.entries.toList()
-                                    val sortEntries = DropdownEntry(
-                                        items = sortTypes.mapIndexed { _, sortBy ->
+                                    var sortMenuExpanded by remember { mutableStateOf(false) }
+                                    IconButton(onClick = { sortMenuExpanded = !sortMenuExpanded }) {
+                                        Icon(
+                                            imageVector = LucideIcons.Sort,
+                                            contentDescription = stringResource(R.string.cd_sort)
+                                        )
+                                    }
+                                    DropdownMenu(
+                                        expanded = sortMenuExpanded,
+                                        onDismissRequest = { sortMenuExpanded = false }
+                                    ) {
+                                        SortBy.entries.forEach { sortBy ->
                                             val isSelected = sortInfo.sortBy == sortBy
-                                            DropdownItem(
-                                                text = stringResource(sortBy.labelRes),
-                                                selected = isSelected,
-                                                summary = if (isSelected) {
-                                                    stringResource(
-                                                        when (sortInfo.order) {
-                                                            SortOrder.ASC -> R.string.sort_ascending
-                                                            SortOrder.DESC -> R.string.sort_descending
-                                                        }
-                                                    )
-                                                } else {
-                                                    null
-                                                },
+                                            DropdownMenuItem(
+                                                text = { Text(stringResource(sortBy.labelRes)) },
+                                                trailingIcon = if (isSelected) {
+                                                    { Icon(LucideIcons.Check, contentDescription = null) }
+                                                } else null,
                                                 onClick = {
                                                     val newOrder = if (isSelected) {
                                                         if (sortInfo.order == SortOrder.ASC) SortOrder.DESC else SortOrder.ASC
                                                     } else {
                                                         SortOrder.ASC
                                                     }
-                                                    viewModel.onSortChange(
-                                                        SortInfo(
-                                                            sortBy,
-                                                            newOrder
-                                                        )
-                                                    )
+                                                    viewModel.onSortChange(SortInfo(sortBy, newOrder))
+                                                    sortMenuExpanded = false
                                                 }
                                             )
                                         }
-                                    )
-                                    OverlayIconDropdownMenu(
-                                        entries = listOf(sortEntries),
-                                    ) {
-                                        Icon(
-                                            imageVector = LucideIcons.Sort,
-                                            contentDescription = stringResource(R.string.cd_sort)
-                                        )
                                     }
                                 }
                             )

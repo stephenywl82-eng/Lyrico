@@ -58,16 +58,17 @@ import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.HorizontalDivider
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -272,19 +273,52 @@ fun AlbumsPage(
                                 contentDescription = stringResource(R.string.cd_search)
                             )
                         }
-                        OverlayIconDropdownMenu(
-                            entries = listOf(
-                                albumGridColumnsDropdownEntry(
-                                    columns = albumGridColumns,
-                                    onColumnsChange = viewModel::setGridColumns
-                                ),
-                                albumSortDropdownEntry(sortInfo, viewModel::onSortChange),
-                            )
-                        ) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = !menuExpanded }) {
                             Icon(
                                 imageVector = LucideIcons.Sort,
                                 contentDescription = stringResource(R.string.cd_sort)
                             )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            listOf(2, 3, 4).forEach { count ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.album_grid_columns_format, count)) },
+                                    trailingIcon = if (albumGridColumns == count) {
+                                        { Icon(LucideIcons.Check, contentDescription = null) }
+                                    } else null,
+                                    onClick = {
+                                        viewModel.setGridColumns(count)
+                                        menuExpanded = false
+                                    }
+                                )
+                            }
+                            HorizontalDivider()
+                            AlbumSortBy.entries.forEach { sortBy ->
+                                val isSelected = sortInfo.sortBy == sortBy
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(sortBy.labelRes)) },
+                                    trailingIcon = if (isSelected) {
+                                        { Icon(LucideIcons.Check, contentDescription = null) }
+                                    } else null,
+                                    onClick = {
+                                        viewModel.onSortChange(
+                                            AlbumSortInfo(
+                                                sortBy = sortBy,
+                                                order = if (isSelected && sortInfo.order == SortOrder.ASC) {
+                                                    SortOrder.DESC
+                                                } else {
+                                                    SortOrder.ASC
+                                                }
+                                            )
+                                        )
+                                        menuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 )
@@ -355,57 +389,3 @@ private fun buildAlbumSummary(
     ).joinToString(" ")
 }
 
-@Composable
-private fun albumGridColumnsDropdownEntry(
-    columns: Int,
-    onColumnsChange: (Int) -> Unit
-): DropdownEntry {
-    return DropdownEntry(
-        items = listOf(2, 3, 4).map { count ->
-            DropdownItem(
-                text = stringResource(R.string.album_grid_columns_format, count),
-                selected = columns == count,
-                onClick = { onColumnsChange(count) }
-            )
-        }
-    )
-}
-
-@Composable
-private fun albumSortDropdownEntry(
-    sortInfo: AlbumSortInfo,
-    onSortChange: (AlbumSortInfo) -> Unit
-): DropdownEntry {
-    return DropdownEntry(
-        items = AlbumSortBy.entries.map { sortBy ->
-            val isSelected = sortInfo.sortBy == sortBy
-            DropdownItem(
-                text = stringResource(sortBy.labelRes),
-                selected = isSelected,
-                summary = if (isSelected) {
-                    stringResource(
-                        if (sortInfo.order == SortOrder.ASC) {
-                            R.string.sort_ascending
-                        } else {
-                            R.string.sort_descending
-                        }
-                    )
-                } else {
-                    null
-                },
-                onClick = {
-                    onSortChange(
-                        AlbumSortInfo(
-                            sortBy = sortBy,
-                            order = if (isSelected && sortInfo.order == SortOrder.ASC) {
-                                SortOrder.DESC
-                            } else {
-                                SortOrder.ASC
-                            }
-                        )
-                    )
-                }
-            )
-        }
-    )
-}

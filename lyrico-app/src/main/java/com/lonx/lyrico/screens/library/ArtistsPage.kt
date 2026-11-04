@@ -80,16 +80,16 @@ import my.nanihadesuka.compose.InternalLazyVerticalGridScrollbar
 import my.nanihadesuka.compose.ScrollbarSelectionMode
 import my.nanihadesuka.compose.ScrollbarSettings
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Text
 
 private val SECTIONS_ASC = listOf("0") + ('A'..'Z').map { it.toString() } + listOf("#")
 private val SECTIONS_DESC = SECTIONS_ASC.asReversed()
@@ -338,15 +338,39 @@ fun ArtistsPage(
                                     contentDescription = stringResource(R.string.cd_search)
                                 )
                             }
-                            OverlayIconDropdownMenu(
-                                entries = listOf(
-                                    artistSortDropdownEntry(sortInfo, viewModel::onSortChange),
-                                )
-                            ) {
+                            var sortMenuExpanded by remember { mutableStateOf(false) }
+                            IconButton(onClick = { sortMenuExpanded = !sortMenuExpanded }) {
                                 Icon(
                                     imageVector = LucideIcons.Sort,
                                     contentDescription = stringResource(R.string.cd_sort)
                                 )
+                            }
+                            DropdownMenu(
+                                expanded = sortMenuExpanded,
+                                onDismissRequest = { sortMenuExpanded = false }
+                            ) {
+                                ArtistSortBy.entries.forEach { sortBy ->
+                                    val isSelected = sortInfo.sortBy == sortBy
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(sortBy.labelRes)) },
+                                        trailingIcon = if (isSelected) {
+                                            { Icon(LucideIcons.Check, contentDescription = null) }
+                                        } else null,
+                                        onClick = {
+                                            viewModel.onSortChange(
+                                                ArtistSortInfo(
+                                                    sortBy = sortBy,
+                                                    order = if (isSelected && sortInfo.order == SortOrder.ASC) {
+                                                        SortOrder.DESC
+                                                    } else {
+                                                        SortOrder.ASC
+                                                    }
+                                                )
+                                            )
+                                            sortMenuExpanded = false
+                                        }
+                                    )
+                                }
                             }
 
                         }
@@ -439,43 +463,4 @@ fun ArtistsPage(
         onDismissFinished = { if (!showCrop) { cropTarget = null; cropBitmap = null } }
     )
     ArtistPosterRemovalHost(removalViewModel, pendingRemoval, { pendingRemoval = emptySet() }, showProgress = false)
-}
-
-@Composable
-private fun artistSortDropdownEntry(
-    sortInfo: ArtistSortInfo,
-    onSortChange: (ArtistSortInfo) -> Unit
-): DropdownEntry {
-    return DropdownEntry(
-        items = ArtistSortBy.entries.map { sortBy ->
-            val isSelected = sortInfo.sortBy == sortBy
-            DropdownItem(
-                text = stringResource(sortBy.labelRes),
-                selected = isSelected,
-                summary = if (isSelected) {
-                    stringResource(
-                        if (sortInfo.order == SortOrder.ASC) {
-                            R.string.sort_ascending
-                        } else {
-                            R.string.sort_descending
-                        }
-                    )
-                } else {
-                    null
-                },
-                onClick = {
-                    onSortChange(
-                        ArtistSortInfo(
-                            sortBy = sortBy,
-                            order = if (isSelected && sortInfo.order == SortOrder.ASC) {
-                                SortOrder.DESC
-                            } else {
-                                SortOrder.ASC
-                            }
-                        )
-                    )
-                }
-            )
-        }
-    )
 }
