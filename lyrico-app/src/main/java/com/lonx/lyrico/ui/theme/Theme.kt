@@ -20,7 +20,7 @@ fun LyricoTheme(
 ) {
     val indication = ripple()
     LyricoMiuixTheme(colorMode, keyColor) {
-        LyricoSdwTheme(colorMode) {
+        LyricoSdwTheme(colorMode, keyColor) {
             CompositionLocalProvider(
                 LocalIndication provides indication,
                 content = content,
