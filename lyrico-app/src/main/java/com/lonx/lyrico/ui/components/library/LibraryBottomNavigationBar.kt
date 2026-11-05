@@ -1,26 +1,34 @@
 package com.lonx.lyrico.ui.components.library
 
-import com.lonx.lyrico.ui.components.icons.LucideIcons
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.lonx.lyrico.ui.components.blur.BlurredBar
 import com.lonx.lyrico.data.model.FloatingBarEffect
 import com.lonx.lyrico.screens.library.LibraryTab
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
-import top.yukonga.miuix.kmp.basic.NavigationRail
-import top.yukonga.miuix.kmp.basic.NavigationRailItem
-import top.yukonga.miuix.kmp.blur.LayerBackdrop
+import com.lonx.lyrico.ui.components.blur.BlurredBar
+import com.lonx.lyrico.ui.components.blur.LayerBackdrop
+import com.lonx.lyrico.ui.components.icons.LucideIcons
 
+/**
+ * 阶段6-C：库页导航的纯 M3 Expressive 实现。
+ * 原先 Miuix NavigationBar(icon = ImageVector, label = String) 换成 M3 同名组件
+ * （icon/label 改为 composable lambda、颜色走 NavigationBarItemDefaults 语义色）。
+ */
 @Composable
 fun LibraryBottomNavigationBar(
     tabs: List<LibraryTab>,
@@ -36,7 +44,7 @@ fun LibraryBottomNavigationBar(
     ) {
         NavigationBar(
             modifier = modifier,
-            color = Color.Transparent,
+            containerColor = Color.Transparent,
         ) {
             tabs.forEach { tab ->
                 NavigationBarItem(
@@ -45,8 +53,15 @@ fun LibraryBottomNavigationBar(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onTabSelected(tab)
                     },
-                    icon = tab.icon,
-                    label = stringResource(tab.titleRes)
+                    icon = {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = stringResource(tab.titleRes),
+                            modifier = Modifier.size(24.dp),
+                        )
+                    },
+                    label = { Text(stringResource(tab.titleRes)) },
+                    colors = NavigationBarItemDefaults.colors(),
                 )
             }
         }
@@ -58,12 +73,10 @@ fun LibraryNavigationRail(
     tabs: List<LibraryTab>,
     selectedTab: LibraryTab,
     onTabSelected: (LibraryTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
-    NavigationRail(
-        modifier = modifier
-    ) {
+    NavigationRail(modifier = modifier) {
         tabs.forEach { tab ->
             NavigationRailItem(
                 selected = tab == selectedTab,
@@ -71,17 +84,21 @@ fun LibraryNavigationRail(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onTabSelected(tab)
                 },
-                icon = tab.icon,
-                label = stringResource(tab.titleRes)
+                icon = {
+                    Icon(
+                        imageVector = tab.icon,
+                        contentDescription = stringResource(tab.titleRes),
+                        modifier = Modifier.size(24.dp),
+                    )
+                },
+                label = { Text(stringResource(tab.titleRes)) },
+                colors = NavigationRailItemDefaults.colors(),
             )
         }
     }
 }
 
-/**
- * 手机端悬浮底栏。模糊和液态玻璃都需要 Android 13+ 的 RenderEffect，
- * 不支持时自动降级为描边样式。
- */
+/** 手机端悬浮底栏：C 批次后统一走纯 M3 语义容器的 [BlurNavigationBarV2]。 */
 @Composable
 fun LibraryBlurBottomBar(
     backdrop: LayerBackdrop?,
@@ -89,7 +106,7 @@ fun LibraryBlurBottomBar(
     tabs: List<LibraryTab>,
     selectedTab: LibraryTab,
     onTabSelected: (LibraryTab) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     BlurNavigationBarV2(
         modifier = modifier,
