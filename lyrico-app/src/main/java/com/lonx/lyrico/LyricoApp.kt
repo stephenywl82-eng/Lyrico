@@ -20,7 +20,7 @@ import com.ramcosta.composedestinations.animations.NavHostAnimatedDestinationSty
 import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
 import com.ramcosta.composedestinations.spec.Direction
-import top.yukonga.miuix.kmp.basic.Surface
+import androidx.compose.material3.Surface
 
 @Composable
 fun LyricoApp(externalUri: Uri?, externalEditRequestId: Long = 0L) {
