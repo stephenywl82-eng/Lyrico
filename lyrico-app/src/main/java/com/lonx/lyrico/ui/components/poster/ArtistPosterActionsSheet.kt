@@ -36,7 +36,7 @@ fun ArtistPosterActionsSheet(
         // SaltUI 3.0.0-beta02 无进度控件，用 Material3 回退并取 Salt 颜色。
         if (posterLoading) {
             
-                top.yukonga.miuix.kmp.basic.CircularProgressIndicator()
+                androidx.compose.material3.CircularProgressIndicator()
             
         }
         ItemMenuAction(

@@ -17,10 +17,9 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.base.AppLinearProgressIndicator
 import com.lonx.lyrico.viewmodel.AlbumActionsUiState
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 
 @Composable
@@ -121,11 +120,14 @@ fun AlbumReplayGainProgressBottomSheet(
                 if (uiState.isCalculatingAlbumReplayGain) onAbort() else onDismissRequest()
             }
             TextButton(
-                text = actionLabel,
                 onClick = onAction,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColorsPrimary(),
-            )
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ),
+            ) {
+                Text(actionLabel)
+            }
         }
     )
 }

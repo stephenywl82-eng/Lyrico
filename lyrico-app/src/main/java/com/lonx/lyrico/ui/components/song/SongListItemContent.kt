@@ -39,7 +39,6 @@ import com.lonx.lyrico.ui.components.CoverRequest
 import com.lonx.lyrico.ui.components.rememberTintedPainter
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.components.library.LibraryItemText as Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
 
 @SuppressLint("DefaultLocale")

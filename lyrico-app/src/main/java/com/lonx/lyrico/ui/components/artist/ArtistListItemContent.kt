@@ -22,7 +22,6 @@ import com.lonx.lyrico.data.model.entity.ArtistEntity
 import com.lonx.lyrico.ui.components.CoverCandidate
 import com.lonx.lyrico.ui.components.cover.CoverImage
 import com.lonx.lyrico.ui.components.library.LibraryItemText as Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
 
 @Composable

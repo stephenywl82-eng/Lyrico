@@ -39,7 +39,6 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.viewmodel.ArtistPosterFile
 import kotlinx.coroutines.flow.distinctUntilChanged
 import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 import androidx.compose.material3.MaterialTheme
 

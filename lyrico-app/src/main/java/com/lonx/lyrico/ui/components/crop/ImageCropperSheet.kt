@@ -11,7 +11,7 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.base.SheetConfirmActions
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
+import androidx.compose.material3.CircularProgressIndicator
 
 /** The crop workflow is shared; each engine keeps its own sheet chrome and confirm affordance. */
 @Composable

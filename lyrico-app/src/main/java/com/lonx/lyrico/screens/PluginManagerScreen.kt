@@ -122,7 +122,7 @@ import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.ui.components.sdw.SdwTextInput
 import java.io.File
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.lonx.lyrico.ui.components.sdw.WindowDialog
 @Composable
 private fun PluginMessage.localizedText(): String = when (this) {
     is PluginMessage.Failure -> stringResource(R.string.plugin_action_failed, reason)

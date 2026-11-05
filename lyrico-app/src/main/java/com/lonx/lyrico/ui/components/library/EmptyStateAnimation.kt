@@ -25,7 +25,6 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.rememberLottieDynamicProperties
 import com.airbnb.lottie.compose.rememberLottieDynamicProperty
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import com.lonx.lyrico.ui.theme.LyricoColors
 import androidx.compose.material3.MaterialTheme
 

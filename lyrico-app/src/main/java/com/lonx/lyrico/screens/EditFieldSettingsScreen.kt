@@ -91,7 +91,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 import com.lonx.lyrico.ui.components.sdw.SdwTextInput
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.lonx.lyrico.ui.components.sdw.WindowDialog
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.rememberOverscrollEffect

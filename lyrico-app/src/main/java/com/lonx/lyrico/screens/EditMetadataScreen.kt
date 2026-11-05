@@ -171,7 +171,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.sdw.SdwTextInput
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.lonx.lyrico.ui.components.sdw.WindowDialog
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.FlowRow
 import com.lonx.lyrico.ui.components.scaffoldContentPadding

@@ -41,7 +41,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.Icon
+import androidx.compose.material3.Icon
 
 internal enum class SponsorMethod(
     @StringRes val titleRes: Int,

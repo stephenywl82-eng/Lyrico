@@ -1,6 +1,5 @@
 package com.lonx.lyrico.ui.components.lyrics
 
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp

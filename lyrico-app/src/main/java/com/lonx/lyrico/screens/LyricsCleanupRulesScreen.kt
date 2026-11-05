@@ -53,7 +53,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import top.yukonga.miuix.kmp.window.WindowDialog
+import com.lonx.lyrico.ui.components.sdw.WindowDialog
 
 @Composable
 @Destination<RootGraph>(route = "lyrics_cleanup_rules")

@@ -43,7 +43,6 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.core.net.toUri
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import androidx.compose.material3.MaterialTheme

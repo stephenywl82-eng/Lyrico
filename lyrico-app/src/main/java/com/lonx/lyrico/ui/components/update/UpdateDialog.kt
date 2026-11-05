@@ -14,7 +14,6 @@ import com.lonx.lyrico.ui.components.base.YesNoDialog
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
 
 @Composable
