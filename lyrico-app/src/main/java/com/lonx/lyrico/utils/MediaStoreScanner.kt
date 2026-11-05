@@ -78,12 +78,11 @@ class MediaStoreScanner(
             selectionParts.add("COALESCE($flag, 0) = ?")
             selectionArgs.add("0")
         }
-        for (pathKeyword in RECORDING_PATH_KEYWORDS) {
-            selectionParts.add("(COALESCE(${MediaStore.Audio.Media.DATA}, '') NOT LIKE ?)")
-            selectionArgs.add("%$pathKeyword%")
-        }
+        // 注意：Android 10（API 29）起禁止在 MediaStore 的 selection / sortOrder 中使用 DATA 列，
+        // 否则 query() 直接抛 IllegalArgumentException。录音/录制类路径的排除改为在游标遍历时做内存过滤
+        // （与 SDWMP3_CN 一致，见 SongRepository.kt），排序也改用 _ID，避免触发该限制导致整机扫描静默返回 0 条。
         val selection = selectionParts.joinToString(" AND ")
-        val sortOrder = "${MediaStore.Audio.Media.DATA} ASC"
+        val sortOrder = "${MediaStore.Audio.Media._ID} ASC"
 
         try {
             context.contentResolver.query(
@@ -106,6 +105,9 @@ class MediaStoreScanner(
                     val displayName = cursor.getString(nameCol) ?: continue
                     val data = cursor.getString(dataCol) ?: continue
                     if (displayName.isBlank() || !isSupportedAudioFile(displayName)) continue
+                    // 内存过滤录制/语音类音频（对应 SDWMP3_CN 的路径关键字黑名单）。
+                    // 不能用 DATA 列做 SQL 过滤，否则 API 29+ 直接抛异常使整机扫描静默返回空。
+                    if (RECORDING_PATH_KEYWORDS.any { kw -> data.contains(kw, ignoreCase = true) }) continue
 
                     val parentDir = File(data).parent ?: continue
                     val uri = ContentUris.withAppendedId(collection, id)

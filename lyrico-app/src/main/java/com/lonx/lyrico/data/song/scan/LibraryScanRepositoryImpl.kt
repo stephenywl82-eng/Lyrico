@@ -382,7 +382,7 @@ class LibraryScanRepositoryImpl(
 
             settingsRepository.saveLastScanTime(System.currentTimeMillis())
             val result = LibraryScanResult(
-                scanned = deviceSongs.size,
+                scanned = deviceSongs.size + mediaStoreSongs.size,
                 inserted = songsToUpsert.count { it.isInsert },
                 updated = songsToUpsert.count { !it.isInsert },
                 deleted = allDeletedUris.size,
