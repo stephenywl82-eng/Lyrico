@@ -54,7 +54,6 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,21 +97,18 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import java.net.URL
-import androidx.compose.material3.CircularProgressIndicator as MaterialCircularProgressIndicator
-import androidx.compose.material3.TextButton as MaterialTextButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import java.net.URL
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -174,7 +170,7 @@ fun SearchResultsScreen(
                     viewModel.performSearch()
                 }
                 
-                    MaterialTextButton(onClick = submit) {
+                    TextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
                             style = MaterialTheme.typography.bodyLarge,
@@ -468,7 +464,7 @@ private fun PaginatedSearchResultList(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator(size = 20.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = stringResource(R.string.search_loading_more),
@@ -488,10 +484,11 @@ private fun PaginatedSearchResultList(
                         contentAlignment = Alignment.Center
                     ) {
                         TextButton(
-                            text = stringResource(R.string.search_load_more_failed),
                             onClick = onLoadMore,
-                            colors = ButtonDefaults.textButtonColorsPrimary()
-                        )
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(stringResource(R.string.search_load_more_failed))
+                        }
                     }
                 }
             }
@@ -505,10 +502,11 @@ private fun PaginatedSearchResultList(
                         contentAlignment = Alignment.Center
                     ) {
                         TextButton(
-                            text = stringResource(R.string.search_load_more),
                             onClick = onLoadMore,
-                            colors = ButtonDefaults.textButtonColorsPrimary()
-                        )
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(stringResource(R.string.search_load_more))
+                        }
                     }
                 }
             }
@@ -710,8 +708,9 @@ fun SearchResultItem(
         Card(
             modifier = Modifier
                 .padding(bottom = 6.dp)
-                .clip(RoundedCornerShape(CardDefaults.CornerRadius))
+                .clip(MaterialTheme.shapes.medium)
                 .clickable(onClick = onClick),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             itemContent()
         }
@@ -1015,7 +1014,7 @@ private fun SearchResultApplyBottomSheet(
                         enabled = !lyricsState.isLoading && song != null,
                         leading = if (lyricsState.isLoading) {
                             {
-                                MaterialCircularProgressIndicator(
+                                CircularProgressIndicator(
                                     modifier = Modifier.size(14.dp),
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                                     strokeWidth = 2.dp,
@@ -1199,8 +1198,8 @@ private fun SearchResultApplyLyricsPage(
                 )
             }
             Checkbox(
-                state = if (selected && option?.enabled == true) ToggleableState.On else ToggleableState.Off,
-                onClick = {
+                checked = selected && option?.enabled == true,
+                onCheckedChange = {
                     if (option?.enabled == true) {
                         onSelectedChange(!selected)
                     }
@@ -1315,8 +1314,8 @@ private fun SearchResultApplyOptionItem(
         }
 
         Checkbox(
-            state = if (selected) ToggleableState.On else ToggleableState.Off,
-            onClick = {
+            checked = selected,
+            onCheckedChange = {
                 if (option.enabled) {
                     onSelectedChange(!selected)
                 }
