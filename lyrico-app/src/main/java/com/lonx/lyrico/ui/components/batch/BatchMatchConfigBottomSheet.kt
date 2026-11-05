@@ -35,7 +35,7 @@ import com.lonx.lyrico.ui.components.sdw.BasicComponent
 import com.lonx.lyrico.ui.components.sdw.Card
 import com.lonx.lyrico.ui.components.sdw.CardDefaults
 import com.lonx.lyrico.ui.components.sdw.Checkbox
-import androidx.compose.material3.Switch
+import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
 import androidx.compose.material3.Text
 import com.lonx.lyrico.ui.components.sdw.CheckboxPreference
 

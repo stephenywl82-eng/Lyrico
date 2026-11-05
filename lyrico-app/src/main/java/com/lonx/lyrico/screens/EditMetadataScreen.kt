@@ -163,7 +163,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Switch
+import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -2250,6 +2250,8 @@ private fun MetadataInputField(
                 textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 label = fieldLabel,
+                // 与 RatingField / 封面卡一致的语义容器色，恢复字段分类框（阶段4 迁移时丢失）。
+                backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
                 lineLimits = TextFieldLineLimits.MultiLine(
                     minHeightInLines = 10,
                     maxHeightInLines = if (limitMultilineLines) {
@@ -2267,6 +2269,8 @@ private fun MetadataInputField(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             label = fieldLabel,
+            // 与 RatingField / 封面卡一致的语义容器色，恢复字段分类框（阶段4 迁移时丢失）。
+            backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
             actionContent = if (isModified) {
                 {
                     IconButton(onClick = onRevert) {

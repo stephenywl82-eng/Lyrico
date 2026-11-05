@@ -44,6 +44,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
+            android:enableOnBackInvokedCallback="true"
             android:theme="@style/Theme.Lyrico">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

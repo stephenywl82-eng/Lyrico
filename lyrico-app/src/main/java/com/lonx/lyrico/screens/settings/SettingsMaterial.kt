@@ -1,5 +1,7 @@
 package com.lonx.lyrico.screens.settings
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
+import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -454,18 +456,24 @@ private fun SectionIcon(
     modifier: Modifier = Modifier,
 ) {
     val base = sectionOnContainerColor()
+    // M3 Expressive：启用/禁用切换时图标带弹性缩放反馈，与 ExpressiveSwitch 呼应。
+    val iconSize by animateDpAsState(
+        targetValue = if (enabled) 22.dp else 18.dp,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
+        label = "sectionIconSize",
+    )
     Box(
         modifier = modifier
             .size(40.dp)
             .clip(CircleShape)
-            .background(sectionContainerColor()),
+            .background(sectionContainerColor().let { if (enabled) it else it.copy(alpha = 0.5f) }),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             icon,
             contentDescription = null,
             tint = if (enabled) base else base.copy(alpha = 0.38f),
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier.size(iconSize),
         )
     }
 }

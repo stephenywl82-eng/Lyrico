@@ -103,7 +103,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Switch
+import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -1292,7 +1292,9 @@ private fun BasicComponent(
         if (startAction != null) {
             Box(modifier = Modifier.padding(end = 12.dp)) { startAction() }
         }
-        Box(modifier = Modifier.weight(1f)) { content() }
+        // 必须用 Column：content 里是「标题 Row + 多行说明 Text」，放进 Box 会全部层叠
+        // （插件包预览里插件名/id/版本/类型/路径相互重叠的根因）。
+        Column(modifier = Modifier.weight(1f)) { content() }
         if (endActions != null) {
             endActions()
         }
