@@ -36,16 +36,16 @@ import com.lonx.lyrico.platform.player.InstalledAppChecker
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 
 import org.koin.compose.koinInject
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.core.net.toUri
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.BasicComponent
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import com.lonx.lyrico.ui.components.sdw.SmallTitle
+import androidx.compose.material3.Text
+import com.lonx.lyrico.ui.components.sdw.ArrowPreference
 
 @Composable
 fun PlayerPickerBottomSheet(

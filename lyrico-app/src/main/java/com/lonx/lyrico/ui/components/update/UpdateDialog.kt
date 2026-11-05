@@ -12,9 +12,9 @@ import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.base.YesNoDialog
 import dev.jeziellago.compose.markdowntext.MarkdownText
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
 
 @Composable
 fun UpdateDialog(

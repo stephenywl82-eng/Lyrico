@@ -30,12 +30,12 @@ import com.lonx.lyrico.data.model.lyrics.normalizedLyricLineOrder
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.BasicComponent
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 
 @Composable
 fun LyricLineOrderBottomSheetContent(

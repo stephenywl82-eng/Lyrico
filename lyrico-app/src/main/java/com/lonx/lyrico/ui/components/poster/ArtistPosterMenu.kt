@@ -22,10 +22,10 @@ import com.lonx.lyrico.ui.components.base.ItemMenuAction
 import com.lonx.lyrico.domain.poster.ArtistPictureEntry
 import com.lonx.lyrico.domain.poster.ArtistPosterGrouping
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.preference.ArrowPreference
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
+import com.lonx.lyrico.ui.components.sdw.ArrowPreference
 
 /**
  * 「艺术家海报」的两个面板（操作菜单、目标选择）以及它们的选中状态。

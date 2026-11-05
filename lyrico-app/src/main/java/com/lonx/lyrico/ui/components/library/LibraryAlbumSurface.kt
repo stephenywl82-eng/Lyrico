@@ -8,10 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
 import androidx.compose.material3.MaterialTheme
 import com.lonx.lyrico.ui.theme.LocalHapticEnabled
+import com.lonx.lyrico.ui.components.sdw.BasicComponent
+import com.lonx.lyrico.ui.components.sdw.Card
 
 /**
  * 专辑卡片容器（Miuix）。

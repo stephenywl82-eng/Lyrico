@@ -30,14 +30,14 @@ import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.ui.components.base.ConcurrencyDropdown
 import com.lonx.lyrico.viewmodel.BatchMatchType
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.Switch
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.BasicComponent
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
+import com.lonx.lyrico.ui.components.sdw.Checkbox
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import com.lonx.lyrico.ui.components.sdw.CheckboxPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

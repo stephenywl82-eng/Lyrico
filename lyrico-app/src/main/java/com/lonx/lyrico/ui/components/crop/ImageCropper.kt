@@ -39,8 +39,6 @@ import androidx.compose.ui.unit.toSize
 import androidx.core.graphics.scale
 import com.lonx.lyrico.R
 
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.preference.WindowSpinnerPreference
 import kotlin.math.abs
@@ -48,6 +46,8 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
 
 // ============================================================
 // 裁剪状态持有者 —— 供外部读取和触发裁剪

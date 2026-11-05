@@ -8,10 +8,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.BasicComponent
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 
 @Composable
 fun FabMenuItem(

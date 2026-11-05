@@ -10,9 +10,9 @@ import androidx.compose.ui.res.stringResource
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.ui.components.base.ConcurrencyDropdown
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
 
 @Composable
 fun BatchRGConfigBottomSheet(
