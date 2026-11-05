@@ -3,6 +3,7 @@ package com.lonx.lyrico.utils
 import android.content.ContentUris
 import android.content.Context
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import com.lonx.lyrico.data.model.SongFile
@@ -52,6 +53,9 @@ class MediaStoreScanner(
             if (isAudiobookColumnAvailable) {
                 add(MediaStore.Audio.Media.IS_AUDIOBOOK)
             }
+            // API 29+ 重建路径兜底用：DATA 为 null 时改用 RELATIVE_PATH + DISPLAY_NAME
+            add(MediaStore.Audio.Media.RELATIVE_PATH)
+            add(MediaStore.Audio.Media.VOLUME_NAME)
         }.toTypedArray()
 
         // 对齐 SDWMP3_CN：不在 SQL 层用 IS_MUSIC 过滤。
@@ -96,12 +100,26 @@ class MediaStoreScanner(
                 val addedCol = cursor.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
                 val durCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
                 val sizeCol = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE)
+                val relPathCol = cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH)
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idCol)
                     val displayName = cursor.getString(nameCol) ?: continue
-                    val data = cursor.getString(dataCol) ?: continue
                     if (displayName.isBlank() || !isSupportedAudioFile(displayName)) continue
+                    // API 29+ 仅持 READ_MEDIA_AUDIO 时，整机查询的 DATA 列被 MediaProvider 置为 null，
+                    // 直接 getString(DATA) 拿到 null 会让全部歌曲被 `?: continue` 跳过 → scanned 恒为 0。
+                    // 故优先用 DATA；为 null 时改用 RELATIVE_PATH + DISPLAY_NAME 重建路径。
+                    val rawData = cursor.getString(dataCol)
+                    val data = if (!rawData.isNullOrBlank()) {
+                        rawData
+                    } else {
+                        val rel = if (relPathCol >= 0) cursor.getString(relPathCol) else null
+                        buildString {
+                            append(volumeRootPath())
+                            if (!rel.isNullOrBlank()) append('/').append(rel.trimEnd('/'))
+                            append('/').append(displayName)
+                        }
+                    }
                     // 内存过滤录制/语音类音频（对应 SDWMP3_CN 的路径关键字黑名单）。
                     // 不能用 DATA 列做 SQL 过滤，否则 API 29+ 直接抛异常使整机扫描静默返回空。
                     if (RECORDING_PATH_KEYWORDS.any { kw -> data.contains(kw, ignoreCase = true) }) continue
@@ -130,12 +148,19 @@ class MediaStoreScanner(
                         )
                     )
                 }
+                Log.i(tag, "queryAllAudio: cursor=${cursor.count}, collected=${songs.size}")
             }
         } catch (e: Exception) {
             Log.e(tag, "Failed to query MediaStore audio", e)
         }
 
         return songs
+    }
+
+    /** DATA 为 null 时重建路径用的卷根：主外部存储（绝大多数用户音乐所在）。
+     *  次级卷（SD 卡）路径可能不精确，但歌曲仍会被正常扫描。 */
+    private fun volumeRootPath(): String {
+        return Environment.getExternalStorageDirectory().absolutePath.trimEnd('/')
     }
 
     /** 取路径前三个分段作为卷根，例如 /storage/emulated/0 或 /storage/ABCD-1234 */
