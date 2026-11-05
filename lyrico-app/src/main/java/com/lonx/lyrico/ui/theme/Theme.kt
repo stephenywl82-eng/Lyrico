@@ -9,7 +9,7 @@ import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.ui.theme.sdw.LyricoSdwTheme
 
 /**
- * Lyrico 统一主题（M3 Expressive 内层 + Miuix 外层，后者在阶段6 收尾时移除）。
+ * Lyrico 统一主题（纯 M3 Expressive，阶段6 收尾后已移除 Miuix 外层）。
  * [keyColor] 保留签名兼容但主题层不再消费用户选色：默认走壁纸 dynamic / 系统默认主题色。
  * [hapticEnabled] 全站震动反馈开关，默认 false（关闭）。
  */
@@ -22,13 +22,11 @@ fun LyricoTheme(
 ) {
     val indication = ripple()
     ProvideHapticFeedback(enabled = hapticEnabled) {
-        LyricoMiuixTheme(colorMode, keyColor) {
-            LyricoSdwTheme(colorMode, keyColor) {
-                CompositionLocalProvider(
-                    LocalIndication provides indication,
-                    content = content,
-                )
-            }
+        LyricoSdwTheme(colorMode, keyColor) {
+            CompositionLocalProvider(
+                LocalIndication provides indication,
+                content = content,
+            )
         }
     }
 }

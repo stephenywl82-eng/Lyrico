@@ -40,8 +40,7 @@ import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.utils.MiuixPopupUtils.Companion.MiuixPopupHost
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
 
 internal fun requiredStartupPermissions(
@@ -186,7 +185,6 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
                 }
 
                 Scaffold(
-                    popupHost = { MiuixPopupHost() },
                     containerColor = MaterialTheme.colorScheme.background,
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) {
