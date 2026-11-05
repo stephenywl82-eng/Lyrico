@@ -11,7 +11,7 @@ import com.lonx.lyrico.ui.components.LocalScaffoldIncludesStartPadding
 import com.lonx.lyrico.ui.components.blur.*
 import com.lonx.lyrico.ui.components.library.*
 import com.lonx.lyrico.ui.components.scaffoldBottomPadding
-import top.yukonga.miuix.kmp.basic.Scaffold
+import androidx.compose.material3.Scaffold
 
 @Composable
 internal fun LibraryHomeMiuix(

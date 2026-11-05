@@ -6,16 +6,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -26,16 +23,12 @@ internal fun LibraryDetailPageMiuix(
     snackbarHost: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
 ) {
-    top.yukonga.miuix.kmp.basic.Scaffold(
+    Scaffold(
         topBar = topBar,
         snackbarHost = snackbarHost,
         content = content,
     )
 }
-
-@Composable
-internal fun Modifier.libraryDetailScrollMiuix(behavior: ScrollBehavior): Modifier =
-    scrollEndHaptic().overScrollVertical().nestedScroll(behavior.nestedScrollConnection)
 
 @Composable
 internal fun LibraryDetailIconButtonMiuix(

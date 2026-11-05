@@ -19,7 +19,7 @@ internal enum class SectionTone { Primary, Secondary, Tertiary }
 
 internal val LocalSectionTone = staticCompositionLocalOf { SectionTone.Primary }
 
-/** Shared settings definitions; native controls live in SettingsSalt/SettingsMiuix. */
+/** Shared settings definitions; M3 Expressive controls live in SettingsMaterial. */
 @Composable
 internal fun SettingsPage(
     initialized: Boolean,
