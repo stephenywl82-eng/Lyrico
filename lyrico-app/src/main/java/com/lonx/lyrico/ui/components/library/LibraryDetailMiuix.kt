@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
 
 /** Detail pages share layout and actions; M3 Expressive implementation, themed by SDW. */
 @Composable
@@ -24,7 +25,12 @@ internal fun LibraryDetailPageMiuix(
     content: @Composable (PaddingValues) -> Unit,
 ) {
     Scaffold(
-        topBar = topBar,
+        topBar = {
+            // 与搜索系列页面一致：M3 Scaffold 不替 topBar 消费状态栏 insets，
+            // 各 screen 的 TopAppBar 又是 windowInsets = 0，所以由这里统一补安全区，
+            // 否则详情标题会顶到状态栏（E 批次换 Scaffold 后的回归）。
+            Box(Modifier.scaffoldTopAppBarInsetsPadding()) { topBar() }
+        },
         snackbarHost = snackbarHost,
         content = content,
     )
