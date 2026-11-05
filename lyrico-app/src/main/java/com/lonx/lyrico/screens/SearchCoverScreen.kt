@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,7 +28,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TextButton as MaterialTextButton
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -70,15 +71,13 @@ import com.ramcosta.composedestinations.result.ResultBackNavigator
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collectLatest
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.CircularProgressIndicator
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -151,7 +150,7 @@ fun SearchCoverScreen(
                     viewModel.performCoverSearch()
                 }
                 
-                    MaterialTextButton(onClick = submit) {
+                    TextButton(onClick = submit) {
                         Text(
                             text = stringResource(id = R.string.action_search),
                             style = MaterialTheme.typography.bodyLarge,
@@ -351,7 +350,7 @@ private fun SearchCoverContent(
                                         horizontalArrangement = Arrangement.Center,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        CircularProgressIndicator(size = 20.dp)
+                                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = stringResource(R.string.search_loading_more),
@@ -374,14 +373,15 @@ private fun SearchCoverContent(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         TextButton(
-                                            text = stringResource(R.string.search_load_more_failed),
                                             onClick = {
                                                 viewModel.loadNextPage(
                                                     loadMoreError.first
                                                 )
                                             },
-                                            colors = ButtonDefaults.textButtonColorsPrimary()
-                                        )
+                                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                                        ) {
+                                            Text(stringResource(R.string.search_load_more_failed))
+                                        }
                                     }
                                 }
                             }
@@ -398,12 +398,13 @@ private fun SearchCoverContent(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         TextButton(
-                                            text = stringResource(R.string.search_load_more),
                                             onClick = {
                                                 viewModel.loadNextPage(source?.id)
                                             },
-                                            colors = ButtonDefaults.textButtonColorsPrimary()
-                                        )
+                                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                                        ) {
+                                            Text(stringResource(R.string.search_load_more))
+                                        }
                                     }
                                 }
                             }
@@ -451,7 +452,7 @@ fun CoverGridItem(
     val cardContent: @Composable () -> Unit = {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(CardDefaults.CornerRadius))
+                .clip(MaterialTheme.shapes.medium)
                 .clickable(onClick = onClick),
         ) {
             Box(
@@ -563,10 +564,7 @@ fun CoverGridItem(
     }
 
         Card(
-            modifier = Modifier,
-            colors = CardDefaults.defaultColors(
-                color = MaterialTheme.colorScheme.secondaryContainer
-            )
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
         ) { cardContent() }
     
 }
