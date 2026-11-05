@@ -38,9 +38,13 @@ import coil3.request.ImageRequest
 import com.lonx.lyrico.R
 import com.lonx.lyrico.viewmodel.ArtistPosterFile
 import kotlinx.coroutines.flow.distinctUntilChanged
-import top.yukonga.miuix.kmp.basic.*
 import kotlin.math.abs
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 
 @Composable
 internal fun PreviewAction(icon: ImageVector, label: String, enabled: Boolean,

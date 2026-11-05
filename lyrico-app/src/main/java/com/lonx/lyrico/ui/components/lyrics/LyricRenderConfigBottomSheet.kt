@@ -27,12 +27,12 @@ import com.lonx.lyrico.data.model.lyrics.LyricLineTrack
 import com.lonx.lyrico.data.model.lyrics.visibleLyricLineTracks
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
 import androidx.compose.material3.MaterialTheme
 import com.lonx.lyrico.ui.components.sdw.Card
 import com.lonx.lyrico.ui.components.sdw.CardDefaults
 import com.lonx.lyrico.ui.components.sdw.ArrowPreference
 import com.lonx.lyrico.ui.components.sdw.SwitchPreference
+import com.lonx.lyrico.ui.components.sdw.WindowDropdownPreference
 
 @Composable
 fun LyricRenderConfigBottomSheet(

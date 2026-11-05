@@ -24,10 +24,19 @@ import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
 import com.lonx.lyrico.ui.components.base.PillButtonSize
 import com.lonx.lyrico.ui.components.base.SheetConfirmActions
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
-import top.yukonga.miuix.kmp.window.WindowListPopup
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.RadioButtonPreference
+import com.lonx.lyrico.ui.components.sdw.WindowListPopup
+import com.lonx.lyrico.ui.components.sdw.Card
+import com.lonx.lyrico.ui.components.sdw.CardDefaults
+import com.lonx.lyrico.ui.components.sdw.DropdownItem
+import com.lonx.lyrico.ui.components.sdw.DropdownImpl
+import com.lonx.lyrico.ui.components.sdw.DropdownEntry
+import com.lonx.lyrico.ui.components.sdw.ListPopupColumn
+import com.lonx.lyrico.ui.components.sdw.ListPopupDefaults
+import com.lonx.lyrico.ui.components.sdw.PopupPositionProvider
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 
 @Composable
 fun LyricsActionButton(text: String, enabled: Boolean = true, primary: Boolean = false, onCard: Boolean = false,

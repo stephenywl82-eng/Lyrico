@@ -37,9 +37,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.sdw.WindowIconDropdownMenu
+import com.lonx.lyrico.ui.components.sdw.DropdownItem
+import com.lonx.lyrico.ui.components.sdw.DropdownEntry
+import com.lonx.lyrico.ui.components.sdw.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 private data class PreviewCrop(val key: String, val media: PosterPreviewMedia, val bitmap: android.graphics.Bitmap)
 
