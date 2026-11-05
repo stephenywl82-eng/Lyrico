@@ -85,17 +85,16 @@ import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import androidx.compose.material3.TopAppBarDefaults
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.Color
 
 @Composable
 @Destination<RootGraph>(route = "local_search")
@@ -124,7 +123,7 @@ fun LocalSearchScreen(
     } else {
         null
     }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val selectionScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -218,8 +217,13 @@ fun LocalSearchScreen(
                                 onClose = selectionViewModel::exitSelectionMode
                             )
                         } else {
-                            SmallTopAppBar(
-                                title = stringResource(R.string.local_search_title),
+                            TopAppBar(
+                                title = {
+                                    Text(
+                                        stringResource(R.string.local_search_title),
+                                        style = MaterialTheme.typography.titleLarge
+                                    )
+                                },
                                 navigationIcon = {
                                     IconButton(onClick = { navigator.popBackStack() }) {
                                         Icon(
@@ -228,6 +232,11 @@ fun LocalSearchScreen(
                                         )
                                     }
                                 },
+                                colors = TopAppBarDefaults.topAppBarColors(
+                                    containerColor = Color.Transparent,
+                                    scrolledContainerColor = Color.Transparent
+                                ),
+                                windowInsets = WindowInsets(0.dp),
                                 scrollBehavior = topAppBarScrollBehavior
                             )
                         }
@@ -428,7 +437,7 @@ private fun LocalSearchResultsPage(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     contentPaddingValues: PaddingValues,
     salt: Boolean,
     onArtistClick: (ArtistEntity) -> Unit,
@@ -443,17 +452,14 @@ private fun LocalSearchResultsPage(
     val hasResults = hasResultsForTab(tab, uiState, searchQuery)
 
     LazyColumn(
-        modifier = (Modifier
-            .scrollEndHaptic()
-            .overScrollVertical()
-            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
+        modifier = Modifier
+            .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
             .fillMaxHeight(),
         state = listState,
         contentPadding = scaffoldContentPadding(
             paddingValues = contentPaddingValues,
             bottomExtra = 12.dp
-        ),
-        overscrollEffect = null
+        )
     ) {
         if (searchQuery.isNotBlank() && !hasResults) {
             item {
@@ -789,7 +795,7 @@ private fun LocalSearchPages(
     selectedSongUris: Set<String>,
     swipeSelectionLabel: String,
     swipeSelectionSecondaryLabel: String?,
-    topAppBarScrollBehavior: ScrollBehavior,
+    topAppBarScrollBehavior: TopAppBarScrollBehavior,
     contentPaddingValues: PaddingValues,
     salt: Boolean,
     onArtistClick: (ArtistEntity) -> Unit,
