@@ -53,7 +53,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -91,39 +90,39 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.Checkbox
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Switch
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.compose.material3.MaterialTheme.colorScheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import top.yukonga.miuix.kmp.window.WindowDialog
-import java.io.File
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.rememberOverscrollEffect
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.semantics.Role
 import com.lonx.lyrico.ui.components.base.PillButton
 import com.lonx.lyrico.ui.components.base.PillButtonDefaults
 import com.lonx.lyrico.ui.components.base.PillButtonSize
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
-import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.components.blur.BlurredTopBar
+import com.lonx.lyrico.ui.components.blur.blurSource
+import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
+import com.lonx.lyrico.ui.components.library.libraryDetailScroll
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
+import java.io.File
+import top.yukonga.miuix.kmp.window.WindowDialog
 @Composable
 private fun PluginMessage.localizedText(): String = when (this) {
     is PluginMessage.Failure -> stringResource(R.string.plugin_action_failed, reason)
@@ -205,7 +204,8 @@ fun PluginManagerScreen(
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val topBarBackdrop = rememberBarBlurBackdrop()
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -244,17 +244,17 @@ fun PluginManagerScreen(
         title = stringResource(id = R.string.plugin_manager_title),
         onBack = { navigator.navigateUp() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(id = R.string.plugin_manager_title),
-                navigationIcon = {
-                    IconButton(onClick = { navigator.navigateUp() }) {
-                        Icon(
-                            imageVector = LucideIcons.ArrowLeft,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                actions = {
+            BlurredTopBar(backdrop = topBarBackdrop) {
+                TopAppBar(
+                    title = { Text(stringResource(id = R.string.plugin_manager_title), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.navigateUp() }) {
+                            Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
+                        }
+                    },
+                    actions = {
                     IconButton(
                         onClick = toggleCompactMode
                     ) {
@@ -287,11 +287,14 @@ fun PluginManagerScreen(
                 },
                 scrollBehavior = topAppBarScrollBehavior
             )
+            }
         }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .blurSource(topBarBackdrop)
+                .libraryDetailScroll(topAppBarScrollBehavior)
                 .padding(scaffoldTopHorizontalPadding(paddingValues))
         ) {
             val typeTabs = PluginTypeTab.entries.map { stringResource(it.labelRes) }
@@ -303,13 +306,21 @@ fun PluginManagerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .padding(top = 8.dp)
+                        .padding(top = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    TabRowWithContour(
-                        tabs = typeTabs,
+                    TabRow(
                         selectedTabIndex = selectedTypeTab.ordinal,
-                        onTabSelected = onTypeTabSelected
-                    )
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        typeTabs.forEachIndexed { index, label ->
+                            Tab(
+                                selected = index == selectedTypeTab.ordinal,
+                                onClick = { onTypeTabSelected(index) },
+                                text = { Text(label) }
+                            )
+                        }
+                    }
                 }
 
                 Text(
@@ -319,16 +330,13 @@ fun PluginManagerScreen(
                     modifier = Modifier.padding(12.dp)
                 )
             
-            LazyColumn(
-                state = lazyListState,
-                modifier = (Modifier
-                    .scrollEndHaptic()
-                    .overScrollVertical()
-                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
-                    .fillMaxHeight(),
-                contentPadding = PaddingValues(bottom = 12.dp),
-                overscrollEffect = null,
-            ) {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
+                    contentPadding = PaddingValues(bottom = 12.dp),
+                ) {
                 if (currentList.isEmpty()) {
                     item("empty") {
                         IllustratedEmptyState(
@@ -368,7 +376,7 @@ fun PluginManagerScreen(
                                 .padding(horizontal = 12.dp)
                                 .padding(bottom = if (compactMode) 6.dp else 12.dp)
                                 .clip(
-                                    RoundedCornerShape(CardDefaults.CornerRadius)
+                                    MaterialTheme.shapes.medium
                                 )
                                 .longPressDraggableHandle(
                                     onDragStarted = {
@@ -448,11 +456,11 @@ fun PluginManagerScreen(
         }
     ) {
         Column {
-            TextField(
-                modifier = Modifier.fillMaxWidth(),
+            SdwTextInput(
                 state = nameState,
                 label = stringResource(R.string.plugin_custom_name),
                 lineLimits = TextFieldLineLimits.SingleLine,
+                modifier = Modifier.fillMaxWidth(),
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
@@ -468,15 +476,13 @@ fun PluginManagerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = {
                         showRenameDialog = false
                     },
                     modifier = Modifier.weight(1f)
-                )
+                ) { Text(stringResource(R.string.cancel)) }
                 Spacer(modifier = Modifier.width(20.dp))
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = {
                         showRenameDialog = false
                         pendingRenamePluginId?.let { id ->
@@ -484,8 +490,8 @@ fun PluginManagerScreen(
                         }
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) { Text(stringResource(R.string.confirm)) }
             }
         }
     }
@@ -599,9 +605,7 @@ private fun PluginImportCandidateItem(
         .joinToString(" / ")
 
     Card(
-        colors = CardDefaults.defaultColors(
-            color = colorScheme.secondaryContainer,
-        )
+        colors = CardDefaults.cardColors(containerColor = colorScheme.secondaryContainer)
     ) {
         BasicComponent(
             insideMargin = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
@@ -617,8 +621,8 @@ private fun PluginImportCandidateItem(
             },
             endActions = {
                 Checkbox(
-                    state = if (selected) ToggleableState.On else ToggleableState.Off,
-                    onClick = {
+                    checked = selected,
+                    onCheckedChange = {
                         onCheckedChange(!selected)
                     }
                 )
@@ -733,9 +737,7 @@ private fun PluginImportFailedItem(
     }
 
     Card(
-        colors = CardDefaults.defaultColors(
-            color = colorScheme.errorContainer
-        )
+        colors = CardDefaults.cardColors(containerColor = colorScheme.errorContainer)
     ) {
         BasicComponent(
             onClick = {
@@ -906,12 +908,13 @@ fun PluginItem(
 
     Card(
         modifier = modifier,
-        insideMargin = PaddingValues(16.dp),
         onClick = {
             if (hasDescription) expanded = !expanded
-        }
+        },
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
+            Modifier.padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1078,9 +1081,10 @@ private fun CompactPluginItem(
 
     Card(
         modifier = modifier,
-        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -1267,4 +1271,45 @@ private fun PluginActionChip(
             modifier = Modifier.padding(start = 5.dp, end = 2.dp)
         )
     }
+}
+
+@Composable
+private fun BasicComponent(
+    modifier: Modifier = Modifier,
+    insideMargin: PaddingValues = PaddingValues(0.dp),
+    onClick: (() -> Unit)? = null,
+    startAction: (@Composable () -> Unit)? = null,
+    endActions: (@Composable () -> Unit)? = null,
+    content: @Composable () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(insideMargin),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (startAction != null) {
+            Box(modifier = Modifier.padding(end = 12.dp)) { startAction() }
+        }
+        Box(modifier = Modifier.weight(1f)) { content() }
+        if (endActions != null) {
+            endActions()
+        }
+    }
+}
+
+@Composable
+private fun SmallTitle(
+    text: String,
+    modifier: Modifier = Modifier,
+    insideMargin: PaddingValues = PaddingValues(0.dp),
+    textColor: Color? = null,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = textColor ?: MaterialTheme.colorScheme.onSurface,
+        modifier = modifier.padding(insideMargin)
+    )
 }
