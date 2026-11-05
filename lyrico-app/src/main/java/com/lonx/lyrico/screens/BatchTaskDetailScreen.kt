@@ -37,21 +37,29 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.TabRowWithContour
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import androidx.compose.foundation.rememberOverscrollEffect
-import androidx.compose.ui.res.painterResource
-import com.lonx.lyrico.ui.components.library.LibraryDetailTabs
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import com.lonx.lyrico.ui.components.blur.BlurredTopBar
+import com.lonx.lyrico.ui.components.blur.blurSource
+import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
+import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 
 enum class TaskDetailTab(val labelRes: Int) {
     SUCCEEDED(R.string.batch_task_status_succeeded),
@@ -68,7 +76,8 @@ fun BatchTaskDetailScreen(
     val viewModel: BatchTaskDetailViewModel = koinViewModel { parametersOf(taskId) }
     val task by viewModel.task.collectAsState()
     val items by viewModel.items.collectAsState()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val topBarBackdrop = rememberBarBlurBackdrop()
     val scope = rememberCoroutineScope()
     val salt = false
 
@@ -80,19 +89,17 @@ fun BatchTaskDetailScreen(
         title = stringResource(R.string.batch_task_detail_title),
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(R.string.batch_task_detail_title),
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigator.popBackStack() }
-                    ) {
-                        Icon(
-                            imageVector = LucideIcons.ArrowLeft,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                actions = {
+            BlurredTopBar(backdrop = topBarBackdrop) {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.batch_task_detail_title), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.popBackStack() }) {
+                            Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
+                        }
+                    },
+                    actions = {
                     val t = task
                     if (t != null && (t.status == BatchTaskStatus.RUNNING || t.status == BatchTaskStatus.QUEUED)) {
                         IconButton(
@@ -109,10 +116,13 @@ fun BatchTaskDetailScreen(
                 scrollBehavior = topAppBarScrollBehavior
             )
         }
-    ) { paddingValues ->
+    }
+) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .blurSource(topBarBackdrop)
+                .libraryDetailScroll(topAppBarScrollBehavior)
                 .padding(scaffoldTopHorizontalPadding(paddingValues))
         ) {
             val t = task
@@ -154,12 +164,22 @@ fun BatchTaskDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 12.dp)
-                            .padding(bottom = 12.dp)
+                            .padding(bottom = 12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                     ) {
-                        BasicComponent(
-                            title = progressTitle,
-                            summary = summary
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = progressTitle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = summary,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 
             }
@@ -168,15 +188,21 @@ fun BatchTaskDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    TabRowWithContour(
-                        tabs = tabLabels,
+                    TabRow(
                         selectedTabIndex = pagerState.currentPage,
-                        onTabSelected = { index ->
-                            scope.launch { pagerState.animateScrollToPage(index) }
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        tabLabels.forEachIndexed { index, label ->
+                            Tab(
+                                selected = index == pagerState.currentPage,
+                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                                text = { Text(label) }
+                            )
                         }
-                    )
+                    }
                 }
             
             HorizontalPager(
@@ -195,13 +221,10 @@ fun BatchTaskDetailScreen(
                 }
 
                 LazyColumn(
-                    modifier = (Modifier
-                        .scrollEndHaptic()
-                        .overScrollVertical()
-                        .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
-                        .fillMaxHeight(),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    overscrollEffect = null,
                 ) {
                     if (filteredItems.isEmpty()) {
                         item {
@@ -243,11 +266,46 @@ private fun BatchTaskItemCard(
         }
     }
 
-    Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-        ArrowPreference(
+    Card(
+        modifier = Modifier.padding(horizontal = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        ArrowRow(
             title = item.fileName,
             summary = summary,
             onClick = onClick
+        )
+    }
+}
+
+@Composable
+private fun ArrowRow(
+    title: String,
+    summary: String? = null,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Icon(
+            imageVector = LucideIcons.ArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

@@ -47,26 +47,27 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.BatchTaskDetailDestination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import top.yukonga.miuix.kmp.window.WindowDialog
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.ui.semantics.Role
-import androidx.compose.material3.MaterialTheme
 @Destination<RootGraph>(route = "batch_task_list")
 @Composable
 fun BatchTaskListScreen(
@@ -75,7 +76,7 @@ fun BatchTaskListScreen(
     val viewModel: BatchTaskListViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val salt = false
 
     val typeItems = remember {
@@ -141,15 +142,13 @@ fun BatchTaskListScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TextButton(
-                        text = stringResource(R.string.cancel),
                         onClick = {
                             showDeleteDialog = false
                             selectedTaskId = null
                         },
                         modifier = Modifier.weight(1f)
-                    )
+                    ) { Text(stringResource(R.string.cancel)) }
                     TextButton(
-                        text = stringResource(R.string.confirm),
                         onClick = {
                             if (pendingDeleteTaskIds.isNotEmpty()) {
                                 viewModel.deleteTasks(pendingDeleteTaskIds)
@@ -162,8 +161,8 @@ fun BatchTaskListScreen(
                             pendingDeleteTaskIds = emptyList()
                         },
                         modifier = Modifier.weight(1f),
-                        colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.textButtonColorsPrimary()
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) { Text(stringResource(R.string.confirm)) }
                 }
             }
         }
@@ -184,20 +183,18 @@ fun BatchTaskListScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     TextButton(
-                        text = stringResource(R.string.cancel),
                         onClick = { showClearDialog = false },
                         modifier = Modifier.weight(1f)
-                    )
+                    ) { Text(stringResource(R.string.cancel)) }
                     TextButton(
-                        text = stringResource(R.string.confirm),
                         onClick = {
                             viewModel.deleteTasks(deletableFilteredTaskIds)
                             selectedTaskIds = emptySet()
                             showClearDialog = false
                         },
                         modifier = Modifier.weight(1f),
-                        colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.textButtonColorsPrimary()
-                    )
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    ) { Text(stringResource(R.string.confirm)) }
                 }
             }
         }
@@ -209,18 +206,13 @@ fun BatchTaskListScreen(
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    title = stringResource(R.string.batch_task_list_title),
+                TopAppBar(
+                    title = { Text(stringResource(R.string.batch_task_list_title), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
                     navigationIcon = {
-                        IconButton(
-                            onClick = { navigator.popBackStack() }
-                        ) {
-                            Icon(
-                                imageVector = LucideIcons.ArrowLeft,
-                                contentDescription = stringResource(R.string.action_back)
-                            )
+                        IconButton(onClick = { navigator.popBackStack() }) {
+                            Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
                         }
                     },
                     actions = {
@@ -249,27 +241,27 @@ fun BatchTaskListScreen(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = (Modifier
+            modifier = Modifier
+                .fillMaxHeight()
                 .blurSource(topBarBackdrop)
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
-                .fillMaxHeight(),
+                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
             contentPadding = scaffoldContentPadding(
                 paddingValues = paddingValues,
                 bottomExtra = 12.dp
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            overscrollEffect = null,
         ) {
             item {
                 val typeLabels = listOf(stringResource(R.string.batch_task_filter_all)) +
                         typeItems.map { stringResource(it) }
                 val statusLabels = listOf(stringResource(R.string.batch_task_filter_all)) +
                         statusItems.map { stringResource(it) }
-                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-                    WindowDropdownPreference(
-                        startAction = { PreferenceIcon(LucideIcons.ListFilter, PreferenceIconTone.Appearance) },
+                Card(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                ) {
+                    DropdownPreferenceRow(
+                        leadingIcon = { PreferenceIcon(LucideIcons.ListFilter, PreferenceIconTone.Appearance) },
                         title = stringResource(R.string.batch_task_filter_type),
                         items = typeLabels,
                         selectedIndex = selectedTypeIndex,
@@ -279,8 +271,8 @@ fun BatchTaskListScreen(
                             )
                         }
                     )
-                    WindowDropdownPreference(
-                        startAction = { PreferenceIcon(LucideIcons.ListChecks, PreferenceIconTone.Tools) },
+                    DropdownPreferenceRow(
+                        leadingIcon = { PreferenceIcon(LucideIcons.ListChecks, PreferenceIconTone.Tools) },
                         title = stringResource(R.string.batch_task_filter_status),
                         items = statusLabels,
                         selectedIndex = selectedStatusIndex,
@@ -328,6 +320,65 @@ fun BatchTaskListScreen(
 }
 
 @Composable
+private fun DropdownPreferenceRow(
+    leadingIcon: @Composable (() -> Unit)? = null,
+    title: String,
+    summary: String? = null,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { expanded = true }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (leadingIcon != null) {
+            Box(modifier = Modifier.padding(end = 12.dp)) { leadingIcon() }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Box {
+            Text(
+                text = items.getOrNull(selectedIndex).orEmpty(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                items.forEachIndexed { index, label ->
+                    DropdownMenuItem(
+                        text = { Text(label) },
+                        onClick = {
+                            onSelectedIndexChange(index)
+                            expanded = false
+                        },
+                        trailingIcon = if (index == selectedIndex) {
+                            { Icon(LucideIcons.Check, contentDescription = null) }
+                        } else null,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun BatchTaskCard(
     modifier: Modifier = Modifier,
     task: BatchTaskEntity,
@@ -340,37 +391,41 @@ private fun BatchTaskCard(
         task.status == BatchTaskStatus.RUNNING || task.status == BatchTaskStatus.QUEUED
 
     Card(
-        modifier = modifier.padding(horizontal = 12.dp)
+        modifier = modifier.padding(horizontal = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        BasicComponent(
-            onClick = onClick,
-            insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            endActions = {
-                if (isRunning) {
-                    IconButton(onClick = onCancelClick) {
-                        Icon(
-                            painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
-                            contentDescription = stringResource(R.string.action_close),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                } else {
-                    IconButton(onClick = onDeleteClick) {
-                        Icon(
-                            LucideIcons.Trash,
-                            contentDescription = stringResource(R.string.common_delete),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                BatchTaskCardDetails(
+                    task = task,
+                    formattedDate = formattedDate,
+                    salt = false,
+                    isRunning = isRunning
+                )
+            }
+            if (isRunning) {
+                IconButton(onClick = onCancelClick) {
+                    Icon(
+                        painter = painterResource(android.R.drawable.ic_menu_close_clear_cancel),
+                        contentDescription = stringResource(R.string.action_close),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        LucideIcons.Trash,
+                        contentDescription = stringResource(R.string.common_delete),
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
-        ) {
-            BatchTaskCardDetails(
-                task = task,
-                formattedDate = formattedDate,
-                salt = false,
-                isRunning = isRunning
-            )
         }
     }
 }
