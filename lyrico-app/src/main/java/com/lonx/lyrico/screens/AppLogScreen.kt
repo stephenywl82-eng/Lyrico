@@ -65,21 +65,22 @@ import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.SnackbarHost
-import top.yukonga.miuix.kmp.basic.SnackbarHostState
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import top.yukonga.miuix.kmp.window.WindowDialog
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,7 +89,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.sp
-import androidx.compose.material3.MaterialTheme
 @Composable
 @Destination<RootGraph>(route = "app_logs")
 fun AppLogScreen(
@@ -98,7 +98,7 @@ fun AppLogScreen(
     val clipboardManager = LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val snackbarHostState = remember { SnackbarHostState() }
     var selectedLevel by remember { mutableStateOf<AppLogLevel?>(null) }
     var selectedType by remember { mutableStateOf<AppLogType?>(null) }
@@ -178,16 +178,13 @@ fun AppLogScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    title = stringResource(R.string.app_log_title),
+                TopAppBar(
+                    title = { Text(stringResource(R.string.app_log_title), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
                     navigationIcon = {
                         IconButton(onClick = { navigator.popBackStack() }) {
-                            Icon(
-                                imageVector = LucideIcons.ArrowLeft,
-                                contentDescription = stringResource(R.string.action_back)
-                            )
+                            Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
                         }
                     },
                     actions = {
@@ -222,12 +219,10 @@ fun AppLogScreen(
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = (Modifier
+            modifier = Modifier
+                .fillMaxSize()
                 .blurSource(topBarBackdrop)
-                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
-                .scrollEndHaptic()
-                .overScrollVertical())
-                .fillMaxSize(),
+                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection),
             contentPadding = scaffoldContentPadding(
                 paddingValues = paddingValues,
                 topExtra = 8.dp,
@@ -240,9 +235,12 @@ fun AppLogScreen(
                         levelItems.map { stringResource(it) }
                 val typeLabels = listOf(stringResource(R.string.app_log_filter_all)) +
                         typeItems.map { stringResource(it) }
-                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-                    WindowDropdownPreference(
-                        startAction = { PreferenceIcon(LucideIcons.ListFilter, PreferenceIconTone.Appearance) },
+                Card(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                ) {
+                    DropdownPreferenceRow(
+                        leadingIcon = { PreferenceIcon(LucideIcons.ListFilter, PreferenceIconTone.Appearance) },
                         title = stringResource(R.string.app_log_filter_level),
                         items = levelLabels,
                         selectedIndex = selectedLevelIndex,
@@ -250,8 +248,8 @@ fun AppLogScreen(
                             selectedLevel = if (index == 0) null else AppLogLevel.entries[index - 1]
                         }
                     )
-                    WindowDropdownPreference(
-                        startAction = { PreferenceIcon(LucideIcons.Logs, PreferenceIconTone.Tools) },
+                    DropdownPreferenceRow(
+                        leadingIcon = { PreferenceIcon(LucideIcons.Logs, PreferenceIconTone.Tools) },
                         title = stringResource(R.string.app_log_filter_type),
                         items = typeLabels,
                         selectedIndex = selectedTypeIndex,
@@ -259,8 +257,8 @@ fun AppLogScreen(
                             selectedType = if (index == 0) null else AppLogType.entries[index - 1]
                         }
                     )
-                    WindowDropdownPreference(
-                        startAction = { PreferenceIcon(LucideIcons.Calendar, PreferenceIconTone.Library) },
+                    DropdownPreferenceRow(
+                        leadingIcon = { PreferenceIcon(LucideIcons.Calendar, PreferenceIconTone.Library) },
                         title = stringResource(R.string.log_retention_title),
                         summary = stringResource(R.string.log_retention_summary),
                         items = logRetentionItems,
@@ -326,13 +324,11 @@ fun AppLogScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.SpaceBetween) {
                 TextButton(
-                    text = stringResource(R.string.cancel),
                     onClick = { showDeleteConfirmDialog = false },
                     modifier = Modifier.weight(1f)
-                )
+                ) { Text(stringResource(R.string.cancel)) }
                 Spacer(modifier = Modifier.width(20.dp))
                 TextButton(
-                    text = stringResource(R.string.confirm),
                     onClick = {
                         viewModel.deleteLogs(pendingDeleteIds)
                         selectedLogIds = emptySet()
@@ -340,8 +336,67 @@ fun AppLogScreen(
                         showDeleteConfirmDialog = false
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.textButtonColorsPrimary()
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) { Text(stringResource(R.string.confirm)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DropdownPreferenceRow(
+    leadingIcon: @Composable (() -> Unit)? = null,
+    title: String,
+    summary: String? = null,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectedIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { expanded = true }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (leadingIcon != null) {
+            Box(modifier = Modifier.padding(end = 12.dp)) { leadingIcon() }
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+        Box {
+            Text(
+                text = items.getOrNull(selectedIndex).orEmpty(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                items.forEachIndexed { index, label ->
+                    DropdownMenuItem(
+                        text = { Text(label) },
+                        onClick = {
+                            onSelectedIndexChange(index)
+                            expanded = false
+                        },
+                        trailingIcon = if (index == selectedIndex) {
+                            { Icon(LucideIcons.Check, contentDescription = null) }
+                        } else null,
+                    )
+                }
             }
         }
     }
@@ -355,12 +410,14 @@ private fun AppLogItem(
     val salt = false
 
     Card(
-        modifier = Modifier
-            .padding(horizontal = 12.dp)
+        modifier = Modifier.padding(horizontal = 12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
-        BasicComponent(
-            insideMargin = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            onClick = onClick
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),

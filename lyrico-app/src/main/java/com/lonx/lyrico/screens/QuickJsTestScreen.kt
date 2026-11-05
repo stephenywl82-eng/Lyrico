@@ -46,19 +46,23 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.ButtonDefaults
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextButton
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.Color
+import com.lonx.lyrico.ui.components.blur.BlurredTopBar
+import com.lonx.lyrico.ui.components.blur.blurSource
+import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
+import com.lonx.lyrico.ui.components.library.libraryDetailScroll
 
 @Composable
 @Destination<RootGraph>(route = "quickjs_test")
@@ -67,7 +71,8 @@ fun QuickJsTestScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val topBarBackdrop = rememberBarBlurBackdrop()
 
     val scriptState = rememberTextFieldState(initialText = DEFAULT_EVAL_SCRIPT)
 
@@ -370,25 +375,25 @@ fun QuickJsTestScreen(
         title = stringResource(R.string.quickjs_test_title),
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
-            SmallTopAppBar(
-                title = stringResource(R.string.quickjs_test_title),
-                navigationIcon = {
-                    IconButton(onClick = { navigator.popBackStack() }) {
-                        Icon(
-                            imageVector = LucideIcons.ArrowLeft,
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                scrollBehavior = topAppBarScrollBehavior
-            )
+            BlurredTopBar(backdrop = topBarBackdrop) {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.quickjs_test_title), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
+                    navigationIcon = {
+                        IconButton(onClick = { navigator.popBackStack() }) {
+                            Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
+                        }
+                    },
+                    scrollBehavior = topAppBarScrollBehavior
+                )
+            }
         }
     ) { paddingValues ->
         LazyColumn(
-            modifier = (Modifier
-                .scrollEndHaptic()
-                .overScrollVertical())
-                .fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .then(Modifier.blurSource(topBarBackdrop).libraryDetailScroll(topAppBarScrollBehavior)),
             contentPadding = scaffoldContentPadding(
                 paddingValues = paddingValues,
                 topExtra = 8.dp,
@@ -397,12 +402,23 @@ fun QuickJsTestScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item("description") {
-                Card(modifier = Modifier.padding(horizontal = 12.dp)) {
-                    BasicComponent(
-                        insideMargin = PaddingValues(16.dp),
-                        title = stringResource(R.string.quickjs_test_description),
-                        summary = stringResource(R.string.quickjs_test_description_summary)
-                    )
+                Card(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+                ) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(
+                            text = stringResource(R.string.quickjs_test_description),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.quickjs_test_description_summary),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
 
@@ -550,11 +566,10 @@ private fun EvalTestCard(
                         horizontalArrangement = Arrangement.End
                     ) {
                         TextButton(
-                            text = example.title,
                             enabled = !isRunning,
                             onClick = { scriptState.setTextAndPlaceCursorAtEnd(example.script) },
-                            colors = ButtonDefaults.textButtonColorsPrimary()
-                        )
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                        ) { Text(example.title) }
                     }
                 }
             }
@@ -566,11 +581,10 @@ private fun EvalTestCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    text = stringResource(R.string.quickjs_test_run),
                     onClick = onRun,
                     enabled = !isRunning,
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) { Text(stringResource(R.string.quickjs_test_run)) }
             }
 
             ResultText(result = result)
@@ -614,11 +628,10 @@ private fun TestCard(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    text = stringResource(R.string.quickjs_test_run),
                     onClick = onRun,
                     enabled = !isRunning,
-                    colors = ButtonDefaults.textButtonColorsPrimary()
-                )
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) { Text(stringResource(R.string.quickjs_test_run)) }
             }
 
             ResultText(result = result)
@@ -632,7 +645,7 @@ private fun QuickJsCard(
     modifier: Modifier = Modifier,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit
 ) {
-    Card(modifier = modifier) { content() }
+    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) { content() }
 }
 
 @Composable
