@@ -1,39 +1,37 @@
-
 package com.lonx.lyrico.screens
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberOverscrollEffect
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.OutputTransformation
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.lonx.lyrico.ui.components.blur.BlurredTopBar
-import com.lonx.lyrico.ui.components.blur.blurSource
-import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
-import com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -43,13 +41,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
+import com.lonx.lyrico.ui.components.blur.BlurredTopBar
+import com.lonx.lyrico.ui.components.blur.blurSource
+import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
+import com.lonx.lyrico.ui.components.blur.rememberBarBlurEnabled
+import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.library.EmptyStateKind
 import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.library.LibraryDetailPage
-import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
+import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.data.model.plugin.PluginConfigField
 import com.lonx.lyrico.data.model.plugin.PluginConfigFieldType
+import com.lonx.lyrico.data.model.plugin.PluginConfigOption
 import com.lonx.lyrico.data.model.plugin.PluginSourceType
 import com.lonx.lyrico.utils.isSatisfied
 import com.lonx.lyrico.viewmodel.SearchSourceConfigViewModel
@@ -59,24 +64,19 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.CardDefaults
-import top.yukonga.miuix.kmp.basic.DropdownEntry
-import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.SmallTopAppBar
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.preference.SwitchPreference
-import top.yukonga.miuix.kmp.preference.WindowDropdownPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
-import androidx.compose.foundation.overscroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+
 @Composable
 @Destination<RootGraph>(route = "plugin_config")
 fun PluginConfigScreen(
@@ -87,9 +87,8 @@ fun PluginConfigScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val topAppBarScrollBehavior = MiuixScrollBehavior()
-    val salt = false
-    val barBackdrop = rememberBarBlurBackdrop(enabled = rememberBarBlurEnabled())
+    val topAppBarScrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val topBarBackdrop = rememberBarBlurBackdrop(enabled = rememberBarBlurEnabled())
 
     val requiredMessage = stringResource(R.string.source_config_required_error)
 
@@ -119,11 +118,9 @@ fun PluginConfigScreen(
         title = title,
         onBack = { navigator.navigateUp() },
         miuixTopBar = {
-            BlurredTopBar(barBackdrop) {
-                SmallTopAppBar(
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
-                    title = title,
+            BlurredTopBar(topBarBackdrop) {
+                TopAppBar(
+                    title = { Text(title, style = MaterialTheme.typography.titleLarge) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.navigateUp() }) {
                             Icon(
@@ -144,24 +141,24 @@ fun PluginConfigScreen(
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        scrolledContainerColor = Color.Transparent
+                    ),
+                    windowInsets = WindowInsets(0.dp),
                     scrollBehavior = topAppBarScrollBehavior
                 )
             }
         }
     ) { paddingValues ->
-        // Salt 的 verticalScroll 默认没有过度滚动，短内容时拖不动；挂上 Cupertino 效果对齐列表页。
-        val overscrollEffect = rememberOverscrollEffect()
         Column(
-            modifier = (Modifier
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection))
-                .then(Modifier)
+            modifier = Modifier
+                .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
                 .fillMaxSize()
-                .blurSource(barBackdrop)
-                .then(Modifier.imePadding())
+                .blurSource(topBarBackdrop)
+                .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(com.lonx.lyrico.ui.components.scaffoldContentPadding(paddingValues, bottomExtra = 12.dp))
+                .padding(scaffoldContentPadding(paddingValues, bottomExtra = 12.dp))
         ) {
             if (uiState.errorMessage != null) {
                 Text(
@@ -187,35 +184,33 @@ fun PluginConfigScreen(
                 uiState.minHostApiVersion
             )
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 8.dp),
-                    colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        if (uiState.sourceTypes.isNotEmpty()) {
-                            Text(
-                                text = typeText,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (uiState.sourceTypes.isNotEmpty()) {
                         Text(
-                            text = apiText,
+                            text = typeText,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
+
+                    Text(
+                        text = apiText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
+                    )
                 }
-            
+            }
+
             if (!hasConfigContent) {
                 IllustratedEmptyState(
                     kind = EmptyStateKind.Plugins,
@@ -232,9 +227,7 @@ fun PluginConfigScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 8.dp),
-                    colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                 ) {
                     Text(
                         text = hint,
@@ -266,7 +259,6 @@ private fun PluginConfigFormItems(
 ) {
     if (fields.isEmpty()) return
 
-    val salt = false
     val grouped = fields.groupBy { field ->
         field.group.ifBlank { DEFAULT_CONFIG_GROUP }
     }
@@ -286,33 +278,33 @@ private fun PluginConfigFormItems(
             groupFields.first().groupTitle ?: group
         }
 
-            SmallTitle(text = groupTitle)
+        SmallTitle(text = groupTitle)
 
-            Card(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp)
+        Card(
+            modifier = Modifier
+                .padding(horizontal = 12.dp)
+                .padding(bottom = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+        ) {
+            Column(
+                modifier = Modifier.animateContentSize()
             ) {
-                Column(
-                    modifier = Modifier.animateContentSize()
-                ) {
-                    groupFields.forEach { field ->
-                        val visible = field.dependency.isSatisfied(values)
+                groupFields.forEach { field ->
+                    val visible = field.dependency.isSatisfied(values)
 
-                        AnimatedVisibility(visible = visible) {
-                            PluginConfigFormItem(
-                                field = field,
-                                value = values[field.key].orEmpty(),
-                                error = validationErrors[field.key],
-                                onValueChange = { value ->
-                                    onValueChange(field.key, value)
-                                }
-                            )
-                        }
+                    AnimatedVisibility(visible = visible) {
+                        PluginConfigFormItem(
+                            field = field,
+                            value = values[field.key].orEmpty(),
+                            error = validationErrors[field.key],
+                            onValueChange = { value ->
+                                onValueChange(field.key, value)
+                            }
+                        )
                     }
                 }
             }
-        
+        }
     }
 }
 
@@ -323,10 +315,9 @@ private fun PluginConfigFormItem(
     error: String?,
     onValueChange: (String) -> Unit
 ) {
-    val salt = false
     when (field.type) {
         PluginConfigFieldType.SWITCH -> {
-            SwitchPreference(
+            SwitchPreferenceRow(
                 title = field.title,
                 summary = error ?: field.summary,
                 checked = value.toBooleanStrictOrNull() ?: false,
@@ -340,30 +331,17 @@ private fun PluginConfigFormItem(
             val selectedIndex = field.options
                 .indexOfFirst { it.value == value }
                 .coerceAtLeast(0)
-            
-                val entry = remember(field.options, selectedIndex, onValueChange) {
-                    DropdownEntry(
-                        items = field.options.mapIndexed { index, option ->
-                            DropdownItem(
-                                text = option.label,
-                                summary = option.summary.takeIf { it.isNotBlank() },
-                                selected = index == selectedIndex,
-                                onClick = {
-                                    onValueChange(option.value)
-                                }
-                            )
-                        }
-                    )
-                }
 
-                WindowDropdownPreference(
-                    title = field.title,
-                    summary = error ?: field.summary,
-                    entry = entry,
-                    enabled = field.options.isNotEmpty(),
-                    collapseOnSelection = true
-                )
-            
+            DropdownPreferenceRow(
+                title = field.title,
+                summary = error ?: field.summary,
+                options = field.options,
+                selectedIndex = selectedIndex,
+                enabled = field.options.isNotEmpty(),
+                onSelectedIndexChange = { index ->
+                    field.options.getOrNull(index)?.let { onValueChange(it.value) }
+                }
+            )
         }
 
         PluginConfigFieldType.TEXT,
@@ -391,68 +369,44 @@ private fun PluginConfigFormItem(
                 }
             } else null
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                ) {
-                    TextField(
-                        modifier = Modifier.fillMaxWidth(),
-                        state = inputState,
-                        label = field.title,
-                        outputTransformation = if (isPassword && !passwordVisible) {
-                            OutputTransformation {
-                                // Keep each character boundary available to cursor/selection mapping.
-                                for (index in 0 until length) replace(index, index + 1, "•")
-                            }
-                        } else null,
-                        keyboardOptions = keyboardOptions,
-                        trailingIcon = if (isPassword) {
-                            {
-                                IconButton(
-                                    onClick = {
-                                        passwordVisible = !passwordVisible
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            ) {
+                SdwTextInput(
+                    state = inputState,
+                    label = field.title,
+                    modifier = Modifier.fillMaxWidth(),
+                    secure = isPassword,
+                    passwordVisible = passwordVisible,
+                    keyboardOptions = keyboardOptions,
+                    lineLimits = lineLimits,
+                    inputTransformation = numberInputTransformation,
+                    summary = field.summary,
+                    error = error,
+                    actionContent = if (isPassword) {
+                        {
+                            IconButton(
+                                onClick = { passwordVisible = !passwordVisible }
+                            ) {
+                                Icon(
+                                    imageVector = if (passwordVisible) {
+                                        LucideIcons.EyeOff
+                                    } else {
+                                        LucideIcons.Eye
+                                    },
+                                    contentDescription = if (passwordVisible) {
+                                        stringResource(R.string.password_hide)
+                                    } else {
+                                        stringResource(R.string.password_show)
                                     }
-                                ) {
-                                    Icon(
-                                        imageVector = if (passwordVisible) {
-                                            LucideIcons.EyeOff
-                                        } else {
-                                            LucideIcons.Eye
-                                        },
-                                        contentDescription = if (passwordVisible) {
-                                            stringResource(R.string.password_hide)
-                                        } else {
-                                            stringResource(R.string.password_show)
-                                        }
-                                    )
-                                }
+                                )
                             }
-                        } else {
-                            null
-                        },
-                        lineLimits = lineLimits,
-                        inputTransformation = numberInputTransformation,
-                    )
-
-                    error?.let {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = it,
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    field.summary?.let {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = it,
-                            fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            
+                        }
+                    } else null
+                )
+            }
         }
 
         PluginConfigFieldType.MARKDOWN -> {
@@ -480,6 +434,112 @@ private fun PluginConfigFormItem(
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SmallTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun SwitchPreferenceRow(
+    title: String,
+    summary: String?,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@Composable
+private fun DropdownPreferenceRow(
+    title: String,
+    summary: String?,
+    options: List<PluginConfigOption>,
+    selectedIndex: Int,
+    enabled: Boolean = true,
+    onSelectedIndexChange: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (enabled) Modifier.clickable { expanded = true } else Modifier)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            if (!summary.isNullOrBlank()) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Box {
+            Text(
+                text = options.getOrNull(selectedIndex)?.label.orEmpty(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                options.forEachIndexed { index, option ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(option.label)
+                                val optionSummary = option.summary
+                                if (!optionSummary.isNullOrBlank()) {
+                                    Text(
+                                        optionSummary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        },
+                        onClick = {
+                            onSelectedIndexChange(index)
+                            expanded = false
+                        },
+                        trailingIcon = if (index == selectedIndex) {
+                            { Icon(LucideIcons.Check, contentDescription = null) }
+                        } else null,
                     )
                 }
             }
