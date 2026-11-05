@@ -54,12 +54,11 @@ class MediaStoreScanner(
             }
         }.toTypedArray()
 
-        // 对齐 SDWMP3_CN：只取「音乐」，排除系统音效与录制音频。
-        // 关键：MediaStore 里 IS_RINGTONE/IS_NOTIFICATION/... 这些列对普通音乐文件
-        // 通常是 NULL 而非 0，直接写 `IS_RINGTONE = 0` 在 NULL 时整条判定为 NULL
-        // （非真）会把歌曲全部误排除。因此用 COALESCE(列, 0) = 0：NULL 视为「非该类别」保留。
-        // 1) 标志位排除 铃声 / 通知 / 闹钟 / 播客（+ 30+ 的有声书）；
-        // 2) 路径关键字排除 录音机、微信语音、钉钉 等用户录制音频。
+        // 对齐 SDWMP3_CN：不在 SQL 层用 IS_MUSIC 过滤。
+        // 原因：不少 OEM ROM（如 Motorola / 部分国产 ROM）对用户音乐文件的 IS_MUSIC 标志并不置 1，
+        // 写 `IS_MUSIC = 1` 会把全部歌曲「合法地」静默排除（查询返回 0 行、不抛错、不计失败）。
+        // SDWMP3_CN 用 selection=null 取回全部音频，再在游标里按扩展名 / 路径关键字 / 时长过滤。
+        // 这里仅保留「标志位排除 铃声/通知/闹钟/播客(+有声书)」作为兜底，但绝不再要求 IS_MUSIC=1。
         val excludeFlagColumns = buildList {
             add(MediaStore.Audio.Media.IS_RINGTONE)
             add(MediaStore.Audio.Media.IS_NOTIFICATION)
@@ -72,8 +71,6 @@ class MediaStoreScanner(
 
         val selectionParts = mutableListOf<String>()
         val selectionArgs = mutableListOf<String>()
-        selectionParts.add("COALESCE(${MediaStore.Audio.Media.IS_MUSIC}, 0) = ?")
-        selectionArgs.add("1")
         for (flag in excludeFlagColumns) {
             selectionParts.add("COALESCE($flag, 0) = ?")
             selectionArgs.add("0")
@@ -81,7 +78,7 @@ class MediaStoreScanner(
         // 注意：Android 10（API 29）起禁止在 MediaStore 的 selection / sortOrder 中使用 DATA 列，
         // 否则 query() 直接抛 IllegalArgumentException。录音/录制类路径的排除改为在游标遍历时做内存过滤
         // （与 SDWMP3_CN 一致，见 SongRepository.kt），排序也改用 _ID，避免触发该限制导致整机扫描静默返回 0 条。
-        val selection = selectionParts.joinToString(" AND ")
+        val selection = if (selectionParts.isEmpty()) null else selectionParts.joinToString(" AND ")
         val sortOrder = "${MediaStore.Audio.Media._ID} ASC"
 
         try {
