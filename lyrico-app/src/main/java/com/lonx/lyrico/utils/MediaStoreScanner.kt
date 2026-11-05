@@ -58,11 +58,18 @@ class MediaStoreScanner(
             add(MediaStore.Audio.Media.VOLUME_NAME)
         }.toTypedArray()
 
-        // 对齐 SDWMP3_CN：不在 SQL 层用 IS_MUSIC 过滤。
-        // 原因：不少 OEM ROM（如 Motorola / 部分国产 ROM）对用户音乐文件的 IS_MUSIC 标志并不置 1，
-        // 写 `IS_MUSIC = 1` 会把全部歌曲「合法地」静默排除（查询返回 0 行、不抛错、不计失败）。
-        // SDWMP3_CN 用 selection=null 取回全部音频，再在游标里按扩展名 / 路径关键字 / 时长过滤。
-        // 这里仅保留「标志位排除 铃声/通知/闹钟/播客(+有声书)」作为兜底，但绝不再要求 IS_MUSIC=1。
+        // 对齐 SDWMP3_CN：selection=null 取回全部音频，再在游标里做内存过滤。
+        // 【真机根因 2026-11-05 · Motorola XT2409-5 / Android16 API36】
+        // 绝不能在 SQL selection 里写「COALESCE(is_xxx, 0) = ?」并用 selectionArgs 绑定字符串 "0"：
+        // COALESCE() 表达式没有列 affinity，ContentResolver 把 "0" 作为 TEXT 绑定后，
+        // 与表达式的整数结果比较不成立（MediaProvider 的 SQL 重写不会做隐式转换），
+        // 于是整机查询「合法地」返回 0 行、不抛异常、不计失败 —— 表现为 scanned 恒为 0。
+        // 用 shell `content query --where "= 0"`（整数字面量）会被 SQLite 隐式转换而掩盖，
+        // 故只有在 App 进程内用真 selectionArgs 才复现。实测：裸查询 count=399，带该 selection count=0。
+        // 因此：SQL 层不加任何标志位条件，铃声/通知/闹钟/播客(+有声书) 的排除改为内存过滤。
+        // 同时 IS_MUSIC=1 也不能用（部分 OEM ROM 不置位，会静默排除全部歌曲）。
+        // 另注：Android 10（API 29）起禁止在 selection/sortOrder 使用 DATA 列，会抛异常导致静默空，
+        // 故录制类路径排除也放内存，排序用 _ID。
         val excludeFlagColumns = buildList {
             add(MediaStore.Audio.Media.IS_RINGTONE)
             add(MediaStore.Audio.Media.IS_NOTIFICATION)
@@ -72,17 +79,8 @@ class MediaStoreScanner(
                 add(MediaStore.Audio.Media.IS_AUDIOBOOK)
             }
         }
-
-        val selectionParts = mutableListOf<String>()
-        val selectionArgs = mutableListOf<String>()
-        for (flag in excludeFlagColumns) {
-            selectionParts.add("COALESCE($flag, 0) = ?")
-            selectionArgs.add("0")
-        }
-        // 注意：Android 10（API 29）起禁止在 MediaStore 的 selection / sortOrder 中使用 DATA 列，
-        // 否则 query() 直接抛 IllegalArgumentException。录音/录制类路径的排除改为在游标遍历时做内存过滤
-        // （与 SDWMP3_CN 一致，见 SongRepository.kt），排序也改用 _ID，避免触发该限制导致整机扫描静默返回 0 条。
-        val selection = if (selectionParts.isEmpty()) null else selectionParts.joinToString(" AND ")
+        val selection: String? = null
+        val selectionArgs = emptyList<String>()
         val sortOrder = "${MediaStore.Audio.Media._ID} ASC"
 
         try {
@@ -101,9 +99,13 @@ class MediaStoreScanner(
                 val durCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
                 val sizeCol = cursor.getColumnIndex(MediaStore.Audio.Media.SIZE)
                 val relPathCol = cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH)
+                // 铃声/通知/闹钟/播客(+有声书) 标志位：改为内存过滤（见上方 selection=null 说明）。
+                val excludeFlagColIndices = excludeFlagColumns.map { cursor.getColumnIndex(it) }
 
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(idCol)
+                    // 标志位排除：任一被置 1（且非 null）则跳过。用 getInt 兼容 NULL→0。
+                    if (excludeFlagColIndices.any { col -> col >= 0 && cursor.getInt(col) == 1 }) continue
                     val displayName = cursor.getString(nameCol) ?: continue
                     if (displayName.isBlank() || !isSupportedAudioFile(displayName)) continue
                     // API 29+ 仅持 READ_MEDIA_AUDIO 时，整机查询的 DATA 列被 MediaProvider 置为 null，
@@ -148,7 +150,7 @@ class MediaStoreScanner(
                         )
                     )
                 }
-                Log.i(tag, "queryAllAudio: cursor=${cursor.count}, collected=${songs.size}")
+                Log.i(tag, "queryAllAudio: cursor=${cursor.count}, collected=${songs.size}") // selection=null 全量取回，标志位/录制路径均内存过滤
             }
         } catch (e: Exception) {
             Log.e(tag, "Failed to query MediaStore audio", e)
