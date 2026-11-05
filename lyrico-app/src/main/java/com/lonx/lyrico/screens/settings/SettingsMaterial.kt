@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
@@ -48,7 +50,6 @@ import com.lonx.lyrico.ui.components.blur.BlurredTopBar
 import com.lonx.lyrico.ui.components.blur.blurSource
 import com.lonx.lyrico.ui.components.blur.rememberBarBlurBackdrop
 import com.lonx.lyrico.ui.components.icons.LucideIcons
-import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
 
@@ -109,6 +110,38 @@ internal fun SettingsPageMaterial(
     }
 }
 
+/** 当前板块的语义容器色（M3 Expressive：primary/secondary/tertiary 三档轮换）。 */
+@Composable
+private fun sectionContainerColor(): Color = when (LocalSectionTone.current) {
+    SectionTone.Primary -> MaterialTheme.colorScheme.primaryContainer
+    SectionTone.Secondary -> MaterialTheme.colorScheme.secondaryContainer
+    SectionTone.Tertiary -> MaterialTheme.colorScheme.tertiaryContainer
+}
+
+/** 容器上的内容色（图标徽标里的图标），保证与容器色的对比度。 */
+@Composable
+private fun sectionOnContainerColor(): Color = when (LocalSectionTone.current) {
+    SectionTone.Primary -> MaterialTheme.colorScheme.onPrimaryContainer
+    SectionTone.Secondary -> MaterialTheme.colorScheme.onSecondaryContainer
+    SectionTone.Tertiary -> MaterialTheme.colorScheme.onTertiaryContainer
+}
+
+/** 板块主色：用于页面背景上的分组标题 / 强调（深浅色下均与背景有对比）。 */
+@Composable
+private fun sectionAccentColor(): Color = when (LocalSectionTone.current) {
+    SectionTone.Primary -> MaterialTheme.colorScheme.primary
+    SectionTone.Secondary -> MaterialTheme.colorScheme.secondary
+    SectionTone.Tertiary -> MaterialTheme.colorScheme.tertiary
+}
+
+/** 两色混合，用于「板块色的弱化版」卡面，避免整页三原色对撞（对齐 SDWMP3_CN blendColor）。 */
+private fun blend(from: Color, to: Color, t: Float): Color = Color(
+    red = from.red + (to.red - from.red) * t,
+    green = from.green + (to.green - from.green) * t,
+    blue = from.blue + (to.blue - from.blue) * t,
+    alpha = 1f,
+)
+
 internal object MaterialSettingsItems : SettingsItemPresentation {
     @Composable
     override fun SectionTitle(text: String) {
@@ -118,7 +151,8 @@ internal object MaterialSettingsItems : SettingsItemPresentation {
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            color = sectionAccentColor(),
         )
     }
 
@@ -131,6 +165,16 @@ internal object MaterialSettingsItems : SettingsItemPresentation {
             modifier = modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
+            // 卡面 = 表面色阶混入少量板块色：既与页面底色拉开层次，又保持 onSurface 文字可读，
+            // 每个板块还有自己的颜色身份（M3 Expressive 的 tonal grouping）。
+            colors = CardDefaults.cardColors(
+                containerColor = blend(
+                    MaterialTheme.colorScheme.surfaceContainerLow,
+                    sectionContainerColor(),
+                    0.22f,
+                ),
+                contentColor = MaterialTheme.colorScheme.onSurface,
+            ),
         ) {
             Column(Modifier.fillMaxWidth()) {
                 content()
@@ -357,7 +401,7 @@ internal object MaterialSettingsItems : SettingsItemPresentation {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (icon != null) {
-                    PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+                    SectionIcon(icon, enabled = true, modifier = Modifier.padding(end = 12.dp))
                 }
                 Column(Modifier.weight(1f)) {
                     Text(
@@ -399,6 +443,33 @@ internal object MaterialSettingsItems : SettingsItemPresentation {
     }
 }
 
+/**
+ * M3 Expressive 设置项图标：坐在板块语义容器色的圆形徽标里，图标取 on*Container。
+ * 取代旧的彩虹硬编码 tint，配色随主题（dynamic / 深浅）自适应且对比度正确。
+ */
+@Composable
+private fun SectionIcon(
+    icon: ImageVector,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val base = sectionOnContainerColor()
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(sectionContainerColor()),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = if (enabled) base else base.copy(alpha = 0.38f),
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
 @Composable
 private fun SettingsRow(
     modifier: Modifier = Modifier,
@@ -430,7 +501,7 @@ private fun SettingsRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
+            SectionIcon(icon, enabled, Modifier.padding(end = 12.dp))
         }
         Column(Modifier.weight(1f)) {
             Text(

@@ -850,4 +850,9 @@
     <string name="plugin_action_none_installable">No installable plugins found</string>
     <string name="plugin_action_remove_failed">Cannot delete plugin files</string>
     <string name="rating_stars_value">%1$d out of 5 stars</string>
+    <!-- Theme & feedback (M3 Expressive) -->
+    <string name="theme_follow_system">Follow system theme</string>
+    <string name="theme_follow_system_summary">Switch light / dark automatically with the system</string>
+    <string name="haptic_feedback">Haptic feedback</string>
+    <string name="haptic_feedback_summary">Vibrate on long-press, drag-to-reorder and list gestures</string>
 </resources>

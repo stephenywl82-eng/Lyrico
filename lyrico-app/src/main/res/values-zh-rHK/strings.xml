@@ -851,4 +851,9 @@
     <string name="plugin_action_none_installable">找不到可安裝的外掛</string>
     <string name="plugin_action_remove_failed">無法刪除外掛檔案</string>
     <string name="rating_stars_value">%1$d 星</string>
+    <!-- 主題與反饋 (M3 Expressive) -->
+    <string name="theme_follow_system">跟隨系統主題</string>
+    <string name="theme_follow_system_summary">隨系統自動切換淺色 / 深色</string>
+    <string name="haptic_feedback">震動反饋</string>
+    <string name="haptic_feedback_summary">長按、拖動排序與列表手勢時提供震動</string>
 </resources>

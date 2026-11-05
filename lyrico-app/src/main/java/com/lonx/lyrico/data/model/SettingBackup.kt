@@ -45,6 +45,7 @@ data class SettingsBackup(
     @SerialName("key_theme_color") val keyThemeColor: Int? = null,
     @SerialName("floating_bottom_bar_enabled") val floatingBottomBarEnabled: Boolean? = null,
     @SerialName("bar_blur_enabled") val barBlurEnabled: Boolean? = null,
+    @SerialName("haptic_feedback_enabled") val hapticFeedbackEnabled: Boolean? = null,
     @SerialName("floating_bar_effect") val floatingBarEffect: String? = null,
     @SerialName("artist_split_config") val artistSplitConfig: ArtistSplitConfig? = null,
     @SerialName("edit_field_visibility_overrides") val editFieldVisibilityOverrides: Map<String, Boolean>? = null,

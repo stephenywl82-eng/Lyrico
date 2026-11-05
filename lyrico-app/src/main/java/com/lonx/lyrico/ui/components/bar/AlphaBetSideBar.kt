@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lonx.lyrico.R
+import com.lonx.lyrico.ui.theme.LocalHapticEnabled
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,6 +65,7 @@ fun AlphabetSideBar(
     val view = LocalView.current
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
+    val hapticEnabled = LocalHapticEnabled.current
 
     var scrollJob by remember { mutableStateOf<Job?>(null) }
     var currentItem by remember { mutableStateOf<AlphabetSideBarItem?>(null) }
@@ -147,7 +149,7 @@ fun AlphabetSideBar(
 
         handleItemSelected(item)
 
-        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+        if (hapticEnabled) view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
     }
 
     fun clearSelection() {

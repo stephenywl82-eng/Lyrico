@@ -12,6 +12,7 @@ import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.theme.LocalHapticEnabled
 
 /**
  * 专辑卡片容器（Miuix）。
@@ -25,9 +26,10 @@ internal fun LibraryAlbumSurface(
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
+    val hapticEnabled = LocalHapticEnabled.current
     val onLongPress = onLongClick?.let { action ->
         {
-            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            if (hapticEnabled) view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
             action()
         }
     }

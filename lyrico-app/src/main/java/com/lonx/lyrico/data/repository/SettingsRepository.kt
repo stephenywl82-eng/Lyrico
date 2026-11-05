@@ -64,6 +64,7 @@ interface SettingsRepository {
     val keyColor: Flow<KeyColor>
     val floatingBottomBarEnabled: Flow<Boolean>
     val barBlurEnabled: Flow<Boolean>
+    val hapticFeedbackEnabled: Flow<Boolean>
     val floatingBarEffect: Flow<FloatingBarEffect>
     val onlyTranslationIfAvailable: Flow<Boolean>
     val removeEmptyLines: Flow<Boolean>
@@ -107,6 +108,7 @@ interface SettingsRepository {
     suspend fun saveKeyColor(selectedKeyColor: KeyColor)
     suspend fun saveFloatingBottomBarEnabled(enabled: Boolean)
     suspend fun saveBarBlurEnabled(enabled: Boolean)
+    suspend fun saveHapticFeedbackEnabled(enabled: Boolean)
     suspend fun saveFloatingBarEffect(effect: FloatingBarEffect)
     suspend fun saveOnlyTranslationIfAvailable(enabled: Boolean)
     suspend fun saveRemoveEmptyLines(enabled: Boolean)

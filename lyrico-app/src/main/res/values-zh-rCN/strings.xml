@@ -855,4 +855,9 @@
     <string name="plugin_action_none_installable">未找到可安装的插件</string>
     <string name="plugin_action_remove_failed">无法删除插件文件</string>
     <string name="rating_stars_value">%1$d 星</string>
+    <!-- 主题与反馈 (M3 Expressive) -->
+    <string name="theme_follow_system">跟随系统主题</string>
+    <string name="theme_follow_system_summary">随系统自动切换浅色 / 深色</string>
+    <string name="haptic_feedback">震动反馈</string>
+    <string name="haptic_feedback_summary">长按、拖动排序与列表手势时提供震动</string>
 </resources>

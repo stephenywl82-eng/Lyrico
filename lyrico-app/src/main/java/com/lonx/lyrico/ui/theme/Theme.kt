@@ -9,22 +9,26 @@ import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.ui.theme.sdw.LyricoSdwTheme
 
 /**
- * [B] 统一到 SDW 一套：最内层 MaterialTheme 由 LyricoSdwTheme 提供，使 SDW 基础件获得 SDW 调色板 / 排版；
- * 外层的 MIUIX / Salt 主题暂时保留，仅为尚未迁移的 80+ 处组件提供其专属主题令牌（Phase 3 删除）。
+ * Lyrico 统一主题（M3 Expressive 内层 + Miuix 外层，后者在阶段6 收尾时移除）。
+ * [keyColor] 保留签名兼容但主题层不再消费用户选色：默认走壁纸 dynamic / 系统默认主题色。
+ * [hapticEnabled] 全站震动反馈开关，默认 false（关闭）。
  */
 @Composable
 fun LyricoTheme(
     colorMode: ThemeMode = ThemeMode.AUTO,
     keyColor: Color? = null,
+    hapticEnabled: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val indication = ripple()
-    LyricoMiuixTheme(colorMode, keyColor) {
-        LyricoSdwTheme(colorMode, keyColor) {
-            CompositionLocalProvider(
-                LocalIndication provides indication,
-                content = content,
-            )
+    ProvideHapticFeedback(enabled = hapticEnabled) {
+        LyricoMiuixTheme(colorMode, keyColor) {
+            LyricoSdwTheme(colorMode, keyColor) {
+                CompositionLocalProvider(
+                    LocalIndication provides indication,
+                    content = content,
+                )
+            }
         }
     }
 }

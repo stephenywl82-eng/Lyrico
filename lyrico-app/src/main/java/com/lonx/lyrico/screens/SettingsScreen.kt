@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,8 +52,6 @@ import com.lonx.lyrico.ui.components.base.ActionBottomSheet
 import com.lonx.lyrico.ui.components.lyrics.LyricLineOrderBottomSheetContent
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
-import com.lonx.lyrico.ui.components.getSystemWallpaperColor
-import com.lonx.lyrico.ui.theme.KeyColors
 import com.lonx.lyrico.viewmodel.SettingsEvent
 import com.lonx.lyrico.viewmodel.SettingsViewModel
 import com.ramcosta.composedestinations.annotation.Destination
@@ -100,7 +99,6 @@ fun SettingsScreen(
     val floatingBottomBarEnabled = settingsUiState.floatingBottomBarEnabled
     val barBlurEnabled = settingsUiState.barBlurEnabled
     val floatingBarEffect = settingsUiState.floatingBarEffect
-    val currentKeyColor = settingsUiState.keyColor
     val translationEnabled = settingsUiState.translationEnabled
     val onlyTranslationIfAvailable = settingsUiState.onlyTranslationIfAvailable
     val removeEmptyLines = settingsUiState.removeEmptyLines
@@ -119,9 +117,12 @@ fun SettingsScreen(
     val showRgTargetDialog = remember { mutableStateOf(false) }
     val showLyricLineOrderSheet = remember { mutableStateOf(false) }
     val visibleTracks = visibleLyricLineTracks(romaEnabled, translationEnabled, onlyTranslationIfAvailable)
-    val themeModeItems = ThemeMode.entries.map { stringResource(it.labelRes) }
-    val selectedThemeModeIndex =
-        ThemeMode.entries.indexOf(themeMode).coerceAtLeast(0)
+    // 主题模式：一个「跟随系统」开关 + 非常驻时的「深色模式」开关（M3 Expressive 官方双开关范式）。
+    val followSystem = themeMode == ThemeMode.AUTO
+    val systemInDark = isSystemInDarkTheme()
+    val darkChecked = themeMode == ThemeMode.DARK || (followSystem && systemInDark)
+    // 震动反馈开关直接读写 Repository，避免改动 ViewModel 的多路 combine 链。
+    val hapticEnabled by settingsRepository.hapticFeedbackEnabled.collectAsStateWithLifecycle(initialValue = false)
 
     val lyricFormatItems = LyricFormat.entries.map { stringResource(it.labelRes) }
     val selectedLyricFormatIndex = LyricFormat.entries.indexOf(lyricFormat).coerceAtLeast(0)
@@ -259,16 +260,40 @@ fun SettingsScreen(
                             )
                         }
                     )
-                    Choice(
+                    Toggle(
                         icon = LucideIcons.Moon, tone = PreferenceIconTone.Library,
-                        title = stringResource(R.string.theme_mode),
-                        items = themeModeItems,
-                        selectedIndex = selectedThemeModeIndex,
-                        onSelectedIndexChange = { index ->
-                            settingsViewModel.setThemeMode(ThemeMode.entries[index])
+                        title = stringResource(R.string.theme_follow_system),
+                        summary = stringResource(R.string.theme_follow_system_summary),
+                        checked = followSystem,
+                        onCheckedChange = { follow ->
+                            settingsViewModel.setThemeMode(
+                                if (follow) ThemeMode.AUTO
+                                else if (systemInDark) ThemeMode.DARK else ThemeMode.LIGHT
+                            )
                         }
                     )
-                                        Toggle(
+                    AnimatedVisibility(visible = !followSystem) {
+                        Toggle(
+                            icon = LucideIcons.Moon, tone = PreferenceIconTone.Appearance,
+                            title = stringResource(R.string.theme_mode_dark),
+                            checked = darkChecked,
+                            onCheckedChange = { dark ->
+                                settingsViewModel.setThemeMode(
+                                    if (dark) ThemeMode.DARK else ThemeMode.LIGHT
+                                )
+                            }
+                        )
+                    }
+                    Toggle(
+                        icon = LucideIcons.Activity, tone = PreferenceIconTone.Tools,
+                        title = stringResource(R.string.haptic_feedback),
+                        summary = stringResource(R.string.haptic_feedback_summary),
+                        checked = hapticEnabled,
+                        onCheckedChange = { enabled ->
+                            scope.launch { settingsRepository.saveHapticFeedbackEnabled(enabled) }
+                        }
+                    )
+                    Toggle(
                         icon = LucideIcons.Blend, tone = PreferenceIconTone.Lyrics,
                         title = stringResource(R.string.bar_blur),
                         summary = stringResource(R.string.bar_blur_summary),
@@ -295,23 +320,6 @@ fun SettingsScreen(
                             },
                         )
                     }
-                    Spinner(
-                        items = KeyColors.map { keyColor ->
-                            PaletteOption(
-                                title = stringResource(keyColor.nameResId),
-                                color = keyColor.color ?: getSystemWallpaperColor(context),
-                            )
-                        },
-                        selectedIndex = KeyColors.indexOf(currentKeyColor).let {
-                            if (it == -1) 0 else it
-                        },
-                        icon = LucideIcons.Palette, tone = PreferenceIconTone.Appearance,
-                        title = stringResource(R.string.key_color),
-                        onSelectedIndexChange = {
-                            val selectedKeyColor = KeyColors[it]
-                            settingsViewModel.setKeyColor(selectedKeyColor)
-                        }
-                    )
                 }
             }
 

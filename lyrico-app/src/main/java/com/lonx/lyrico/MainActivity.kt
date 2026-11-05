@@ -33,7 +33,6 @@ import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.data.repository.LibraryIndexRepository
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.update.UpdateDialog
-import com.lonx.lyrico.ui.theme.KeyColors
 import com.lonx.lyrico.ui.theme.LyricoTheme
 import com.lonx.lyrico.utils.UpdateManager
 import com.lonx.lyrico.viewmodel.SongListViewModel
@@ -140,8 +139,9 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             val themeMode by settingsRepository.themeMode.collectAsStateWithLifecycle(
                 initialValue = ThemeMode.AUTO
             )
-            val keyColor by settingsRepository.keyColor.collectAsStateWithLifecycle(
-                initialValue = KeyColors.first()
+            // 种子色选择已移除：主题色固定走系统默认 / 壁纸 dynamic，不再消费用户选色。
+            val hapticEnabled by settingsRepository.hapticFeedbackEnabled.collectAsStateWithLifecycle(
+                initialValue = false
             )
             val darkMode = when (themeMode) {
                 ThemeMode.DARK -> true
@@ -174,7 +174,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
 
             LyricoTheme(
                 colorMode = themeMode,
-                keyColor = keyColor.color
+                hapticEnabled = hapticEnabled
             ) {
                 LaunchedEffect(Unit) {
                     updateManager.effect.collect { effect ->

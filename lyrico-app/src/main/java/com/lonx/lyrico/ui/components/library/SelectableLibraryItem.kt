@@ -23,6 +23,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import kotlin.math.abs
 import androidx.compose.material3.MaterialTheme
+import com.lonx.lyrico.ui.theme.LocalHapticEnabled
 
 /** Shared song/artist selection gestures, reveal labels, and selected-row styling. */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -41,6 +42,7 @@ fun SelectableLibraryItem(
 ) {
     val view = LocalView.current
     val density = LocalDensity.current
+    val hapticEnabled = LocalHapticEnabled.current
     val swipeThresholdPx = with(density) { 56.dp.toPx() }
     val maxSwipeOffsetPx = swipeThresholdPx * 1.35f
     var swipeOffsetX by remember(itemKey) { mutableFloatStateOf(0f) }
@@ -148,7 +150,7 @@ fun SelectableLibraryItem(
                             },
                             onDragEnd = {
                                 if (abs(totalDragX) >= swipeThresholdPx) {
-                                    view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+                                    if (hapticEnabled) view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                                     onSwipeSelection()
                                 }
                                 totalDragX = 0f
@@ -178,7 +180,7 @@ fun SelectableLibraryItem(
                     null
                 } else {
                     {
-                        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                        if (hapticEnabled) view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                         onToggleSelection?.invoke()
                     }
                 }

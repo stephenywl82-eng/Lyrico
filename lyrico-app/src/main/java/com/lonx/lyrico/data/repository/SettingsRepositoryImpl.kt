@@ -73,6 +73,8 @@ internal fun encodeArtistPosterFolder(uri: String?): String =
 object SettingsDefaults {
     const val FLOATING_BOTTOM_BAR_ENABLED: Boolean = true
     const val BAR_BLUR_ENABLED: Boolean = false
+    /** 震动反馈默认关闭（交互触感需用户显式开启）。 */
+    const val HAPTIC_FEEDBACK_ENABLED: Boolean = false
     val FLOATING_BAR_EFFECT = FloatingBarEffect.NONE
     val KEY_THEME_COLOR = null
     val CONVERSION_MODE = ConversionMode.NONE
@@ -185,6 +187,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val FLOATING_BOTTOM_BAR_ENABLED = booleanPreferencesKey("floating_bottom_bar_enabled")
         val BAR_BLUR_ENABLED = booleanPreferencesKey("bar_blur_enabled")
+        val HAPTIC_FEEDBACK_ENABLED = booleanPreferencesKey("haptic_feedback_enabled")
         val FLOATING_BAR_EFFECT = stringPreferencesKey("floating_bar_effect")
 
         val FLOATING_BAR_BLUR_ENABLED_LEGACY = booleanPreferencesKey("floating_bar_blur_enabled")
@@ -388,6 +391,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         get() = context.settingsDataStore.data.map { preferences ->
             preferences[PreferencesKeys.FLOATING_BOTTOM_BAR_ENABLED]
                 ?: SettingsDefaults.FLOATING_BOTTOM_BAR_ENABLED
+        }
+
+    override val hapticFeedbackEnabled: Flow<Boolean>
+        get() = context.settingsDataStore.data.map { preferences ->
+            preferences[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED]
+                ?: SettingsDefaults.HAPTIC_FEEDBACK_ENABLED
         }
     override val barBlurEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
@@ -696,6 +705,12 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
+    override suspend fun saveHapticFeedbackEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED] = enabled
+        }
+    }
+
     override suspend fun saveFloatingBarEffect(effect: FloatingBarEffect) {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.FLOATING_BAR_EFFECT] = effect.name
@@ -842,6 +857,8 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                 ?: SettingsDefaults.FLOATING_BOTTOM_BAR_ENABLED,
             barBlurEnabled = prefs[PreferencesKeys.BAR_BLUR_ENABLED]
                 ?: SettingsDefaults.BAR_BLUR_ENABLED,
+            hapticFeedbackEnabled = prefs[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED]
+                ?: SettingsDefaults.HAPTIC_FEEDBACK_ENABLED,
             floatingBarEffect = prefs.resolveFloatingBarEffect().name,
             keyThemeColor = prefs[PreferencesKeys.KEY_THEME_COLOR] ?: SettingsDefaults.KEY_THEME_COLOR,
 
@@ -934,6 +951,9 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                     prefs[PreferencesKeys.FLOATING_BOTTOM_BAR_ENABLED] = it
                 }
                 backup.barBlurEnabled?.let { prefs[PreferencesKeys.BAR_BLUR_ENABLED] = it }
+                backup.hapticFeedbackEnabled?.let {
+                    prefs[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED] = it
+                }
                 backup.floatingBarEffect?.let {
                     prefs[PreferencesKeys.FLOATING_BAR_EFFECT] = FloatingBarEffect.fromName(it).name
                 }
