@@ -42,18 +42,27 @@ import org.koin.compose.koinInject
 import com.lonx.lyrico.ui.components.pro.ProDeactivationDialog
 import com.lonx.lyrico.ui.components.pro.SponsorMethod
 import com.lonx.lyrico.ui.components.pro.SponsorQrCodeSheet
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.preference.ArrowPreference
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @Composable
 internal fun AboutProEntry(onClick: () -> Unit) {
     
-        ArrowPreference(
+        ArrowRow(
+            icon = LucideIcons.Crown,
+            tone = PreferenceIconTone.Gold,
             title = "Lyrico Pro",
             summary = stringResource(R.string.pro_about_summary),
-            startAction = { PreferenceIcon(LucideIcons.Crown, PreferenceIconTone.Gold) },
             onClick = onClick,
         )
     
@@ -69,17 +78,17 @@ fun ProScreen(navigator: DestinationsNavigator) {
     var selectedMethod by rememberSaveable { mutableIntStateOf(0) }
     var showQrCode by rememberSaveable { mutableStateOf(false) }
     val salt = false
-    val behavior = MiuixScrollBehavior()
+    val behavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val backdrop = rememberBarBlurBackdrop()
     LibraryDetailPage(
         title = "Lyrico Pro",
         onBack = { navigator.popBackStack() },
         miuixTopBar = {
             BlurredTopBar(backdrop = backdrop) {
-                SmallTopAppBar(
-                    title = "Lyrico Pro",
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
+                TopAppBar(
+                    title = { Text("Lyrico Pro", style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
                     navigationIcon = {
                         IconButton(onClick = { navigator.popBackStack() }) {
                             Icon(LucideIcons.ArrowLeft, stringResource(R.string.action_back))
@@ -96,7 +105,6 @@ fun ProScreen(navigator: DestinationsNavigator) {
             ),
             contentPadding = scaffoldContentPadding(padding, bottomExtra = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            overscrollEffect = null,
         ) {
             if (activated) {
                 item(key = "pro_identity") { ProIdentity() }
@@ -108,27 +116,29 @@ fun ProScreen(navigator: DestinationsNavigator) {
                                 showQrCode = true
                             }
                             
-                                ArrowPreference(
+                                ArrowRow(
+                                    icon = method.icon,
+                                    tone = method.iconTone,
                                     title = stringResource(method.titleRes),
-                                    startAction = { PreferenceIcon(method.icon, method.iconTone) },
                                     onClick = onClick,
                                 )
                             
                         }
                     }
                     Column {
-                        SmallTitle(stringResource(R.string.sponsor_title))
-                        Card(Modifier.padding(horizontal = 12.dp), content = methods)
+                        SectionTitle(stringResource(R.string.sponsor_title))
+                        Card(Modifier.padding(horizontal = 12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer), content = methods)
                     }
                 }
                 item(key = "pro_settings") {
                     
                         Column {
-                            SmallTitle(stringResource(R.string.pro_settings))
-                            Card(Modifier.padding(horizontal = 12.dp)) {
-                                BasicComponent(
+                            SectionTitle(stringResource(R.string.pro_settings))
+                            Card(Modifier.padding(horizontal = 12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
+                                ActionRow(
+                                    icon = LucideIcons.Power,
+                                    tone = PreferenceIconTone.Danger,
                                     title = stringResource(R.string.pro_disable),
-                                    startAction = { PreferenceIcon(LucideIcons.Power, PreferenceIconTone.Danger) },
                                     onClick = onDisable,
                                 )
                             }
@@ -153,7 +163,7 @@ fun ProScreen(navigator: DestinationsNavigator) {
 @Composable
 private fun ProIdentity() {
     
-        Card(Modifier.padding(horizontal = 12.dp)) { ProIdentityContent() }
+        Card(Modifier.padding(horizontal = 12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) { ProIdentityContent() }
     
 }
 
@@ -215,5 +225,72 @@ private fun ProIdentityContent() {
             )
             Text(stringResource(R.string.pro_discovered), color = goldSecondary, style = bodyStyle.copy(fontSize = 13.sp, fontWeight = FontWeight.Medium))
         }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun ActionRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp))
+        Text(text = title, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun ArrowRow(
+    icon: ImageVector,
+    tone: PreferenceIconTone,
+    title: String,
+    summary: String? = null,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        PreferenceIcon(icon, tone, Modifier.size(24.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Icon(
+            imageVector = LucideIcons.ArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

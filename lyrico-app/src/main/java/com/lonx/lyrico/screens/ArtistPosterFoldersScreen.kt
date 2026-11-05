@@ -33,8 +33,17 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.generated.destinations.ArtistDetailDestination
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import org.koin.androidx.compose.koinViewModel
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import top.yukonga.miuix.kmp.window.WindowDialog
 import com.lonx.lyrico.ui.components.base.ItemMenuAction
 import com.lonx.lyrico.viewmodel.ArtistPosterFile
@@ -44,7 +53,8 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
-import top.yukonga.miuix.kmp.menu.OverlayIconDropdownMenu
+import com.lonx.lyrico.ui.components.sdw.SdwTextInput
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 
 @Composable
@@ -82,7 +92,7 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
         viewModel.clearOperationMessage()
     }
     val salt = false
-    val scrollBehavior = MiuixScrollBehavior()
+    val scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val topBarBackdrop = rememberBarBlurBackdrop()
     val menuEnabled = !state.isLoading && !state.isEditing
 
@@ -91,51 +101,51 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
         onBack = { navigator.navigateUp() },
         miuixTopBar = {
             BlurredTopBar(backdrop = topBarBackdrop) {
-                SmallTopAppBar(
-                    title = stringResource(R.string.artist_poster_folders),
-                    color = Color.Transparent,
-                    defaultWindowInsetsPadding = false,
+                TopAppBar(
+                    title = { Text(stringResource(R.string.artist_poster_folders), style = MaterialTheme.typography.titleLarge) },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent),
+                    windowInsets = WindowInsets(0.dp),
                     navigationIcon = {
                         IconButton(onClick = navigator::navigateUp) {
                             Icon(LucideIcons.ArrowLeft, stringResource(R.string.artist_poster_back))
                         }
                     },
                     actions = {
-                        OverlayIconDropdownMenu(
-                            entry = DropdownEntry(
-                                items = buildList {
-                                    add(DropdownItem(
-                                        icon = { modifier -> PreferenceIcon(LucideIcons.Info, PreferenceIconTone.Appearance, modifier = modifier) },
-                                        text = stringResource(R.string.artist_poster_naming),
-                                        onClick = { showHelp = true }
-                                    ))
-                                    if (state.folder != null) {
-                                        add(DropdownItem(
-                                            icon = { modifier -> PreferenceIcon(LucideIcons.Info, PreferenceIconTone.Tools, modifier = modifier) },
-                                            text = stringResource(R.string.artist_poster_folder_details),
-                                            onClick = { showFolderDetails = true }
-                                        ))
-                                        add(DropdownItem(
-                                            icon = { modifier -> PreferenceIcon(LucideIcons.RefreshCw, PreferenceIconTone.Library, modifier = modifier) },
-                                            text = stringResource(R.string.action_refresh_folder),
-                                            onClick = viewModel::refresh
-                                        ))
-                                        add(DropdownItem(
-                                            icon = { modifier -> PreferenceIcon(LucideIcons.FolderPlus, PreferenceIconTone.Lyrics, modifier = modifier) },
-                                            text = stringResource(R.string.artist_poster_folder_change),
-                                            onClick = { picker.launch(null) }
-                                        ))
-                                        add(DropdownItem(
-                                            icon = { modifier -> PreferenceIcon(LucideIcons.Folder, PreferenceIconTone.Pink, modifier = modifier) },
-                                            text = stringResource(R.string.folder_action_remove),
-                                            onClick = { showRemoveDialog = true }
-                                        ))
-                                    }
-                                }
-                            ),
-                            enabled = menuEnabled
-                        ) {
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        IconButton(onClick = { menuExpanded = true }, enabled = menuEnabled) {
                             Icon(LucideIcons.EllipsisVertical, stringResource(R.string.cd_more_actions))
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                leadingIcon = { PreferenceIcon(LucideIcons.Info, PreferenceIconTone.Appearance) },
+                                text = { Text(stringResource(R.string.artist_poster_naming)) },
+                                onClick = { menuExpanded = false; showHelp = true }
+                            )
+                            if (state.folder != null) {
+                                DropdownMenuItem(
+                                    leadingIcon = { PreferenceIcon(LucideIcons.Info, PreferenceIconTone.Tools) },
+                                    text = { Text(stringResource(R.string.artist_poster_folder_details)) },
+                                    onClick = { menuExpanded = false; showFolderDetails = true }
+                                )
+                                DropdownMenuItem(
+                                    leadingIcon = { PreferenceIcon(LucideIcons.RefreshCw, PreferenceIconTone.Library) },
+                                    text = { Text(stringResource(R.string.action_refresh_folder)) },
+                                    onClick = { menuExpanded = false; viewModel.refresh() }
+                                )
+                                DropdownMenuItem(
+                                    leadingIcon = { PreferenceIcon(LucideIcons.FolderPlus, PreferenceIconTone.Lyrics) },
+                                    text = { Text(stringResource(R.string.artist_poster_folder_change)) },
+                                    onClick = { menuExpanded = false; picker.launch(null) }
+                                )
+                                DropdownMenuItem(
+                                    leadingIcon = { PreferenceIcon(LucideIcons.Folder, PreferenceIconTone.Pink) },
+                                    text = { Text(stringResource(R.string.folder_action_remove)) },
+                                    onClick = { menuExpanded = false; showRemoveDialog = true }
+                                )
+                            }
                         }
                     },
                     scrollBehavior = scrollBehavior
@@ -255,8 +265,8 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                     }
                 } },
                 content = {
-                    TextField(state = renameState,
-                        modifier = Modifier.fillMaxWidth(), trailingIcon = {
+                    SdwTextInput(state = renameState,
+                        modifier = Modifier.fillMaxWidth(), actionContent = {
                             Text("." + file?.name?.substringAfterLast('.').orEmpty(), modifier = Modifier.padding(horizontal = 12.dp))
                         },
                         lineLimits = TextFieldLineLimits.SingleLine,
@@ -327,20 +337,19 @@ fun ArtistPosterFoldersScreen(navigator: DestinationsNavigator) {
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.SpaceBetween) {
                             TextButton(
-                                text = stringResource(R.string.cancel),
                                 onClick = { showRemoveDialog = false },
-                                modifier = Modifier.weight(1f)
-                            )
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) { Text(stringResource(R.string.cancel)) }
                             Spacer(Modifier.width(20.dp))
                             TextButton(
-                                text = stringResource(R.string.confirm),
                                 onClick = {
                                     viewModel.removeFolder()
                                     showRemoveDialog = false
                                 },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.textButtonColorsPrimary()
-                            )
+                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                            ) { Text(stringResource(R.string.confirm)) }
                         }
                     }
                 }

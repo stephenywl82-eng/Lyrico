@@ -28,11 +28,14 @@ import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.poster.PosterPreviewMenuAction
 import com.lonx.lyrico.viewmodel.ArtistPosterFile
 import com.lonx.lyrico.viewmodel.ArtistPosterFolder
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.Text
 
 @Composable
 internal fun ArtistPosterFolderContents(
@@ -51,13 +54,11 @@ internal fun ArtistPosterFolderContents(
     previewUri: String?,
     onDismissPreview: () -> Unit,
     padding: PaddingValues,
-    scrollBehavior: ScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior
 ) {
     val salt = false
     val files = folder.posters.orEmpty()
     val scrollModifier = (Modifier
-        .scrollEndHaptic()
-        .overScrollVertical()
         .nestedScroll(scrollBehavior.nestedScrollConnection))
         .fillMaxSize()
     if (files.isEmpty()) {
@@ -66,7 +67,6 @@ internal fun ArtistPosterFolderContents(
         LazyColumn(
             modifier = scrollModifier,
             contentPadding = padding,
-            overscrollEffect = null,
         ) {
             item(key = "folder") {
                 ArtistPosterDirectoryCard(folder, Modifier.padding(top = 12.dp))
@@ -99,8 +99,7 @@ internal fun ArtistPosterFolderContents(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = padding,
-        modifier = scrollModifier,
-        overscrollEffect = null
+        modifier = scrollModifier
     ) {
         item(key = "folder", span = { GridItemSpan(maxLineSpan) }) {
             ArtistPosterDirectoryCard(folder, Modifier.padding(top = 12.dp))
@@ -124,8 +123,9 @@ internal fun ArtistPosterFolderContents(
             
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = if (enabled && !isLoading) { { onFileMenu(file) } } else null,
-                    showIndication = true
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                    enabled = enabled && !isLoading,
+                    onClick = { onFileMenu(file) },
                 ) {
                     PosterImage(file, revision, Modifier.fillMaxWidth().aspectRatio(4f / 5f), ContentScale.Crop)
                     Column(Modifier.fillMaxWidth().padding(12.dp)) {
@@ -169,7 +169,7 @@ private fun ArtistPosterDirectoryCard(
     modifier: Modifier = Modifier
 ) {
 
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(modifier = modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
@@ -205,7 +205,7 @@ private fun PosterImage(file: ArtistPosterFile, revision: Long, modifier: Modifi
         AsyncImage(request, file.name, Modifier.fillMaxSize(), contentScale = scale,
             onSuccess = { loading = false; failed = false }, onError = { loading = false; failed = true })
         if (loading) {
-            CircularProgressIndicator(size = 24.dp)
+            CircularProgressIndicator(modifier = Modifier.size(24.dp))
         }
         if (failed) Column(horizontalAlignment = Alignment.CenterHorizontally) {
             
