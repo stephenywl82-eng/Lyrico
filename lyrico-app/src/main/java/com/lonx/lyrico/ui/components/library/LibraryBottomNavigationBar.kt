@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
@@ -38,12 +39,15 @@ fun LibraryBottomNavigationBar(
     backdrop: LayerBackdrop? = null,
 ) {
     val haptic = LocalHapticFeedback.current
+    val scheme = MaterialTheme.colorScheme
     BlurredBar(
         backdrop = backdrop,
         modifier = Modifier.fillMaxWidth(),
     ) {
         NavigationBar(
             modifier = modifier,
+            // 透明容器：背景交给外层 BlurredBar。BlurredBar 用高不透明度的
+            // surfaceContainer 半透明叠层，既保留玻璃质感，又让文字对比度稳定。
             containerColor = Color.Transparent,
         ) {
             tabs.forEach { tab ->
@@ -61,7 +65,13 @@ fun LibraryBottomNavigationBar(
                         )
                     },
                     label = { Text(stringResource(tab.titleRes)) },
-                    colors = NavigationBarItemDefaults.colors(),
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = scheme.onSecondaryContainer,
+                        selectedTextColor = scheme.onSecondaryContainer,
+                        indicatorColor = scheme.secondaryContainer,
+                        unselectedIconColor = scheme.onSurfaceVariant,
+                        unselectedTextColor = scheme.onSurfaceVariant,
+                    ),
                 )
             }
         }
@@ -76,6 +86,7 @@ fun LibraryNavigationRail(
     modifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
+    val scheme = MaterialTheme.colorScheme
     NavigationRail(modifier = modifier) {
         tabs.forEach { tab ->
             NavigationRailItem(
@@ -92,7 +103,13 @@ fun LibraryNavigationRail(
                     )
                 },
                 label = { Text(stringResource(tab.titleRes)) },
-                colors = NavigationRailItemDefaults.colors(),
+                colors = NavigationRailItemDefaults.colors(
+                    selectedIconColor = scheme.onSecondaryContainer,
+                    selectedTextColor = scheme.onSecondaryContainer,
+                    indicatorColor = scheme.secondaryContainer,
+                    unselectedIconColor = scheme.onSurfaceVariant,
+                    unselectedTextColor = scheme.onSurfaceVariant,
+                ),
             )
         }
     }
@@ -141,4 +158,5 @@ private val LibraryTab.icon: ImageVector
         LibraryTab.Songs -> LucideIcons.Music
         LibraryTab.Artists -> LucideIcons.Users
         LibraryTab.Albums -> LucideIcons.Disc
+        LibraryTab.Folders -> LucideIcons.Folder
     }

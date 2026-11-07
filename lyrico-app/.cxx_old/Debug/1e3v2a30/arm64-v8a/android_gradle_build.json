@@ -1,0 +1,66 @@
+{
+  "buildFiles": [
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\CMakeLists.txt",
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ffmpeg-build.cmake"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "E:\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+      "-C",
+      "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\1e3v2a30\\arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "E:\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe",
+    "-C",
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\1e3v2a30\\arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "ebur128::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "ebur128",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\1e3v2a30\\obj\\arm64-v8a\\libebur128.so",
+      "runtimeFiles": []
+    },
+    "ffmpeg-decoder::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "ffmpeg-decoder",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\1e3v2a30\\obj\\arm64-v8a\\libffmpeg-decoder.so",
+      "runtimeFiles": []
+    },
+    "ffmpeg-native::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "ffmpeg-native"
+    },
+    "quickjs::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "quickjs",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\1e3v2a30\\arm64-v8a\\libquickjs.a"
+    },
+    "quickjs-ng::@6890427a1f51a3e7e1df": {
+      "toolchain": "toolchain",
+      "abi": "arm64-v8a",
+      "artifactName": "quickjs-ng",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\1e3v2a30\\obj\\arm64-v8a\\libquickjs-ng.so",
+      "runtimeFiles": []
+    }
+  },
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe",
+      "cppCompilerExecutable": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe"
+    }
+  },
+  "cFileExtensions": [
+    "c"
+  ],
+  "cppFileExtensions": [
+    "cpp"
+  ]
+}

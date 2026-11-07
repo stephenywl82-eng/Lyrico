@@ -5,7 +5,8 @@ import com.lonx.audiotag.model.AudioTagData
 interface AudioTagRepository {
     suspend fun read(
         uri: String,
-        options: AudioTagReadOptions = AudioTagReadOptions()
+        options: AudioTagReadOptions = AudioTagReadOptions(),
+        filePath: String? = null
     ): AudioTagData
 
     suspend fun overwrite(

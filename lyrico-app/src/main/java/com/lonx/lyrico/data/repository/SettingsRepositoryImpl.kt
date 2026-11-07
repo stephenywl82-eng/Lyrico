@@ -92,7 +92,6 @@ object SettingsDefaults {
     val LYRIC_LINE_ORDER = DefaultLyricLineOrder
     const val ROMA_ENABLED = true
     const val TRANSLATION_ENABLED = true
-    const val CHECK_UPDATE_ENABLED = true
     const val IGNORE_SHORT_AUDIO = true
     const val ONLY_TRANSLATION_IF_AVAILABLE = false
     const val REMOVE_EMPTY_LINES = true
@@ -175,7 +174,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         val SEPARATOR = stringPreferencesKey("separator")
         val LYRIC_LINE_ORDER = stringPreferencesKey("lyric_line_order")
         val ROMA_ENABLED = booleanPreferencesKey("roma_enabled")
-        val CHECK_UPDATE_ENABLED = booleanPreferencesKey("check_update_enabled")
         val TRANSLATION_ENABLED = booleanPreferencesKey("translation_enabled")
         val LYRIC_INDEX_ENABLED = booleanPreferencesKey("lyric_index_enabled")
         val IGNORE_SHORT_AUDIO = booleanPreferencesKey("ignore_short_audio")
@@ -301,12 +299,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override val translationEnabled: Flow<Boolean>
         get() = context.settingsDataStore.data.map { preferences ->
             preferences[PreferencesKeys.TRANSLATION_ENABLED] ?: SettingsDefaults.TRANSLATION_ENABLED
-        }
-
-    override val checkUpdateEnabled: Flow<Boolean>
-        get() = context.settingsDataStore.data.map { preferences ->
-            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED]
-                ?: SettingsDefaults.CHECK_UPDATE_ENABLED
         }
 
     override val lyricIndexEnabled: Flow<Boolean>
@@ -605,12 +597,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
         }
     }
 
-    override suspend fun saveCheckUpdateEnabled(enabled: Boolean) {
-        context.settingsDataStore.edit { preferences ->
-            preferences[PreferencesKeys.CHECK_UPDATE_ENABLED] = enabled
-        }
-    }
-
     override suspend fun saveTranslationEnabled(enabled: Boolean) {
         context.settingsDataStore.edit { preferences ->
             preferences[PreferencesKeys.TRANSLATION_ENABLED] = enabled
@@ -825,9 +811,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
             romaEnabled = prefs[PreferencesKeys.ROMA_ENABLED]
                 ?: SettingsDefaults.ROMA_ENABLED,
 
-            checkUpdateEnabled = prefs[PreferencesKeys.CHECK_UPDATE_ENABLED]
-                ?: SettingsDefaults.CHECK_UPDATE_ENABLED,
-
             translationEnabled = prefs[PreferencesKeys.TRANSLATION_ENABLED]
                 ?: SettingsDefaults.TRANSLATION_ENABLED,
 
@@ -911,7 +894,6 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
                         decodeLyricLineOrder(names.joinToString(",")).joinToString(",") { it.name }
                 }
 
-                backup.checkUpdateEnabled?.let { prefs[PreferencesKeys.CHECK_UPDATE_ENABLED] = it }
                 backup.translationEnabled?.let { prefs[PreferencesKeys.TRANSLATION_ENABLED] = it }
                 backup.lyricIndexEnabled?.let { prefs[PreferencesKeys.LYRIC_INDEX_ENABLED] = it }
                 backup.ignoreShortAudio?.let { prefs[PreferencesKeys.IGNORE_SHORT_AUDIO] = it }

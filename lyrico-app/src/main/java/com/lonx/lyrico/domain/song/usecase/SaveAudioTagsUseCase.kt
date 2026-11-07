@@ -35,7 +35,12 @@ class SaveAudioTagsUseCase(
             is AudioTagWriteResult.Success -> {
                 val savedData = writeResult.savedData
                 val song = songLibraryRepository.getSongByUri(uri)
-                val updatedSong = if (song != null) {
+                // If the write succeeded but the file could not be read back (read-only
+                // parse failed even after the writable repair), the returned snapshot is
+                // empty. Keep the existing library metadata instead of overwriting it with
+                // a blank snapshot (which would wipe title/artist/album in the database).
+                val usableMetadata = savedData.rawProperties != null || savedData.fileName.isNotEmpty()
+                val updatedSong = if (song != null && usableMetadata) {
                     val updated = songMetadataMapper.applyAudioTagData(
                         old = song,
                         tag = savedData
@@ -48,7 +53,7 @@ class SaveAudioTagsUseCase(
                     }
                     updated
                 } else {
-                    null
+                    song
                 }
 
                 SaveAudioTagsResult.Success(

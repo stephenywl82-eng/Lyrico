@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +21,7 @@ import com.ramcosta.composedestinations.generated.NavGraphs
 import com.ramcosta.composedestinations.generated.destinations.EditMetadataDestination
 import com.ramcosta.composedestinations.spec.Direction
 import androidx.compose.material3.Surface
+import com.lonx.lyrico.ui.theme.Motion
 
 @Composable
 fun LyricoApp(externalUri: Uri?, externalEditRequestId: Long = 0L) {
@@ -43,49 +44,27 @@ fun LyricoApp(externalUri: Uri?, externalEditRequestId: Long = 0L) {
                 start = startDirection,
                 dependenciesContainerBuilder = {
                 },
+                // M3 Expressive 转场：fade-through（出页先快速淡出、入页延迟淡入，任意时刻只一个页面可读）
+                // + emphasized 缓动；返回（pop）方向用 spring 携带手势速度实现预测返回跟手。覆盖全站所有路由。
                 defaultTransitions = object : NavHostAnimatedDestinationStyle() {
                     override val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition =
                         {
-                            slideInHorizontally(
-                                initialOffsetX = { it },
-                                animationSpec = tween(
-                                    durationMillis = 300,
-                                    easing = FastOutSlowInEasing
-                                )
-                            )
+                            slideInHorizontally(Motion.navSlideIn) { it / 6 } + fadeIn(Motion.navFadeIn)
                         }
 
                     override val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition =
                         {
-                            slideOutHorizontally(
-                                targetOffsetX = { -it },
-                                animationSpec = tween(
-                                    durationMillis = 300,
-                                    easing = FastOutSlowInEasing
-                                )
-                            )
+                            slideOutHorizontally(Motion.navSlideOut) { -it / 10 } + fadeOut(Motion.navFadeOut)
                         }
 
                     override val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition =
                         {
-                            slideInHorizontally(
-                                initialOffsetX = { -it },
-                                animationSpec = tween(
-                                    durationMillis = 300,
-                                    easing = FastOutSlowInEasing
-                                )
-                            )
+                            slideInHorizontally(Motion.navPopSlideIn) { -it / 6 } + fadeIn(Motion.navFadeIn)
                         }
 
                     override val popExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition =
                         {
-                            slideOutHorizontally(
-                                targetOffsetX = { it },
-                                animationSpec = tween(
-                                    durationMillis = 300,
-                                    easing = FastOutSlowInEasing
-                                )
-                            )
+                            slideOutHorizontally(Motion.navPopSlideOut) { it / 10 } + fadeOut(Motion.navFadeOut)
                         }
                 }
             )

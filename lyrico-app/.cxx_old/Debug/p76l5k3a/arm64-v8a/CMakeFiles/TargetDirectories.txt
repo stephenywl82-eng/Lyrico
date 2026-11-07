@@ -1,0 +1,7 @@
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/ffmpeg-native.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/ffmpeg-decoder.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/ebur128.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/quickjs.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/quickjs-ng.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/edit_cache.dir
+E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,15 +1,11 @@
 package com.lonx.lyrico.ui.components.bar
 
-import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
+import android.app.Activity
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.ui.Modifier
@@ -20,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -38,7 +35,10 @@ import com.lonx.lyrico.ui.components.batch.BatchLyricsFormatConfigBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchMatchBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchMatchConfigBottomSheet
 import com.lonx.lyrico.ui.components.batch.BatchRGBottomSheet
+import com.lonx.lyrico.ui.permissions.rememberBatchWritePermissionRequester
 import com.lonx.lyrico.ui.components.batch.BatchRGConfigBottomSheet
+import com.lonx.lyrico.viewmodel.SongSelectionViewModel
+import kotlinx.coroutines.flow.collect
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenu
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenuStyle
 import com.lonx.lyrico.ui.components.fab.FabMenuItem
@@ -174,6 +174,7 @@ fun BoxScope.SongBatchSelectionActions(
     val batchExportUiState by batchExportViewModel.uiState.collectAsStateWithLifecycle()
     val matchTargets by batchMatchViewModel.visibleTargets.collectAsStateWithLifecycle()
     val batchMatchConfig by batchMatchViewModel.batchMatchConfig.collectAsStateWithLifecycle()
+    val batchMatchSourcesByType by batchMatchViewModel.sourcesByType.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
     var showExportDestinationSheet by remember { mutableStateOf(false) }
@@ -198,38 +199,21 @@ fun BoxScope.SongBatchSelectionActions(
         }
     }
 
-    var pendingBatchMatch: (() -> Unit)? by remember { mutableStateOf(null) }
-    val batchWritePermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { _ ->
-        val action = pendingBatchMatch
-        pendingBatchMatch = null
-        action?.invoke()
-    }
+    val requestBatchWritePermission = rememberBatchWritePermissionRequester()
 
-    fun requestMatchWritePermission(uris: List<String>, onGranted: () -> Unit) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R || uris.isEmpty()) {
-            onGranted()
-            return
+    val selectionViewModel: SongSelectionViewModel = koinViewModel()
+    val batchDeletePermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            selectionViewModel.retryPendingBatchDelete()
         }
-        val contentUris = uris.mapNotNull { raw ->
-            runCatching { Uri.parse(raw) }.getOrNull()?.takeIf { it.scheme == "content" }
-        }
-        if (contentUris.isEmpty()) {
-            onGranted()
-            return
-        }
-        val intentSender = try {
-            MediaStore.createWriteRequest(context.contentResolver, contentUris).intentSender
-        } catch (e: Exception) {
-            Log.w("SongSelectionSupport", "createWriteRequest failed", e)
-            null
-        }
-        if (intentSender == null) {
-            onGranted()
-        } else {
-            pendingBatchMatch = onGranted
-            batchWritePermissionLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+    }
+    LaunchedEffect(Unit) {
+        selectionViewModel.batchPermissionRequest.collect { intentSender ->
+            intentSender?.let {
+                batchDeletePermissionLauncher.launch(IntentSenderRequest.Builder(it).build())
+            }
         }
     }
 
@@ -277,6 +261,7 @@ fun BoxScope.SongBatchSelectionActions(
         matchType = batchMatchUiState.matchType,
         initialConfig = batchMatchConfig,
         visibleTargets = matchTargets,
+        sources = batchMatchSourcesByType[batchMatchUiState.matchType].orEmpty(),
         onDismissRequest = { config ->
             batchMatchViewModel.saveBatchMatchConfig(config)
             batchMatchViewModel.closeBatchMatchConfig()
@@ -284,7 +269,7 @@ fun BoxScope.SongBatchSelectionActions(
         onConfirm = { config ->
             batchMatchViewModel.saveBatchMatchConfig(config)
             val candidateUris = songs.filter { it.uri in selectedSongUris }.map { it.uri }
-            requestMatchWritePermission(candidateUris) {
+            requestBatchWritePermission(candidateUris) {
                 batchMatchViewModel.batchMatch(songs, config)
             }
         }
@@ -311,7 +296,9 @@ fun BoxScope.SongBatchSelectionActions(
         },
         onConfirm = { concurrency ->
             batchReplayGainViewModel.setConcurrency(concurrency)
-            batchReplayGainViewModel.startBatchScan()
+            requestBatchWritePermission(selectedSongUris.toList()) {
+                batchReplayGainViewModel.startBatchScan()
+            }
         }
     )
 
@@ -333,7 +320,11 @@ fun BoxScope.SongBatchSelectionActions(
         onConcurrency = batchLyricsFormatViewModel::setConcurrency,
         onTwoColumnMapping = batchLyricsFormatViewModel::setTwoColumnMapping,
         onThreeColumnMapping = batchLyricsFormatViewModel::setThreeColumnMapping,
-        onConfirm = batchLyricsFormatViewModel::startBatchConvert
+        onConfirm = {
+            requestBatchWritePermission(selectedSongUris.toList()) {
+                batchLyricsFormatViewModel.startBatchConvert()
+            }
+        }
     )
 
     BatchLyricsFormatBottomSheet(

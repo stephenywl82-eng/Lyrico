@@ -5,7 +5,7 @@ import android.widget.MediaController
 import android.widget.VideoView
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.*
@@ -95,7 +95,7 @@ internal fun ArtistPosterPreview(
 
     fun setInfo(open: Boolean) {
         chromeVisible = true
-        scope.launch { infoProgress.animateTo(if (open) 1f else 0f, tween(320, easing = FastOutSlowInEasing)) }
+        scope.launch { infoProgress.animateTo(if (open) 1f else 0f, tween(Motion.contentDuration, easing = Motion.emphasized)) }
     }
     fun toggleChrome() {
         if (infoProgress.value > 0f || infoOpen) {

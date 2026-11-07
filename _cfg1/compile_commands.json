@@ -1,0 +1,42 @@
+[
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -D_FILE_OFFSET_BITS=64 -Dffmpeg_decoder_EXPORTS -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/ffmpeg -IE:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-build -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -fvisibility=hidden -o CMakeFiles\\ffmpeg-decoder.dir\\ffmpeg_decoder.cpp.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ffmpeg_decoder.cpp",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ffmpeg_decoder.cpp"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Debur128_EXPORTS -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -Wno-cpp -o CMakeFiles\\ebur128.dir\\ebur128.cpp.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ebur128.cpp",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ebur128.cpp"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Debur128_EXPORTS -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -Wno-cpp -o CMakeFiles\\ebur128.dir\\ebur128\\ebur128.c.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ebur128\\ebur128.c",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ebur128\\ebur128.c"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DCONFIG_VERSION=\\\"0.14.0\\\" -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/quickjs-ng -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -std=gnu11 -o CMakeFiles\\quickjs.dir\\quickjs-ng\\quickjs.c.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\quickjs.c",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\quickjs.c"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DCONFIG_VERSION=\\\"0.14.0\\\" -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/quickjs-ng -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -std=gnu11 -o CMakeFiles\\quickjs.dir\\quickjs-ng\\libregexp.c.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\libregexp.c",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\libregexp.c"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DCONFIG_VERSION=\\\"0.14.0\\\" -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/quickjs-ng -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -std=gnu11 -o CMakeFiles\\quickjs.dir\\quickjs-ng\\libunicode.c.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\libunicode.c",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\libunicode.c"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -DCONFIG_VERSION=\\\"0.14.0\\\" -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/quickjs-ng -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security  -fno-limit-debug-info  -fPIC -std=gnu11 -o CMakeFiles\\quickjs.dir\\quickjs-ng\\dtoa.c.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\dtoa.c",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs-ng\\dtoa.c"
+},
+{
+  "directory": "E:/WorkBuddy/Claw/Lyrico/_cfg1",
+  "command": "E:\\Android\\Sdk\\ndk\\29.0.14206865\\toolchains\\llvm\\prebuilt\\windows-x86_64\\bin\\clang++.exe --target=aarch64-none-linux-android28 --sysroot=E:/Android/Sdk/ndk/29.0.14206865/toolchains/llvm/prebuilt/windows-x86_64/sysroot -Dquickjs_ng_EXPORTS -IE:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp/quickjs-ng -g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -fno-limit-debug-info  -fPIC -o CMakeFiles\\quickjs-ng.dir\\quickjs_bridge.cpp.o -c E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs_bridge.cpp",
+  "file": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\quickjs_bridge.cpp"
+}
+]

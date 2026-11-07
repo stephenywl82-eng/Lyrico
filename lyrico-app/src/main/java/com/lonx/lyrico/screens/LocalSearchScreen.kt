@@ -5,7 +5,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -186,12 +186,12 @@ fun LocalSearchScreen(
                         targetState = isSelectionMode,
                         label = "LocalSearchTopBarAnimation",
                         transitionSpec = {
-                            val animationDuration = 300
+                            val animationDuration = Motion.contentDuration
                             val enter = fadeIn(tween(animationDuration)) +
                                 slideInVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     initialOffsetY = { -it / 3 }
                                 )
@@ -199,7 +199,7 @@ fun LocalSearchScreen(
                                 slideOutVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     targetOffsetY = { -it / 3 }
                                 )
@@ -245,28 +245,28 @@ fun LocalSearchScreen(
                         visible = !isSelectionMode,
                         enter = expandVertically(
                             animationSpec = tween(
-                                durationMillis = 300,
-                                easing = FastOutSlowInEasing
+                                durationMillis = Motion.contentDuration,
+                                easing = Motion.emphasized
                             )
                         ) + slideInVertically(
                             animationSpec = tween(
-                                durationMillis = 300,
-                                easing = FastOutSlowInEasing
+                                durationMillis = Motion.contentDuration,
+                                easing = Motion.emphasized
                             ),
                             initialOffsetY = { -it / 3 }
-                        ) + fadeIn(tween(300)),
+                        ) + fadeIn(tween(Motion.contentDuration)),
                         exit = shrinkVertically(
                             animationSpec = tween(
-                                durationMillis = 300,
-                                easing = FastOutSlowInEasing
+                                durationMillis = Motion.contentDuration,
+                                easing = Motion.emphasized
                             )
                         ) + slideOutVertically(
                             animationSpec = tween(
-                                durationMillis = 300,
-                                easing = FastOutSlowInEasing
+                                durationMillis = Motion.contentDuration,
+                                easing = Motion.emphasized
                             ),
                             targetOffsetY = { -it / 3 }
-                        ) + fadeOut(tween(300))
+                        ) + fadeOut(tween(Motion.contentDuration))
                     ) {
                         Column {
                             SearchBar(

@@ -7,12 +7,22 @@ import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
+@Serializable
+enum class PluginSelectionMode {
+    /** 自动插件：按优先级依次尝试所有可用插件（默认行为）。 */
+    AUTO,
+    /** 自定义插件：仅使用用户指定的单个插件。 */
+    SPECIFIC
+}
+
 @Parcelize
 @Serializable
 data class BatchMatchConfig(
     val targetModes: Map<MetadataFieldTarget, MetadataWriteMode>,
     val concurrency: Int = 3,
-    val preferFileName: Boolean = false
+    val preferFileName: Boolean = false,
+    val pluginMode: PluginSelectionMode = PluginSelectionMode.AUTO,
+    val selectedSourceIds: Map<String, String> = emptyMap()
 ) : Parcelable {
     fun restrictedTo(targets: Set<MetadataFieldTarget>): BatchMatchConfig = copy(
         targetModes = targetModes.mapValues { (target, mode) ->

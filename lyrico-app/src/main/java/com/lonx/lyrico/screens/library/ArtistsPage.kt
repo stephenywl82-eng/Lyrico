@@ -24,7 +24,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import com.lonx.lyrico.ui.components.library.SelectableLibraryItem
 import com.lonx.lyrico.data.model.entity.ArtistEntity
 import com.lonx.lyrico.ui.components.bar.SelectionTopAppBar
@@ -297,8 +297,8 @@ fun ArtistsPage(
                 AnimatedContent(
                     targetState = selecting, label = "TopBarAnimation",
                     transitionSpec = {
-                        val enter = fadeIn(tween(300)) + slideInVertically(tween(300, easing = FastOutSlowInEasing)) { -it / 3 }
-                        val exit = fadeOut(tween(300)) + slideOutVertically(tween(300, easing = FastOutSlowInEasing)) { -it / 3 }
+                        val enter = fadeIn(tween(Motion.contentDuration)) + slideInVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
+                        val exit = fadeOut(tween(Motion.contentDuration)) + slideOutVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
                         (enter togetherWith exit).using(SizeTransform(clip = false))
                     }
                 ) { selectionMode ->

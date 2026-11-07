@@ -1,7 +1,7 @@
 package com.lonx.lyrico.screens.library
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -38,11 +38,11 @@ internal fun LibraryTopBarTransition(
         label = "TopBarAnimation",
         transitionSpec = {
             val enter =
-                fadeIn(tween(300)) +
-                    slideInVertically(tween(300, easing = FastOutSlowInEasing)) { -it / 3 }
+                fadeIn(tween(Motion.contentDuration)) +
+                    slideInVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
             val exit =
-                fadeOut(tween(300)) +
-                    slideOutVertically(tween(300, easing = FastOutSlowInEasing)) { -it / 3 }
+                fadeOut(tween(Motion.contentDuration)) +
+                    slideOutVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
             // Preserve the native slot anchor; only the explicit Y transition should move content.
             (enter togetherWith exit).using(null)
         },

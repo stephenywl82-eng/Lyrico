@@ -1,0 +1,13 @@
+# Target labels
+ ffmpeg-native
+# Source files and their labels
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native-complete.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-build.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-configure.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-download.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-install.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-mkdir.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-patch.rule
+E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-update.rule

@@ -21,7 +21,6 @@ data class SettingsBackup(
     @SerialName("separator") val separator: String? = null,
     @SerialName("roma_enabled") val romaEnabled: Boolean? = null,
     @SerialName("lyric_line_order") val lyricLineOrder: List<String>? = null,
-    @SerialName("check_update_enabled") val checkUpdateEnabled: Boolean? = null,
     @SerialName("translation_enabled") val translationEnabled: Boolean? = null,
     @SerialName("lyric_index_enabled") val lyricIndexEnabled: Boolean? = null,
     @SerialName("ignore_short_audio") val ignoreShortAudio: Boolean? = null,

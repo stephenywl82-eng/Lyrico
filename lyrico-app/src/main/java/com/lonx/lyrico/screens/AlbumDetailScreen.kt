@@ -4,7 +4,7 @@ package com.lonx.lyrico.screens
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -170,12 +170,12 @@ fun AlbumDetailScreen(
                     targetState = isSelectionMode,
                     label = "AlbumDetailTopBarAnimation",
                     transitionSpec = {
-                        val animationDuration = 300
+                        val animationDuration = Motion.contentDuration
                         val enter = fadeIn(tween(animationDuration)) +
                                 slideInVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     initialOffsetY = { -it / 3 }
                                 )
@@ -183,7 +183,7 @@ fun AlbumDetailScreen(
                                 slideOutVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     targetOffsetY = { -it / 3 }
                                 )

@@ -1,0 +1,96 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10.0"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "third_party",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "ebur128::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ebur128-Debug-273208ef9ba02db7fa2e.json",
+					"name" : "ebur128",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ffmpeg-decoder::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ffmpeg-decoder-Debug-eb4ded53751b35f1674b.json",
+					"name" : "ffmpeg-decoder",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ffmpeg-native::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ffmpeg-native-Debug-d5fecac3cf229de6d455.json",
+					"name" : "ffmpeg-native",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "quickjs::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-quickjs-Debug-fcde783745edd1238fdd.json",
+					"name" : "quickjs",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "quickjs-ng::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-quickjs-ng-Debug-fb3f6649e266ae9ccb15.json",
+					"name" : "quickjs-ng",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/p76l5k3a/arm64-v8a",
+		"source" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/src/main/cpp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

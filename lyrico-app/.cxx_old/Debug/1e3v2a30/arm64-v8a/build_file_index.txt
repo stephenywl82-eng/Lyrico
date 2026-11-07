@@ -1,0 +1,2 @@
+E:\WorkBuddy\Claw\Lyrico\lyrico-app\src\main\cpp\CMakeLists.txt
+E:\WorkBuddy\Claw\Lyrico\lyrico-app\src\main\cpp\ffmpeg-build.cmake

@@ -51,7 +51,6 @@ interface SettingsRepository {
     val conversionMode: Flow<ConversionMode>
 
     val translationEnabled: Flow<Boolean>
-    val checkUpdateEnabled: Flow<Boolean>
     val lyricIndexEnabled: Flow<Boolean>
     val ignoreShortAudio: Flow<Boolean>
     val replayGainSettings: Flow<ReplayGainSettings>
@@ -91,7 +90,6 @@ interface SettingsRepository {
     suspend fun saveLyricLineOrder(order: List<LyricLineTrack>)
     suspend fun saveRomaEnabled(enabled: Boolean)
     suspend fun saveConversionMode(mode: ConversionMode)
-    suspend fun saveCheckUpdateEnabled(enabled: Boolean)
     suspend fun saveTranslationEnabled(enabled: Boolean)
     suspend fun saveLyricIndexEnabled(enabled: Boolean)
     suspend fun saveIgnoreShortAudio(enabled: Boolean)

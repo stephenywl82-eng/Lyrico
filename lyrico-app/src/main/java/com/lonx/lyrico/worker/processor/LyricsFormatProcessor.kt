@@ -12,6 +12,7 @@ import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.domain.song.usecase.PatchSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
+import com.lonx.lyrico.domain.song.usecase.failureReason
 import com.lonx.lyrico.utils.LyricDecoder
 import com.lonx.lyrico.utils.LyricEncoder
 import com.lonx.lyrico.utils.lyrics.LyricsColumnSorter
@@ -74,7 +75,7 @@ class LyricsFormatProcessor(
         )
 
         if (result !is SaveAudioTagsResult.Success) {
-            throw Exception("Write failed")
+            throw Exception("Write failed: ${result.failureReason()}")
         }
 
         return BatchTaskProcessResult()

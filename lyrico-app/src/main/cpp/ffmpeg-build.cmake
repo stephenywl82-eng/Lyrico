@@ -1,4 +1,15 @@
 include(ExternalProject)
+# AGP sanitizes PATH during native builds, so git must be resolved via explicit
+# absolute paths instead of relying on PATH lookup (which the Gradle/AGP launcher strips).
+find_program(GIT_EXECUTABLE git
+    PATHS
+        "C:/Program Files/WorkBuddy/resources/vendor/PortableGit/mingw64/bin"
+        "C:/Program Files/WorkBuddy/resources/vendor/PortableGit/bin"
+        "C:/Program Files/Git/bin"
+        "C:/Program Files/Git/mingw64/bin"
+        /usr/bin
+        /bin
+    REQUIRED)
 find_package(Git REQUIRED)
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/configure")
     message(FATAL_ERROR "Initialize FFmpeg: git submodule update --init --recursive")

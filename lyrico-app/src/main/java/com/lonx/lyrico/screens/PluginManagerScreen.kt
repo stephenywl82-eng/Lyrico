@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -1009,8 +1009,8 @@ fun PluginItem(
                     .padding(top = 4.dp)
                     .animateContentSize(
                         animationSpec = tween(
-                            durationMillis = 250,
-                            easing = FastOutSlowInEasing
+                            durationMillis = Motion.contentDuration,
+                            easing = Motion.emphasized
                         )
                     )
             ) {

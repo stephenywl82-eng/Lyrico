@@ -8,7 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +17,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import com.lonx.lyrico.ui.components.library.libraryDetailScroll
+import com.lonx.lyrico.ui.components.library.LocalLibraryBottomContentPadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -90,6 +91,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -115,7 +117,8 @@ import com.lonx.lyrico.viewmodel.SortOrder
 @Composable
 @Destination<RootGraph>(route = "folder_manager")
 fun FolderManagerScreen(
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
+    embedded: Boolean = false
 ) {
     val viewModel: FolderManagerViewModel = koinViewModel()
     val selectionViewModel: SongSelectionViewModel = koinViewModel()
@@ -264,7 +267,7 @@ fun FolderManagerScreen(
     val navigateUpAction: () -> Unit = {
         if (currentFolder != null) {
             navigateToFolder(parentFolder?.id ?: ROOT_FOLDER_ID, forward = false)
-        } else {
+        } else if (!embedded) {
             navigator.navigateUp()
         }
     }
@@ -282,12 +285,12 @@ fun FolderManagerScreen(
                     targetState = isSelectionMode,
                     label = "FolderManagerTopBarAnimation",
                     transitionSpec = {
-                        val animationDuration = 300
+                        val animationDuration = Motion.contentDuration
                         val enter = fadeIn(tween(animationDuration)) +
                                 slideInVertically(
                                     animationSpec = tween(
                                         durationMillis = animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     initialOffsetY = { -it / 3 }
                                 )
@@ -295,7 +298,7 @@ fun FolderManagerScreen(
                                 slideOutVertically(
                                     animationSpec = tween(
                                         durationMillis = animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     targetOffsetY = { -it / 3 }
                                 )
@@ -333,13 +336,15 @@ fun FolderManagerScreen(
                             ),
                             windowInsets = WindowInsets(0.dp),
                             navigationIcon = {
-                                IconButton(
-                                    onClick = navigateUpAction
-                                ) {
-                                    Icon(
-                                        imageVector = LucideIcons.ArrowLeft,
-                                        contentDescription = null
-                                    )
+                                if (currentFolder != null || !embedded) {
+                                    IconButton(
+                                        onClick = navigateUpAction
+                                    ) {
+                                        Icon(
+                                            imageVector = LucideIcons.ArrowLeft,
+                                            contentDescription = null
+                                        )
+                                    }
                                 }
                             },
                             actions = {
@@ -623,8 +628,8 @@ private fun FolderPagerSlideContent(
             progress.animateTo(
                 targetValue = 1f,
                 animationSpec = tween(
-                    durationMillis = 360,
-                    easing = FastOutSlowInEasing
+                    durationMillis = Motion.contentDuration,
+                    easing = Motion.emphasized
                 )
             )
             onTransitionFinished()
@@ -946,7 +951,7 @@ private fun FolderChildrenPage(
         modifier = modifier
             .libraryDetailScroll(topAppBarScrollBehavior)
             .fillMaxHeight(),
-        contentPadding = PaddingValues(bottom = 12.dp),
+        contentPadding = PaddingValues(bottom = 12.dp + LocalLibraryBottomContentPadding.current),
         overscrollEffect = null
     ) {
         if (folders.isEmpty()) {
@@ -1009,7 +1014,7 @@ private fun FolderCurrentSongsPage(
             .libraryDetailScroll(topAppBarScrollBehavior)
             .fillMaxHeight(),
         state = listState,
-        contentPadding = PaddingValues(bottom = 12.dp),
+        contentPadding = PaddingValues(bottom = 12.dp + LocalLibraryBottomContentPadding.current),
         overscrollEffect = null
     ) {
         if (songs.isEmpty()) {
@@ -1075,7 +1080,11 @@ private fun FolderPathHeader(
 ) {
 
     Card(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+        )
     ) {
         Column(
             modifier = Modifier
@@ -1088,6 +1097,14 @@ private fun FolderPathHeader(
                     .horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Icon(
+                    LucideIcons.Folder,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(end = 8.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
                 breadcrumbs.forEachIndexed { index, breadcrumb ->
                     if (index > 0) {
                         Icon(
@@ -1100,8 +1117,8 @@ private fun FolderPathHeader(
                     val isCurrent = index == breadcrumbs.lastIndex
                     Text(
                         text = breadcrumb.label,
-                        style = if (isCurrent) MaterialTheme.typography.labelLarge else MaterialTheme.typography.bodyMedium,
-                        color = if (isCurrent) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = if (isCurrent) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelLarge,
+                        color = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
@@ -1111,12 +1128,12 @@ private fun FolderPathHeader(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.folder_browser_count_format, folderCount, songCount),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = MaterialTheme.typography.bodyMedium.fontSize
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

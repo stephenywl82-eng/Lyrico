@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
@@ -60,6 +61,42 @@ internal fun BlurNavigationBarV2(
     content: @Composable RowScope.() -> Unit,
 ) {
     if (itemCount <= 0) return
+    val scheme = MaterialTheme.colorScheme
+    // 自包含玻璃质感：不依赖 backdrop 采样（内置 com.kyant.backdrop 的 exportedBackdrop
+    // 机制不含子内容，无法透视模糊背后页面），改用半透明表面 + 渐变高光表现玻璃感。
+    // 毛玻璃更实更朦胧，液态玻璃更透并带顶部反光，二者切换有清晰可见差异，且不会触发
+    // 之前的 RenderNode 自引用崩溃。
+    val glass = backdrop != null
+    val frostedBrush = Brush.verticalGradient(
+        colors = listOf(
+            scheme.surfaceContainerHigh.copy(alpha = 0.92f),
+            scheme.surfaceContainerHigh.copy(alpha = 0.74f),
+        ),
+    )
+    val liquidBrush = Brush.verticalGradient(
+        colors = listOf(
+            scheme.surfaceContainerHigh.copy(alpha = 0.52f),
+            scheme.surfaceContainerHigh.copy(alpha = 0.26f),
+            scheme.surfaceContainerHigh.copy(alpha = 0.44f),
+        ),
+    )
+    val barModifier = Modifier
+        .fillMaxWidth()
+        .height(64.dp)
+        .clip(CircleShape)
+        .then(
+            when (effect) {
+                FloatingBarEffect.FROSTED_GLASS -> if (glass)
+                    Modifier.background(frostedBrush)
+                else Modifier.background(scheme.surfaceContainerHigh)
+
+                FloatingBarEffect.LIQUID_GLASS -> if (glass)
+                    Modifier.background(liquidBrush)
+                else Modifier.background(scheme.surfaceContainerHigh)
+
+                else -> Modifier.background(scheme.surfaceContainerHigh)
+            }
+        )
     CompositionLocalProvider(LocalReferenceBarSelection provides onSelectionChanged) {
         Box(
             modifier = modifier
@@ -68,11 +105,7 @@ internal fun BlurNavigationBarV2(
             contentAlignment = Alignment.Center,
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = barModifier,
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {

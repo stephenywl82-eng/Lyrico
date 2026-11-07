@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,17 +26,21 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.BatchMatchConfig
+import com.lonx.lyrico.data.model.PluginSelectionMode
+import com.lonx.lyrico.data.model.lyrics.SearchSource
 import com.lonx.lyrico.data.model.metadata.MetadataFieldTarget
 import com.lonx.lyrico.data.model.metadata.MetadataWriteMode
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.ui.components.base.ConcurrencyDropdown
+import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.viewmodel.BatchMatchType
-import androidx.compose.material3.MaterialTheme
 import com.lonx.lyrico.ui.components.sdw.BasicComponent
 import com.lonx.lyrico.ui.components.sdw.Card
 import com.lonx.lyrico.ui.components.sdw.CardDefaults
 import com.lonx.lyrico.ui.components.sdw.Checkbox
 import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
+import com.lonx.lyrico.ui.components.sdw.RadioButtonPreference
+import com.lonx.lyrico.ui.components.sdw.SdwDropdownRow
 import androidx.compose.material3.Text
 import com.lonx.lyrico.ui.components.sdw.CheckboxPreference
 
@@ -46,6 +51,7 @@ fun BatchMatchConfigBottomSheet(
     matchType: BatchMatchType,
     initialConfig: BatchMatchConfig,
     visibleTargets: List<MetadataFieldTarget>,
+    sources: List<SearchSource>,
     onDismissRequest: (BatchMatchConfig) -> Unit,
     onConfirm: (BatchMatchConfig) -> Unit
 ) {
@@ -102,6 +108,85 @@ fun BatchMatchConfigBottomSheet(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
             ) {
+                // 匹配插件：自动插件 / 自定义插件（指定单个插件）
+                Card(
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    colors = CardDefaults.defaultColors(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                    )
+                ) {
+                    Text(
+                        text = stringResource(R.string.batch_match_plugin_selection),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.padding(
+                            start = 12.dp,
+                            top = 12.dp,
+                            end = 12.dp,
+                            bottom = 4.dp
+                        )
+                    )
+                    RadioButtonPreference(
+                        title = stringResource(R.string.batch_match_plugin_auto),
+                        summary = stringResource(R.string.batch_match_plugin_auto_summary),
+                        selected = config.pluginMode == PluginSelectionMode.AUTO,
+                        onClick = {
+                            config = config.copy(pluginMode = PluginSelectionMode.AUTO)
+                        },
+                        insideMargin = PaddingValues(12.dp)
+                    )
+                    RadioButtonPreference(
+                        title = stringResource(R.string.batch_match_plugin_custom),
+                        summary = stringResource(R.string.batch_match_plugin_custom_summary),
+                        selected = config.pluginMode == PluginSelectionMode.SPECIFIC,
+                        enabled = sources.isNotEmpty(),
+                        onClick = {
+                            val sourceIds = sources.map { it.id }
+                            val current = config.selectedSourceIds[matchType.name]
+                            val firstId = sources.firstOrNull()?.id
+                            val nextSelected = if (firstId != null &&
+                                (current == null || current !in sourceIds)
+                            ) {
+                                config.selectedSourceIds + (matchType.name to firstId)
+                            } else {
+                                config.selectedSourceIds
+                            }
+                            config = config.copy(
+                                pluginMode = PluginSelectionMode.SPECIFIC,
+                                selectedSourceIds = nextSelected
+                            )
+                        },
+                        insideMargin = PaddingValues(12.dp)
+                    )
+                    if (config.pluginMode == PluginSelectionMode.SPECIFIC && sources.isNotEmpty()) {
+                        val sourceIds = sources.map { it.id }
+                        val selectedId = config.selectedSourceIds[matchType.name]
+                            .takeIf { it in sourceIds } ?: sources.first().id
+                        val selectedIndex = sources.indexOfFirst { it.id == selectedId }
+                            .coerceAtLeast(0)
+                        SdwDropdownRow(
+                            title = stringResource(R.string.batch_match_plugin_source),
+                            labels = sources.map { it.name },
+                            selectedIndex = selectedIndex,
+                            icon = LucideIcons.Plug,
+                            onSelectedIndexChange = { index ->
+                                config = config.copy(
+                                    selectedSourceIds = config.selectedSourceIds +
+                                        (matchType.name to sources[index].id)
+                                )
+                            }
+                        )
+                    } else if (config.pluginMode == PluginSelectionMode.SPECIFIC) {
+                        Text(
+                            text = stringResource(R.string.batch_match_plugin_no_source),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(
+                                horizontal = 12.dp,
+                                vertical = 8.dp
+                            )
+                        )
+                    }
+                }
                 if (singleTarget == null) {
                     Card(
                         modifier = Modifier.padding(bottom = 12.dp),

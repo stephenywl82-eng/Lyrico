@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -32,6 +34,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.lonx.lyrico.R
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.entity.getUri
@@ -82,8 +86,17 @@ fun SongListItemContent(
                 .clip(RoundedCornerShape(6.dp))
                 .background(LyricoColors.coverPlaceholder)
         ) {
+            // 列表封面关闭 crossfade：快速滑动时每个 item 的淡入会在主线程跑 alpha 动画，
+            // 是主界面滚动掉帧的次要来源。详情页大图仍保留全局 crossfade。
+            val ctx = LocalContext.current
+            val coverImageRequest = remember(song.getUri, song.fileLastModified) {
+                ImageRequest.Builder(ctx)
+                    .data(CoverRequest(song.getUri, song.fileLastModified))
+                    .crossfade(false)
+                    .build()
+            }
             AsyncImage(
-                model = CoverRequest(song.getUri, song.fileLastModified),
+                model = coverImageRequest,
                 contentDescription = song.title,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,

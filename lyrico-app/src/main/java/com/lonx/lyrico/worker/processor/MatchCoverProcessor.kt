@@ -13,6 +13,7 @@ import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.domain.song.usecase.PatchSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
+import com.lonx.lyrico.domain.song.usecase.failureReason
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.utils.MusicMatchUtils
 import kotlinx.serialization.json.Json
@@ -96,7 +97,9 @@ class MatchCoverProcessor(
             ?: throw BatchTaskSkippedException("No reliable cover match")
         onProgress(0.9f)
         val result = patchSongTagsUseCase(song.uri, AudioTagData(picUrl = selected.picUrl))
-        if (result !is SaveAudioTagsResult.Success) throw Exception("Write failed")
+        if (result !is SaveAudioTagsResult.Success) {
+            throw Exception("Write failed: ${result.failureReason()}")
+        }
         onProgress(1f)
         return BatchTaskProcessResult()
     }

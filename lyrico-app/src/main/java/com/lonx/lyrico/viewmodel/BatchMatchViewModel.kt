@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.lonx.lyrico.data.SharedSelectionManager
 import com.lonx.lyrico.data.model.BatchMatchConfig
 import com.lonx.lyrico.data.model.BatchMatchConfigDefaults
+import com.lonx.lyrico.data.model.PluginSelectionMode
 import com.lonx.lyrico.data.model.BatchTaskStatus
 import com.lonx.lyrico.data.model.BatchTaskType
 import com.lonx.lyrico.data.model.lyrics.LyricRenderConfig
@@ -85,7 +86,7 @@ class BatchMatchViewModel(
     val batchMatchConfig: StateFlow<BatchMatchConfig> = settingsRepository.batchMatchConfig
         .stateIn(viewModelScope, SharingStarted.Eagerly, BatchMatchConfigDefaults.DEFAULT_CONFIG)
 
-    private val sourcesByType: StateFlow<Map<BatchMatchType, List<SearchSource>>> = combine(
+    val sourcesByType: StateFlow<Map<BatchMatchType, List<SearchSource>>> = combine(
         searchSourceProvider.observeSources(PluginSourceType.METADATA),
         searchSourceProvider.observeSources(PluginSourceType.LYRICS),
         searchSourceProvider.observeSources(PluginSourceType.COVER)
@@ -221,7 +222,7 @@ class BatchMatchViewModel(
             val matchType = _uiState.value.matchType
             val allowedTargets = editFieldConfigRepository.configFlow.first().matchTargets().toSet()
             val effectiveConfig = matchConfig.restrictedTo(allowedTargets intersect matchType.targets)
-            val currentOrderIds = buildEnabledSourceOrderIds(matchType)
+            val currentOrderIds = buildEnabledSourceOrderIds(matchType, matchConfig)
             val configJson = Json.encodeToString(
                 MatchMetadataTaskConfig.serializer(),
                 MatchMetadataTaskConfig(
@@ -276,7 +277,21 @@ class BatchMatchViewModel(
         }
     }
 
-    private fun buildEnabledSourceOrderIds(matchType: BatchMatchType): List<String> {
-        return sourcesByType.value[matchType].orEmpty().map { it.id }
+    private fun buildEnabledSourceOrderIds(
+        matchType: BatchMatchType,
+        config: BatchMatchConfig
+    ): List<String> {
+        val allIds = sourcesByType.value[matchType].orEmpty().map { it.id }
+        return if (config.pluginMode == PluginSelectionMode.SPECIFIC) {
+            val chosen = config.selectedSourceIds[matchType.name]
+            if (chosen != null && chosen in allIds) {
+                listOf(chosen)
+            } else {
+                // 自定义模式下未指定有效插件时回退为全部插件，避免空跑。
+                allIds
+            }
+        } else {
+            allIds
+        }
     }
 }

@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -43,7 +42,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.lonx.lyrico.App.Companion.OWNER_ID
 import com.lonx.lyrico.App.Companion.REPO_NAME
 import com.lonx.lyrico.App.Companion.TELEGRAM_GROUP_LINK
@@ -54,14 +52,11 @@ import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.icons.PreferenceIcon
 import com.lonx.lyrico.ui.components.icons.PreferenceIconTone
-import com.lonx.lyrico.ui.components.library.EmptyStateKind
-import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.ui.components.scaffoldContentPadding
 import com.lonx.lyrico.utils.UpdateEffect
 import com.lonx.lyrico.viewmodel.AboutViewModel
 import com.lonx.lyrico.viewmodel.ProVersionTapResult
 import com.lonx.lyrico.ui.components.pro.ProDeactivationDialog
-import com.lonx.lyrico.viewmodel.UiError
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.OpensourceLicenceDestination
@@ -70,11 +65,8 @@ import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import org.koin.androidx.compose.koinViewModel
 import kotlinx.coroutines.launch
 import java.io.IOException
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
@@ -90,7 +82,6 @@ fun AboutScreen(
     navigator: DestinationsNavigator
 ) {
     val viewModel: AboutViewModel = koinViewModel()
-    val checkUpdateEnabled by viewModel.checkUpdateEnabled.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val proActivated by viewModel.proActivated.collectAsStateWithLifecycle()
@@ -112,15 +103,6 @@ fun AboutScreen(
     val updateEffect by viewModel.updateEffect.collectAsStateWithLifecycle(
         initialValue = UpdateEffect(R.string.about_check_update_default)
     )
-    val contributors by viewModel.contributors.collectAsStateWithLifecycle()
-    val loading by viewModel.loadingContributors.collectAsStateWithLifecycle()
-    val error by viewModel.contributorsError.collectAsStateWithLifecycle()
-
-    val errorText = when (val e = error) {
-        null -> null
-        UiError.LoadFailed -> stringResource(R.string.load_failed)
-        is UiError.Message -> e.text
-    }
     val aboutScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     LibraryDetailPage(
         title = stringResource(R.string.about_title),
@@ -153,7 +135,6 @@ fun AboutScreen(
                 pagePadding.calculateRightPadding(layoutDirection) - outerMargin * 2
             val minCellWidth = 104.dp * LocalDensity.current.fontScale.coerceAtLeast(1f)
             val columnCount = ((availableWidth + 8.dp) / (minCellWidth + 8.dp)).toInt().coerceAtLeast(1)
-            val contributorRows = remember(contributors, columnCount) { contributors.chunked(columnCount) }
             LazyColumn(
                 modifier = Modifier
                     .libraryScrollFeedback(aboutScrollBehavior)
@@ -222,14 +203,6 @@ fun AboutScreen(
                                     navigator.navigate(OpensourceLicenceDestination())
                                 },
                             )
-                            AboutSwitchRow(
-                                icon = LucideIcons.CloudDownload,
-                                tone = PreferenceIconTone.Pink,
-                                title = stringResource(R.string.about_auto_check_update),
-                                summary = stringResource(R.string.about_auto_check_update_sub),
-                                checked = checkUpdateEnabled,
-                                onCheckedChange = viewModel::setCheckUpdateEnabled,
-                            )
                             AboutRow(
                                 icon = LucideIcons.Download,
                                 tone = PreferenceIconTone.Teal,
@@ -244,110 +217,13 @@ fun AboutScreen(
                     
                 }
 
-                item {
-                    AboutSectionTitle(text = stringResource(R.string.about_contributors))
-                }
-
-                when {
-                    loading -> {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(vertical = 32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator(modifier = Modifier.size(32.dp))
-                            }
-                        }
-                    }
-
-                    errorText != null -> {
-                        item {
-                            IllustratedEmptyState(
-                                kind = EmptyStateKind.Artists,
-                                title = errorText,
-                                modifier = Modifier.fillMaxWidth(),
-                                actionText = stringResource(R.string.refresh),
-                                icon = LucideIcons.RefreshCw,
-                                onAction = viewModel::loadContributors,
-                            )
-                        }
-                    }
-
-                    contributors.isEmpty() -> {
-                        item {
-                            IllustratedEmptyState(
-                                kind = EmptyStateKind.Artists,
-                                title = stringResource(R.string.about_no_contributors),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
-
-                    else -> {
-                        items(
-                            items = contributorRows,
-                            key = { row -> row.first().id }
-                        ) { row ->
-                            Row(
-                                Modifier.fillMaxWidth().padding(horizontal = outerMargin, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                row.forEach { contributor ->
-                                    ContributorGridItem(
-                                        name = contributor.login,
-                                        avatarUrl = contributor.avatar_url,
-                                        onClick = { viewModel.openBrowser(context, contributor.html_url) },
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                }
-                                repeat(columnCount - row.size) { Spacer(Modifier.weight(1f)) }
-                            }
-                        }
-                    }
-                }
-            }
         }
+    }
     }
     ProDeactivationDialog(
         show = showDisablePro,
         onDismissRequest = { showDisablePro = false },
     )
-}
-
-@Composable
-private fun ContributorGridItem(name: String, avatarUrl: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val salt = false
-    val style = MaterialTheme.typography.bodyMedium
-    val color = MaterialTheme.colorScheme.onSurface
-    val background = MaterialTheme.colorScheme.surfaceContainer
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(background)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        AsyncImage(
-            model = avatarUrl,
-            contentDescription = null,
-            modifier = Modifier.size(48.dp).clip(CircleShape),
-            contentScale = ContentScale.Crop,
-        )
-        Text(
-            text = name,
-            modifier = Modifier.fillMaxWidth(),
-            style = style,
-            color = color,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
 }
 
 @Composable
@@ -408,41 +284,3 @@ private fun AboutRow(
     }
 }
 
-@Composable
-private fun AboutSwitchRow(
-    icon: ImageVector,
-    tone: PreferenceIconTone,
-    title: String,
-    summary: String? = null,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = { onCheckedChange(!checked) })
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        PreferenceIcon(icon, tone, Modifier.size(24.dp).padding(end = 12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (!summary.isNullOrBlank()) {
-                Text(
-                    summary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        Switch(checked = checked, onCheckedChange = null, enabled = true)
-    }
-}

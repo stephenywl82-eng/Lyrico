@@ -106,7 +106,6 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             }
         }
 
-    private val songListViewModel: SongListViewModel by viewModel()
     private val settingsRepository: SettingsRepository by inject()
     private val libraryIndexRepository: LibraryIndexRepository by inject()
 
@@ -120,9 +119,6 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             pendingExternalUri = savedInstanceState.getString(STATE_PENDING_EXTERNAL_URI)?.toUri()
         } else {
             handleIntent(intent)
-        }
-        if (externalUri == null) {
-            songListViewModel.checkForUpdate()
         }
         requestStartupPermissionsIfNeeded()
         lifecycleScope.launch {

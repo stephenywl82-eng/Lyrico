@@ -72,6 +72,7 @@ import com.lonx.lyrico.ui.components.library.IllustratedEmptyState
 import com.lonx.lyrico.data.editfield.toEditFieldBlocks
 import com.lonx.lyrico.data.editfield.EditFieldRegistry
 import com.lonx.lyrico.ui.components.rememberTintedPainter
+import com.lonx.lyrico.ui.permissions.rememberBatchWritePermissionRequester
 import com.lonx.lyrico.ui.theme.LyricoColors
 import com.lonx.lyrico.ui.components.CoverRequest
 import com.lonx.lyrico.ui.components.base.LyricsOffsetField
@@ -139,6 +140,7 @@ fun BatchEditScreen(
     val visibleFields by viewModel.visibleFields.collectAsStateWithLifecycle()
     val visibleFieldCodes = visibleFields.map { it.code }.toSet()
     val fieldBlocks = remember(visibleFields) { visibleFields.toEditFieldBlocks() }
+    val requestBatchWritePermission = rememberBatchWritePermissionRequester()
 
     var showCoverOptionsSheet by remember { mutableStateOf(false) }
     var showSelectedCoverSheet by remember { mutableStateOf(false) }
@@ -323,7 +325,11 @@ Box(
                     },
                     actions = {
                         IconButton(
-                            onClick = { viewModel.saveBatchEdit() },
+                            onClick = {
+                                requestBatchWritePermission(viewModel.getSelectedUris()) {
+                                    viewModel.saveBatchEdit()
+                                }
+                            },
                             enabled = !uiState.isSaving
                         ) {
                             Icon(

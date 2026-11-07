@@ -1,6 +1,9 @@
 package com.lonx.audiotag.rw
 
+import android.media.MediaMetadataRetriever
 import android.os.ParcelFileDescriptor
+import android.system.Os
+import android.system.OsConstants
 import android.util.Log
 import com.lonx.audiotag.TagLib
 import com.lonx.audiotag.internal.FdUtils
@@ -20,7 +23,8 @@ object AudioTagReader {
         pfd: ParcelFileDescriptor,
         readPictures: Boolean = true,
         multiValueSeparator: String = "/",
-        strict: Boolean = false
+        strict: Boolean = false,
+        filePath: String? = null
     ): AudioTagData {
         return withContext(Dispatchers.IO) {
             try {
@@ -29,10 +33,61 @@ object AudioTagReader {
                 // 读取音频属性
                 val audioProps = TagLib.getAudioProperties(nativeFd)
 
+                // TagLib 在 fd 流下常读不出音频属性（时长返回 0），用 MediaMetadataRetriever 兜底
+                var durationMs = audioProps?.length ?: 0
+                var bitrateKbps = audioProps?.bitrate ?: 0
+                var sampleRateHz = audioProps?.sampleRate ?: 0
+                var channelCount = audioProps?.channels ?: 0
+                if (durationMs <= 0) {
+                    try {
+                        val retriever = MediaMetadataRetriever()
+                        var usedPath = false
+                        // 优先用真实文件路径（最可靠，对 m4a/opus 也能正确解析音频属性）
+                        val path = filePath
+                        if (!path.isNullOrEmpty() && (path.startsWith("/") || path.startsWith("file://"))) {
+                            val cleanPath = if (path.startsWith("file://")) path.substring(7) else path
+                            try {
+                                retriever.setDataSource(cleanPath)
+                                usedPath = true
+                            } catch (pe: Exception) {
+                                Log.w(TAG, "MediaMetadataRetriever setDataSource(path) failed: $cleanPath", pe)
+                            }
+                        }
+                        // 后备：用 fd。dup() 与原始 fd 共享文件偏移，TagLib 读完后 fd 已位于末尾，
+                        // MediaMetadataRetriever 从当前偏移读取会失败，需先复位到文件开头。
+                        if (!usedPath) {
+                            try {
+                                Os.lseek(pfd.fileDescriptor, 0L, OsConstants.SEEK_SET)
+                            } catch (_: Exception) { /* 不支持 seek 的 fd 忽略 */ }
+                            retriever.setDataSource(pfd.fileDescriptor)
+                        }
+                        val dur = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull()
+                        if (dur != null && dur > 0) {
+                            durationMs = dur.toInt()
+                            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                                ?.toIntOrNull()?.let { bitrateKbps = it / 1000 }
+                            // 采样率/声道数 MediaMetadataRetriever 不提供标准 KEY，沿用 TagLib 结果（为 0 时不强求）
+                        } else {
+                            Log.w(TAG, "MediaMetadataRetriever returned no duration (usedPath=$usedPath)")
+                        }
+                        retriever.release()
+                    } catch (re: Exception) {
+                        Log.w(TAG, "MediaMetadataRetriever fallback failed", re)
+                    }
+                }
+
                 // 读取 Metadata
                 val metaFd = FdUtils.getNativeFd(pfd)
                 val metadata = TagLib.getMetadata(metaFd, readPictures)
-                    ?: throw IllegalStateException("Unable to read audio metadata")
+                    ?: run {
+                        val detail = TagLib.getLastTagError()
+                        val friendly = TagErrorMessages.friendly(detail)
+                        throw IllegalStateException(
+                            friendly
+                                ?: ("Unable to read audio metadata" +
+                                    (detail?.let { ": $it" } ?: ""))
+                        )
+                    }
 
                 // 处理图片
                 val picList = ArrayList<AudioPicture>()
@@ -211,10 +266,10 @@ object AudioTagReader {
                         "REPLAYGAIN_REFERENCE_LOUDNESS"
                     ),
 
-                    durationMilliseconds = audioProps?.length ?: 0,
-                    bitrate = audioProps?.bitrate ?: 0,
-                    sampleRate = audioProps?.sampleRate ?: 0,
-                    channels = audioProps?.channels ?: 0,
+                    durationMilliseconds = durationMs,
+                    bitrate = bitrateKbps,
+                    sampleRate = sampleRateHz,
+                    channels = channelCount,
                     rawProperties = props,
                     customFields = customFields,
                     pictures = picList,

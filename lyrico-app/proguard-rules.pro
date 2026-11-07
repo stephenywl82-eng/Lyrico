@@ -47,3 +47,14 @@
 ############################################
 -keep class top.yukonga.miuix.kmp.blur.** { *; }
 
+############################################
+# JNI bridge (native taglib) — class & method names
+# are resolved at runtime via JNI_OnLoad FindClass/GetMethodID
+# and via default JNI symbol naming (Java_com_lonx_audiotag_TagLib_*).
+# Obfuscating them would break native library loading.
+############################################
+-keep class com.lonx.audiotag.TagLib { *; }
+-keep class com.lonx.audiotag.model.Metadata { *; }
+-keep class com.lonx.audiotag.model.AudioProperties { *; }
+-keep class com.lonx.audiotag.model.Picture { *; }
+

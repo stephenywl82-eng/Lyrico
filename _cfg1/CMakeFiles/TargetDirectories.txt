@@ -1,0 +1,7 @@
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-decoder.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ebur128.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/quickjs.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/quickjs-ng.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/edit_cache.dir
+E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/rebuild_cache.dir

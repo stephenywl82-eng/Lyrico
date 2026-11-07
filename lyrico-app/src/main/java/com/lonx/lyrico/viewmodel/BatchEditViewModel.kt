@@ -184,6 +184,9 @@ class BatchEditViewModel(
     private var selectedUris: List<String> = emptyList()
     private var selectedSongs: List<SongEntity> = emptyList()
 
+    /** URIs of the songs this batch edit will write to (for MediaStore write-permission request). */
+    fun getSelectedUris(): List<String> = selectedUris
+
     init {
         val uris = selectionManager.selectedUris.value.toList()
         selectedUris = uris

@@ -66,6 +66,14 @@ public object TagLib {
     public external fun getPictures(fd: Int): Array<Picture>
 
     /**
+     * Returns a human-readable description of the last native failure (set when a read/write
+     * call returns null/false). Used to surface root-cause details in the app's own metadata
+     * error log when debugging files TagLib cannot open.
+     */
+    @JvmStatic
+    public external fun getLastTagError(): String?
+
+    /**
      * Get picture with the requested type from file descriptor.
      *
      * @param description Artist name this artwork belongs to. Artist artwork may contain several

@@ -14,5 +14,8 @@ enum class LibraryTab(
     ),
     Albums(
         titleRes = R.string.library_tab_albums
+    ),
+    Folders(
+        titleRes = R.string.library_tab_folders
     )
 }

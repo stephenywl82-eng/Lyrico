@@ -18,6 +18,7 @@ import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.domain.song.usecase.PatchSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
+import com.lonx.lyrico.domain.song.usecase.failureReason
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.utils.LyricEncoder
 import com.lonx.lyrico.utils.MusicMatchUtils
@@ -149,7 +150,7 @@ class MatchLyricsProcessor(
 
         onProgress(0.85f)
         val result = patchSongTagsUseCase(song.uri, AudioTagData(lyrics = encoded))
-        if (result !is SaveAudioTagsResult.Success) throw Exception("Write failed")
+        if (result !is SaveAudioTagsResult.Success) throw Exception("Write failed: ${result.failureReason()}")
         onProgress(1f)
         return BatchTaskProcessResult()
     }

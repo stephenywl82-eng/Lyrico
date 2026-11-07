@@ -14,8 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
+import android.app.Activity
+import androidx.compose.runtime.LaunchedEffect
 import androidx.core.net.toUri
 import com.lonx.lyrico.R
+import com.lonx.lyrico.viewmodel.SongSelectionViewModel
+import kotlinx.coroutines.flow.collect
+import org.koin.androidx.compose.koinViewModel
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.model.entity.getUri
 import com.lonx.lyrico.ui.components.base.YesNoDialog
@@ -49,6 +57,23 @@ fun SongActionSheets(
     var showPlayerPicker by remember { mutableStateOf(false) }
     var pendingPlayUri by remember { mutableStateOf<Uri?>(null) }
     val song = selectedSong
+
+    val selectionViewModel: SongSelectionViewModel = koinViewModel()
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            selectionViewModel.retryPendingRename()
+            selectionViewModel.retryPendingDelete()
+        }
+    }
+    LaunchedEffect(Unit) {
+        selectionViewModel.permissionRequest.collect { intentSender ->
+            intentSender?.let {
+                permissionLauncher.launch(IntentSenderRequest.Builder(it).build())
+            }
+        }
+    }
 
     val shareTitle = stringResource(R.string.share_chooser_title)
     if (song != null) {

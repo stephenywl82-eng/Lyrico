@@ -4,7 +4,7 @@ import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.ui.components.poster.previewMedia
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -186,12 +186,12 @@ fun ArtistDetailScreen(
                     targetState = isSelectionMode,
                     label = "ArtistDetailTopBarAnimation",
                     transitionSpec = {
-                        val animationDuration = 300
+                        val animationDuration = Motion.contentDuration
                         val enter = fadeIn(tween(animationDuration)) +
                                 slideInVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     initialOffsetY = { -it / 3 }
                                 )
@@ -199,7 +199,7 @@ fun ArtistDetailScreen(
                                 slideOutVertically(
                                     animationSpec = tween(
                                         animationDuration,
-                                        easing = FastOutSlowInEasing
+                                        easing = Motion.emphasized
                                     ),
                                     targetOffsetY = { -it / 3 }
                                 )

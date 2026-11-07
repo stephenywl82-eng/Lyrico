@@ -115,7 +115,10 @@ class LibraryScanRepositoryImpl(
                         dbInfo == null ||
                         dbInfo.fileLastModified != deviceSong.lastModified ||
                         dbInfo.fileSize != deviceSong.fileSize ||
-                        dbInfo.filePath != deviceSong.filePath
+                        dbInfo.filePath != deviceSong.filePath ||
+                        // 存量修复：库里时长为 0 的歌曲（含 MediaStore 未解析出 DURATION 的 m4a/opus），
+                        // 强制重抽一次，交给 TagLib + MediaMetadataRetriever 兜底补回真实时长。
+                        (dbInfo != null && dbInfo.durationMilliseconds <= 0)
                     val knownDuration = when {
                         deviceSong.duration > 0L -> deviceSong.duration
                         !needsUpdate -> dbInfo.durationMilliseconds.toLong()
@@ -199,7 +202,10 @@ class LibraryScanRepositoryImpl(
                         dbInfo == null ||
                         dbInfo.fileLastModified != deviceSong.lastModified ||
                         dbInfo.fileSize != deviceSong.fileSize ||
-                        dbInfo.filePath != deviceSong.filePath
+                        dbInfo.filePath != deviceSong.filePath ||
+                        // 存量修复：库里时长为 0 的歌曲（含 MediaStore 未解析出 DURATION 的 m4a/opus），
+                        // 强制重抽一次，交给 TagLib + MediaMetadataRetriever 兜底补回真实时长。
+                        (dbInfo != null && dbInfo.durationMilliseconds <= 0)
                     val knownDuration = when {
                         deviceSong.duration > 0L -> deviceSong.duration
                         !needsUpdate -> dbInfo.durationMilliseconds.toLong()
@@ -424,7 +430,8 @@ class LibraryScanRepositoryImpl(
             uri = songFile.uri.toString(),
             options = AudioTagReadOptions(
                 multiValueSeparator = settingsRepository.separator.first()
-            )
+            ),
+            filePath = songFile.filePath
         )
         val entity = songMetadataMapper.fromScannedFile(
             file = songFile,
@@ -434,6 +441,7 @@ class LibraryScanRepositoryImpl(
             source = source,
             indexLyrics = indexLyrics
         )
+        Log.d(TAG, "extracted duration=${entity.durationMilliseconds}ms for ${songFile.fileName}")
         return ScannedSongMetadata(
             entity = entity,
             customFields = audioData.customFields,

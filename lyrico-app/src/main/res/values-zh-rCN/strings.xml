@@ -83,6 +83,13 @@
     <string name="batch_match_overwrite_mode_summary">开启后覆盖已有内容，关闭时只补充缺失的部分</string>
     <string name="batch_match_prefer_filename">按文件名匹配</string>
     <string name="batch_match_prefer_filename_summary">忽略内置标签，始终以文件名作为匹配依据</string>
+    <string name="batch_match_plugin_selection">匹配插件</string>
+    <string name="batch_match_plugin_auto">自动插件</string>
+    <string name="batch_match_plugin_auto_summary">按优先级依次尝试所有可用插件</string>
+    <string name="batch_match_plugin_custom">自定义插件</string>
+    <string name="batch_match_plugin_custom_summary">仅使用指定的单个插件</string>
+    <string name="batch_match_plugin_source">选择插件</string>
+    <string name="batch_match_plugin_no_source">暂无可用插件</string>
     <!-- 歌词 -->
     <string name="lyric_mode">歌词模式</string>
     <string name="lyric_line_order">歌词内容顺序</string>
@@ -148,15 +155,11 @@
     <string name="about_moto_music_url">Moto Music</string>
     <string name="about_moto_music_url_sub">在 GitHub 上查看 Moto Music 源码</string>
 
-    <string name="about_auto_check_update">自动检查新版本</string>
-    <string name="about_auto_check_update_sub">应用启动时检查是否有新版本</string>
 
     <string name="about_check_update">检查更新</string>
     <string name="about_check_update_default">立即检查更新</string>
 
     <!-- 贡献者 -->
-    <string name="about_contributors">贡献者</string>
-    <string name="about_no_contributors">暂无贡献者</string>
 
 
 
@@ -715,6 +718,7 @@
     <string name="library_tab_songs">歌曲</string>
     <string name="library_tab_artists">艺术家</string>
     <string name="library_tab_albums">专辑</string>
+    <string name="library_tab_folders">文件夹</string>
     <string name="artist_list_title">艺术家（%1$d）</string>
     <string name="album_list_title">专辑（%1$d）</string>
     <string name="label_name">名称</string>

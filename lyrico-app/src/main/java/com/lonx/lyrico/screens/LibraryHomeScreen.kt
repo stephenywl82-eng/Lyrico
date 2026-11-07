@@ -209,7 +209,13 @@ private fun LibraryHomePager(
                         editor = artistEditor,
                     )
                 LibraryTab.Albums -> AlbumsPage(navigator = navigator)
+                LibraryTab.Folders -> FoldersPage(navigator = navigator)
             }
         }
     }
+}
+
+@Composable
+private fun FoldersPage(navigator: DestinationsNavigator) {
+    FolderManagerScreen(navigator = navigator, embedded = true)
 }

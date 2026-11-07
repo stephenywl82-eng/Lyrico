@@ -1,0 +1,146 @@
+{
+	"backtrace" : 4,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_custom_target",
+			"ExternalProject_Add",
+			"include"
+		],
+		"files" : 
+		[
+			"E:/Android/Sdk/cmake/3.22.1/share/cmake-3.22/Modules/ExternalProject.cmake",
+			"ffmpeg-build.cmake",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 4,
+				"parent" : 0
+			},
+			{
+				"file" : 1,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 44,
+				"parent" : 2
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 3530,
+				"parent" : 3
+			}
+		]
+	},
+	"folder" : 
+	{
+		"name" : "ExternalProjectTargets/ffmpeg-native"
+	},
+	"id" : "ffmpeg-native::@6890427a1f51a3e7e1df",
+	"name" : "ffmpeg-native",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		},
+		{
+			"name" : "CMake Rules",
+			"sourceIndexes" : 
+			[
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 4,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/CMakeFiles/ffmpeg-native",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/CMakeFiles/ffmpeg-native.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/CMakeFiles/ffmpeg-native-complete.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-build.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-configure.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-download.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-install.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-mkdir.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-patch.rule",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 0,
+			"isGenerated" : true,
+			"path" : "E:/WorkBuddy/Claw/Lyrico/lyrico-app/.cxx/Debug/1e3v2a30/arm64-v8a/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-update.rule",
+			"sourceGroupIndex" : 1
+		}
+	],
+	"type" : "UTILITY"
+}

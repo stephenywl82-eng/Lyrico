@@ -6,7 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
+import com.lonx.lyrico.ui.theme.Motion
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -146,11 +146,11 @@ fun FieldSongsScreen(
                             targetState = isSelectionMode,
                             label = "FieldSongsTopBarAnimation",
                             transitionSpec = {
-                                val enter = fadeIn(tween(300)) + slideInVertically(
-                                    tween(300, easing = FastOutSlowInEasing), initialOffsetY = { -it / 3 },
+                                val enter = fadeIn(tween(Motion.contentDuration)) + slideInVertically(
+                                    tween(Motion.contentDuration, easing = Motion.emphasized), initialOffsetY = { -it / 3 },
                                 )
-                                val exit = fadeOut(tween(300)) + slideOutVertically(
-                                    tween(300, easing = FastOutSlowInEasing), targetOffsetY = { -it / 3 },
+                                val exit = fadeOut(tween(Motion.contentDuration)) + slideOutVertically(
+                                    tween(Motion.contentDuration, easing = Motion.emphasized), targetOffsetY = { -it / 3 },
                                 )
                                 (enter togetherWith exit).using(SizeTransform(clip = false))
                             },
@@ -188,8 +188,8 @@ fun FieldSongsScreen(
                         }
                         AnimatedVisibility(
                             visible = !isSelectionMode,
-                            enter = expandVertically(tween(300, easing = FastOutSlowInEasing)) + fadeIn(tween(300)),
-                            exit = shrinkVertically(tween(300, easing = FastOutSlowInEasing)) + fadeOut(tween(300)),
+                            enter = expandVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) + fadeIn(tween(Motion.contentDuration)),
+                            exit = shrinkVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) + fadeOut(tween(Motion.contentDuration)),
                         ) {
                             LibraryDetailTabs(
                                 tabs = tabLabels,

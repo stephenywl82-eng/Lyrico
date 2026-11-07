@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/CMakeFiles/ffmpeg-native-complete.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-build.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-configure.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-download.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-install.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-mkdir.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-patch.rule"
+		},
+		{
+			"file" : "E:/WorkBuddy/Claw/Lyrico/_cfg1/ffmpeg-native-prefix/src/ffmpeg-native-stamp/ffmpeg-native-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"ffmpeg-native"
+		],
+		"name" : "ffmpeg-native"
+	}
+}

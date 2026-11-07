@@ -12,7 +12,6 @@ import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.data.song.library.SongLibraryRepository
 import com.lonx.lyrico.data.song.search.SongSearchRepository
 import com.lonx.lyrico.utils.LibraryScanManager
-import com.lonx.lyrico.utils.UpdateManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,7 +25,6 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
@@ -56,7 +54,6 @@ class SongListViewModel(
     private val songLibraryRepository: SongLibraryRepository,
     private val songSearchRepository: SongSearchRepository,
     private val settingsRepository: SettingsRepository,
-    private val updateManager: UpdateManager,
     private val libraryScanManager: LibraryScanManager,
     database: LyricoDatabase
 ) : ViewModel() {
@@ -98,16 +95,6 @@ class SongListViewModel(
     fun clearSearch() {
         _uiState.update { it.copy(searchQuery = "") }
         _searchType.value = LocalSearchType.ALL
-    }
-
-    fun checkForUpdate() {
-        viewModelScope.launch {
-            val checkUpdateEnabled = settingsRepository.checkUpdateEnabled.first()
-            if (checkUpdateEnabled) {
-                Log.d(TAG, "检查更新")
-                updateManager.checkForUpdate()
-            }
-        }
     }
 
     fun onSortChange(newSortInfo: SortInfo) {

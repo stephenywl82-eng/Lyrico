@@ -12,8 +12,6 @@ import com.lonx.lyrico.data.repository.BatchTaskRepositoryImpl
 import com.lonx.lyrico.data.repository.AppLogRepository
 import com.lonx.lyrico.data.repository.AppLogRepositoryImpl
 import com.lonx.lyrico.data.repository.CustomTagKeyRepository
-import com.lonx.lyrico.data.repository.GhContributorRepository
-import com.lonx.lyrico.data.repository.GhContributorRepositoryImpl
 import com.lonx.lyrico.data.repository.LibraryIndexRepository
 import com.lonx.lyrico.data.repository.LibraryIndexRepositoryImpl
 import com.lonx.lyrico.data.repository.PlaybackRepository
@@ -265,7 +263,6 @@ val appModule = module {
     single<LibraryScanManager> { LibraryScanManagerImpl(get(), androidContext(), get(), get(), get()) }
     single<BatchTaskRepository> { BatchTaskRepositoryImpl(get()) }
     single<AppLogRepository> { AppLogRepositoryImpl(get(), get()) }
-    single<GhContributorRepository> { GhContributorRepositoryImpl(get(), get()) }
     single { BatchTaskScheduler(androidContext(), get()) }
     single { LyricsFormatProcessor(get(), get(), get()) }
     single { ReplayGainProcessor(get(), get(), get(), get(), get()) }
@@ -287,9 +284,9 @@ val appModule = module {
         BatchTaskType.EXPORT_COVER to get<BatchExportProcessor>()
     )) }
     // ViewModels
-    viewModel { AboutViewModel(get(),get(), get()) }
+    viewModel { AboutViewModel(get(), get()) }
     viewModel { AlbumActionsViewModel(get(), get(), get(), get(), get()) }
-    viewModel { SongListViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { SongListViewModel(get(), get(), get(), get(), get()) }
     viewModel { SongSelectionViewModel(get(), get(), get(), get()) }
     viewModel { LocalSearchViewModel(get(), get(), get()) }
     viewModel { (albumId: Long) ->

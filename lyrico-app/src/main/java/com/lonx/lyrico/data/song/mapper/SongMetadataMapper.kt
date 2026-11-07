@@ -84,7 +84,9 @@ class SongMetadataMapper(
             replayGainAlbumGain = tag.replayGainAlbumGain,
             replayGainAlbumPeak = tag.replayGainAlbumPeak,
             replayGainReferenceLoudness = tag.replayGainReferenceLoudness,
-            durationMilliseconds = tag.durationMilliseconds,
+            // 时长优先用扫描来源（MediaStore 已算好的正确值）；SAF/扫描源给不出时长时为 0，
+            // 回退到 TagLib + MediaMetadataRetriever 兜底读出的值。避免 m4a/opus 因 TagLib fd 模式读不到时长而显示 0。
+            durationMilliseconds = if (file.duration > 0) file.duration.toInt() else tag.durationMilliseconds,
             bitrate = tag.bitrate,
             sampleRate = tag.sampleRate,
             channels = tag.channels,

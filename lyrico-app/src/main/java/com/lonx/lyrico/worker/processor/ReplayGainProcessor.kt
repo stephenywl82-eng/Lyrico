@@ -11,6 +11,7 @@ import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
 import com.lonx.lyrico.domain.song.usecase.PatchSongTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsResult
+import com.lonx.lyrico.domain.song.usecase.failureReason
 import com.lonx.lyrico.utils.ReplayGainCalculateState
 import com.lonx.lyrico.utils.ReplayGainScanner
 import kotlinx.serialization.Serializable
@@ -89,7 +90,7 @@ class ReplayGainProcessor(
 
         val result = patchSongTagsUseCase(item.songUri, tagData)
         if (result !is SaveAudioTagsResult.Success) {
-            throw Exception("Write failed")
+            throw Exception("Write failed: ${result.failureReason()}")
         }
 
         return BatchTaskProcessResult()

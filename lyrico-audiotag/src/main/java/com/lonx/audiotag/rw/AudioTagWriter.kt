@@ -39,10 +39,19 @@ object AudioTagWriter {
                 mapToSave.forEach { (string, strings) ->
                     Log.d(TAG, "Write tag: $string = $strings")
                 }
-                return@withContext TagLib.savePropertyMap(fd, mapToSave)
+                val ok = TagLib.savePropertyMap(fd, mapToSave)
+                if (!ok) {
+                    val detail = TagLib.getLastTagError()
+                    val friendly = TagErrorMessages.friendly(detail)
+                    throw IllegalStateException(
+                        friendly ?: ("Audio tag write failed" + (detail?.let { ": $it" } ?: ""))
+                    )
+                }
+                true
             } catch (e: Exception) {
+                if (e is IllegalStateException) throw e
                 Log.e(TAG, "Write tags error", e)
-                return@withContext false
+                false
             }
         }
     }
@@ -62,10 +71,19 @@ object AudioTagWriter {
                     ))
                 }
                 val arr = libPics.toTypedArray()
-                return@withContext TagLib.savePictures(fd, arr)
+                val ok = TagLib.savePictures(fd, arr)
+                if (!ok) {
+                    val detail = TagLib.getLastTagError()
+                    val friendly = TagErrorMessages.friendly(detail)
+                    throw IllegalStateException(
+                        friendly ?: ("Audio picture write failed" + (detail?.let { ": $it" } ?: ""))
+                    )
+                }
+                true
             } catch (e: Exception) {
+                if (e is IllegalStateException) throw e
                 Log.e(TAG, "Write pictures error", e)
-                return@withContext false
+                false
             }
         }
     }

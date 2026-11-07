@@ -1,0 +1,51 @@
+{
+  "buildFiles": [
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\CMakeLists.txt",
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\src\\main\\cpp\\ffmpeg-build.cmake"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "D:\\Android\\Sdk\\cmake\\4.1.2\\bin\\ninja.exe",
+      "-C",
+      "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\p76l5k3a\\arm64-v8a",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "D:\\Android\\Sdk\\cmake\\4.1.2\\bin\\ninja.exe",
+    "-C",
+    "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\p76l5k3a\\arm64-v8a",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {
+    "ffmpeg-native::@6890427a1f51a3e7e1df": {
+      "artifactName": "ffmpeg-native",
+      "abi": "arm64-v8a",
+      "runtimeFiles": []
+    },
+    "quickjs-ng::@6890427a1f51a3e7e1df": {
+      "artifactName": "quickjs-ng",
+      "abi": "arm64-v8a",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\p76l5k3a\\obj\\arm64-v8a\\libquickjs-ng.so",
+      "runtimeFiles": []
+    },
+    "ebur128::@6890427a1f51a3e7e1df": {
+      "artifactName": "ebur128",
+      "abi": "arm64-v8a",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\p76l5k3a\\obj\\arm64-v8a\\libebur128.so",
+      "runtimeFiles": []
+    },
+    "ffmpeg-decoder::@6890427a1f51a3e7e1df": {
+      "artifactName": "ffmpeg-decoder",
+      "abi": "arm64-v8a",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\build\\intermediates\\cxx\\Debug\\p76l5k3a\\obj\\arm64-v8a\\libffmpeg-decoder.so",
+      "runtimeFiles": []
+    },
+    "quickjs::@6890427a1f51a3e7e1df": {
+      "artifactName": "quickjs",
+      "abi": "arm64-v8a",
+      "output": "E:\\WorkBuddy\\Claw\\Lyrico\\lyrico-app\\.cxx\\Debug\\p76l5k3a\\arm64-v8a\\libquickjs.a",
+      "runtimeFiles": []
+    }
+  }
+}

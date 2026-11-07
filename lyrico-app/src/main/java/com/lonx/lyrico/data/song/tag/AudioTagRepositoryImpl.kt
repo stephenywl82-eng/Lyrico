@@ -23,22 +23,24 @@ class AudioTagRepositoryImpl(
 
     override suspend fun read(
         uri: String,
-        options: AudioTagReadOptions
+        options: AudioTagReadOptions,
+        filePath: String?
     ): AudioTagData = if (options.strict) {
         withContext(Dispatchers.IO) {
-            readFromUri(uri, fileAccess.getDisplayName(uri), strict = true, options = options)
+            readFromUri(uri, fileAccess.getDisplayName(uri), strict = true, options = options, filePath = filePath)
         }
     } else {
-        readLenient(uri, options)
+        readLenient(uri, options, filePath)
     }
 
     private suspend fun readLenient(
         uri: String,
-        options: AudioTagReadOptions
+        options: AudioTagReadOptions,
+        filePath: String? = null
     ): AudioTagData = withContext(Dispatchers.IO) {
         val displayName = fileAccess.getDisplayName(uri)
         try {
-            readFromUri(uri, displayName, strict = false, options = options)
+            readFromUri(uri, displayName, strict = false, options = options, filePath = filePath)
         } catch (e: Throwable) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Log.e(TAG, "Failed to read audio tags: $uri", e)
@@ -50,6 +52,24 @@ class AudioTagRepositoryImpl(
     private suspend fun readStrict(uri: String): AudioTagData = withContext(Dispatchers.IO) {
         val displayName = fileAccess.getDisplayName(uri)
         readFromUri(uri, displayName, strict = true, options = AudioTagReadOptions())
+    }
+
+    /**
+     * Best-effort strict read for the write path. Some files cannot be parsed via a
+     * read-only descriptor (e.g. a FLAC whose final metadata block is missing the
+     * last-block flag) yet can still be written through a writable one, where TagLib
+     * repairs the stream in place. When the strict read fails we fall back to [fallback]
+     * (default: empty) instead of throwing, so the write itself is not blocked.
+     */
+    private suspend fun readMetadataOrEmpty(
+        uri: String,
+        fallback: AudioTagData = AudioTagData()
+    ): AudioTagData = try {
+        readStrict(uri)
+    } catch (e: Exception) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
+        Log.w(TAG, "Pre/Post-write read failed, continuing with fallback tags: $uri", e)
+        fallback
     }
 
     override suspend fun overwrite(
@@ -68,7 +88,12 @@ class AudioTagRepositoryImpl(
 
     private suspend fun write(uri: String, mutation: AudioTagMutation): AudioTagWriteResult {
         return try {
-            val current = readStrict(uri)
+            // Reading the current tags is best-effort. Some files (e.g. FLAC whose final
+            // metadata block is missing the last-block flag) cannot be parsed through a
+            // *read-only* descriptor, so a strict read throws "Unable to read audio metadata".
+            // They can still be written through a *writable* descriptor, where TagLib repairs
+            // the stream in place. Don't let a read failure block the write.
+            val current = readMetadataOrEmpty(uri)
             val resolved = mutationResolver.resolve(uri, current, mutation)
 
             val writableDescriptor = fileAccess.openWritableDescriptor(uri)
@@ -106,7 +131,7 @@ class AudioTagRepositoryImpl(
                 }
             }
 
-            AudioTagWriteResult.Success(readStrict(uri))
+            AudioTagWriteResult.Success(readMetadataOrEmpty(uri, current))
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             fileAccess.writePermissionFromThrowable(uri, e)?.let { intentSender ->
@@ -122,14 +147,16 @@ class AudioTagRepositoryImpl(
         uri: String,
         displayName: String,
         strict: Boolean,
-        options: AudioTagReadOptions
+        options: AudioTagReadOptions,
+        filePath: String? = null
     ): AudioTagData {
         fileAccess.openReadableDescriptor(uri)?.use { descriptor ->
             return AudioTagReader.read(
                 pfd = descriptor,
                 readPictures = true,
                 multiValueSeparator = options.multiValueSeparator,
-                strict = strict
+                strict = strict,
+                filePath = filePath
             ).copy(fileName = displayName)
         }
         return readFromStreamCache(uri, displayName, strict, options)
