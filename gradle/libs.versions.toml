@@ -24,12 +24,10 @@ documentfile = "1.1.0"
 room = "2.8.5"
 work = "2.11.2"
 tinypinyin = "2.0.3"
-saltUi = "3.0.0-beta02"
 lottie = "6.7.1"
 zoomable = "2.16.0"
 
 [libraries]
-salt-ui = { module = "io.github.moriafly:salt-ui", version.ref = "saltUi" }
 zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 aboutlibraries-compose-core = { module = "com.mikepenz:aboutlibraries-compose-core", version.ref = "aboutLibraries" }
@@ -47,7 +45,7 @@ androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version = "1.5.0-beta02" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version = "1.5.0-rc01" }
 compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "core" }
 lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
 opencc4j = { module = "com.github.houbb:opencc4j", version.ref = "opencc4j" }
