@@ -47,8 +47,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -184,23 +185,20 @@ fun BatchTaskDetailScreen(
                 
             }
 
-                Card(
+                SingleChoiceSegmentedButtonRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    TabRow(
-                        selectedTabIndex = pagerState.currentPage,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        tabLabels.forEachIndexed { index, label ->
-                            Tab(
-                                selected = index == pagerState.currentPage,
-                                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                                text = { Text(label) }
-                            )
+                    tabLabels.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            selected = index == pagerState.currentPage,
+                            onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                            shape = SegmentedButtonDefaults.itemShape(index, tabLabels.size),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(label)
                         }
                     }
                 }

@@ -5,10 +5,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -58,21 +58,18 @@ internal fun LibraryDetailTabsMiuix(
         .fillMaxWidth()
         .padding(horizontal = 12.dp)
         .padding(bottom = 8.dp)
-    Surface(tonalElevation = 0.dp, modifier = outer) {
-        PrimaryTabRow(
-            selectedTabIndex = selectedIndex,
-            divider = {},
-        ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = index == selectedIndex,
-                    onClick = { onSelected(index) },
-                    text = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
+    SingleChoiceSegmentedButtonRow(modifier = outer) {
+        tabs.forEachIndexed { index, title ->
+            SegmentedButton(
+                selected = index == selectedIndex,
+                onClick = { onSelected(index) },
+                shape = SegmentedButtonDefaults.itemShape(index, tabs.size),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1,
                 )
             }
         }

@@ -104,8 +104,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import com.lonx.lyrico.ui.components.sdw.ExpressiveSwitch as Switch
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -302,23 +303,20 @@ fun PluginManagerScreen(
                 selectedTypeTab = PluginTypeTab.entries[index]
             }
 
-                Card(
+                SingleChoiceSegmentedButtonRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .padding(top = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
-                    TabRow(
-                        selectedTabIndex = selectedTypeTab.ordinal,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        typeTabs.forEachIndexed { index, label ->
-                            Tab(
-                                selected = index == selectedTypeTab.ordinal,
-                                onClick = { onTypeTabSelected(index) },
-                                text = { Text(label) }
-                            )
+                    typeTabs.forEachIndexed { index, label ->
+                        SegmentedButton(
+                            selected = index == selectedTypeTab.ordinal,
+                            onClick = { onTypeTabSelected(index) },
+                            shape = SegmentedButtonDefaults.itemShape(index, typeTabs.size),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(label)
                         }
                     }
                 }

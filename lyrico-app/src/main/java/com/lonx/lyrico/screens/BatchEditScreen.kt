@@ -103,8 +103,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -352,12 +353,9 @@ Box(
                     if (tab == BatchEditTab.Preview) stringResource(tab.labelRes, editPreviews.size)
                     else stringResource(tab.labelRes)
                 }
-                TabRow(
-                    selectedTabIndex = pagerState.currentPage,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     tabLabels.forEachIndexed { index, label ->
-                        Tab(
+                        SegmentedButton(
                             selected = index == pagerState.currentPage,
                             onClick = {
                                 scope.launch {
@@ -365,8 +363,11 @@ Box(
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            text = { Text(label) },
-                        )
+                            shape = SegmentedButtonDefaults.itemShape(index, tabLabels.size),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Text(label)
+                        }
                     }
                 }
 
