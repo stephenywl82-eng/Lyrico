@@ -604,7 +604,7 @@ private fun ArtistDetailHeader(
             val badgeModifier = Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(MaterialTheme.colorScheme.surfaceContainer)
                 .padding(5.dp)
             
                 Icon(

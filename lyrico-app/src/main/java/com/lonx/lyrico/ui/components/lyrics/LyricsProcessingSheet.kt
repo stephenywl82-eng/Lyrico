@@ -130,7 +130,7 @@ private fun LyricsColumnCountSettings(
     count: Int, mapping: LyricsColumnMapping, onMapping: (LyricsColumnMapping) -> Unit
 ) {
 
-    Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer)) {
         Text(
             text = stringResource(if (count == 2) R.string.lyrics_two_columns else R.string.lyrics_three_columns),
             modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp),
@@ -171,7 +171,7 @@ fun LyricsConcurrency(value: Int, onChange: (Int) -> Unit, header: (@Composable 
     
         Card(
             modifier = Modifier.padding(top = 12.dp),
-            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer),
         ) { field() }
     
 }
@@ -180,7 +180,7 @@ fun LyricsConcurrency(value: Int, onChange: (Int) -> Unit, header: (@Composable 
 fun LyricsOperationContent(operation: LyricsOperation, targetFormat: LyricFormat, onFormat: (LyricFormat) -> Unit) {
 
     when (operation) {
-        LyricsOperation.CONVERT -> Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)) {
+        LyricsOperation.CONVERT -> Card(colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer)) {
             LyricFormat.entries.forEach { format ->
                 RadioButtonPreference(title = stringResource(format.labelRes), selected = format == targetFormat,
                     onClick = { onFormat(format) })

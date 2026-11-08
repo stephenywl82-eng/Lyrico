@@ -189,7 +189,7 @@ fun PluginConfigScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(bottom = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     if (uiState.sourceTypes.isNotEmpty()) {
@@ -227,7 +227,7 @@ fun PluginConfigScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
                     Text(
                         text = hint,

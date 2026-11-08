@@ -679,7 +679,7 @@ private fun ReplayGainTargetLoudnessSheet(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     )
                 ) {
                     presets.forEachIndexed { index, preset ->
@@ -707,7 +707,7 @@ private fun ReplayGainTargetLoudnessSheet(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     )
                 ) {
                     SdwTextInput(

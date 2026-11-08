@@ -160,7 +160,7 @@ fun SongDetailBottomSheet(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
                 )
             ) {
                 rows.forEach { (label, value) ->

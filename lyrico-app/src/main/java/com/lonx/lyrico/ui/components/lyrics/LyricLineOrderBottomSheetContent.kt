@@ -101,7 +101,7 @@ fun LyricLineOrderBottomSheetContent(
                     
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+                            colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer),
                         ) {
                             BasicComponent(
                                 modifier = dragModifier,

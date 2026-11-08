@@ -92,7 +92,7 @@ fun PlayerPickerBottomSheet(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 playerStates.forEach { item ->
@@ -134,7 +134,7 @@ fun PlayerPickerBottomSheet(
 
             Card(
                 colors = CardDefaults.defaultColors(
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 ArrowPreference(
@@ -194,7 +194,7 @@ private fun FriendlyPlayerItem(
                         imageVector = LucideIcons.Music,
                         contentDescription = displayName,
                         modifier = Modifier.size(24.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -207,7 +207,7 @@ private fun FriendlyPlayerItem(
                     Icon(
                         imageVector = LucideIcons.Link,
                         contentDescription = stringResource(R.string.learn_more),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

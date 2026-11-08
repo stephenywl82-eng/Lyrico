@@ -112,7 +112,7 @@ fun BatchMatchConfigBottomSheet(
                 Card(
                     modifier = Modifier.padding(bottom = 12.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                     )
                 ) {
                     Text(
@@ -191,7 +191,7 @@ fun BatchMatchConfigBottomSheet(
                     Card(
                         modifier = Modifier.padding(bottom = 12.dp),
                         colors = CardDefaults.defaultColors(
-                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            color = MaterialTheme.colorScheme.surfaceContainer,
                         )
                     ) {
                         LazyColumn(
@@ -231,7 +231,7 @@ fun BatchMatchConfigBottomSheet(
                 }
                 Card(
                     colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                     )
                 ) {
                     if (singleTarget != null) {
@@ -342,7 +342,7 @@ private fun BatchMatchTargetItem(
             color = if (isSelected) {
                 MaterialTheme.colorScheme.onSurface
             } else {
-                MaterialTheme.colorScheme.onSecondaryContainer
+                MaterialTheme.colorScheme.onSurface
             }
         )
     }

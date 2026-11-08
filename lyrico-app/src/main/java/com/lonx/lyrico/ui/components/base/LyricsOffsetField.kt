@@ -95,7 +95,7 @@ fun LyricsOffsetField(
                 .fillMaxWidth()
                 .height(STEPPER_HEIGHT)
                 .clip(SDWShapes.Pill)
-                .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
+                .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer)
                 .semantics { contentDescription = formatLyricsOffset(safeOffset) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -296,7 +296,7 @@ fun LyricsOffsetInputDialog(
                 modifier = Modifier
                     .size(44.dp)
                     .clip(SDWShapes.Media)
-                    .background(androidx.compose.material3.MaterialTheme.colorScheme.secondaryContainer)
+                    .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainer)
                     .clickable { negative = !negative },
                 contentAlignment = Alignment.Center,
             ) {
@@ -306,7 +306,7 @@ fun LyricsOffsetInputDialog(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.SemiBold,
                     ),
-                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSecondaryContainer,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))

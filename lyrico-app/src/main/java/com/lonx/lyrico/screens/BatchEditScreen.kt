@@ -549,7 +549,7 @@ Box(
         ) {
             item {
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                 ) {
                     ArrowRow(
                         icon = LucideIcons.ImageAdd,
@@ -621,7 +621,7 @@ Box(
 
                 when {
                     selectedValueOptionsLoading -> {
-                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                             Text(text = stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -681,7 +681,7 @@ Box(
             if (selectedCoverOptionsLoading || selectedCoverOptions.isEmpty()) {
                 item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
                     if (selectedCoverOptionsLoading) {
-                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
                             Text(text = stringResource(R.string.batch_edit_loading_selected_values), modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     } else {
@@ -915,7 +915,7 @@ private fun BatchEditCoverOptionItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(6.dp))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable { onClick() }
             .padding(6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -964,7 +964,7 @@ private fun BatchEditValueOptionItem(
 ) {
     Card(
         modifier = Modifier.padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Box(
             modifier = Modifier

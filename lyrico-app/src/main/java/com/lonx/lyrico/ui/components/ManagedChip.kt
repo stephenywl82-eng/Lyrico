@@ -69,7 +69,7 @@ fun ManagedChip(
                 if (highlighted) {
                     colorScheme.primary.copy(alpha = 0.12f)
                 } else {
-                    colorScheme.secondaryContainer
+                    colorScheme.surfaceContainer
                 }
             )
             .border(

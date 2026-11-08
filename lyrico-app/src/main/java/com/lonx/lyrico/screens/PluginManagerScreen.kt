@@ -603,7 +603,7 @@ private fun PluginImportCandidateItem(
         .joinToString(" / ")
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = colorScheme.secondaryContainer)
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surfaceContainer)
     ) {
         BasicComponent(
             insideMargin = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
@@ -884,7 +884,7 @@ fun PluginItem(
         return
     }
 
-    val secondaryContainer = colorScheme.secondaryContainer.copy(alpha = 0.8f)
+    val neutralSurface = colorScheme.surfaceContainer.copy(alpha = 0.8f)
     val actionIconTint = colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.7f else 0.9f)
 
     val pluginId = plugin.id
@@ -1036,14 +1036,14 @@ fun PluginItem(
                 text = stringResource(R.string.plugin_config),
                 icon = LucideIcons.Settings,
                 tint = actionIconTint,
-                background = secondaryContainer,
+                background = neutralSurface,
                 onClick = onConfig
             )
             PluginActionChip(
                 text = stringResource(R.string.plugin_custom_name),
                 icon = LucideIcons.Pencil,
                 tint = actionIconTint,
-                background = secondaryContainer,
+                background = neutralSurface,
                 onClick = onRename
             )
 
@@ -1074,7 +1074,7 @@ private fun CompactPluginItem(
     val pluginTypeText = plugin.displaySourceTypes
         .map { stringResource(it.labelRes()) }
         .joinToString(" / ")
-    val neutralActionBackground = colorScheme.secondaryContainer.copy(alpha = 0.8f)
+    val neutralActionBackground = colorScheme.surfaceContainer.copy(alpha = 0.8f)
     val neutralActionTint = colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.7f else 0.9f)
 
     Card(

@@ -155,6 +155,7 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.material3)
     // MaterialKolor：从种子色生成 M3 完整色调盘（dynamicColorScheme），
     // 用于替换旧的「扁平主色」做法。Compose Material3 无 Flutter 的 ColorScheme.fromSeed。

@@ -1668,7 +1668,7 @@ Box(modifier = Modifier.fillMaxSize()) {
                 .verticalScroll(rememberScrollState())
         ) {
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 Box(
                     modifier = Modifier
@@ -1686,7 +1686,7 @@ Box(modifier = Modifier.fillMaxSize()) {
             }
 
             Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                 modifier = Modifier.padding(top = 12.dp)
             ) {
                 LyricsOffsetField(
@@ -1825,7 +1825,7 @@ private fun PlainLyricsToggleChip(
     val background = if (selected) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.surfaceContainer
     }
     val contentColor = if (selected) {
         MaterialTheme.colorScheme.onPrimary
@@ -2171,7 +2171,7 @@ private fun RatingField(rating: Int?, onRatingChange: (Int) -> Unit) {
     
         Card(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         ) {
             Column(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -2382,7 +2382,7 @@ private fun editedValue(data: AudioTagData?, field: SimpleTextField): String =
 
 @Composable
 private fun EditorMenuGroup(content: @Composable ColumnScope.() -> Unit) {
-    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)) {
         Column(content = content)
     }
 }

@@ -41,7 +41,7 @@ fun UpdateDialog(
             Card(
                 modifier = Modifier.padding(bottom = 12.dp),
                 colors = CardDefaults.defaultColors(
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 MarkdownText(

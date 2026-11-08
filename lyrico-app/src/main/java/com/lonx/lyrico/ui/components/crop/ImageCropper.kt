@@ -209,7 +209,7 @@ fun ImageCropper(
                 Card(
                     modifier = Modifier.padding(bottom = 8.dp),
                     colors = CardDefaults.defaultColors(
-                        color = MaterialTheme.colorScheme.secondaryContainer
+                        color = MaterialTheme.colorScheme.surfaceContainer
                     )
                 ) {
                     WindowSpinnerPreference(

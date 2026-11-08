@@ -255,7 +255,7 @@ fun ArtistPosterMenu(
                 .verticalScroll(rememberScrollState()),
         ) {
             Card(
-                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer)
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer)
             ) {
                 if (pickerRequest?.picksArtist == true) {
                     artists.forEach { artistName ->

@@ -520,7 +520,7 @@ private fun RuleChip(
     val background = if (checked) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
     } else {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.surfaceContainer
     }
     val borderColor = if (checked) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)

@@ -43,7 +43,7 @@ fun BatchRGConfigBottomSheet(
                 )
             }
             Card(
-                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.secondaryContainer),
+                colors = CardDefaults.defaultColors(color = MaterialTheme.colorScheme.surfaceContainer),
             ) { field() }
         },
         onDismissRequest = { onDismissRequest(concurrency) },

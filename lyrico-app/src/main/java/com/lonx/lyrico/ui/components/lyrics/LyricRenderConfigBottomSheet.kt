@@ -86,7 +86,7 @@ fun LyricRenderConfigBottomSheet(
                     .padding(bottom = 12.dp)
                     .fillMaxWidth(),
                 colors = CardDefaults.defaultColors(
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 config?.let { lyricConfig ->
