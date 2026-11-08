@@ -29,48 +29,32 @@ object LyricoColors {
 
     /**
      * Modified state background color (for edited items).
-     * In light mode: amber tint, in dark mode: darker amber tint.
+     * 走 M3 语义色 tertiaryContainer，自动适配深/浅色与动态主题色。
      */
     val modifiedBackground: Color
         @Composable
-        get() = if (isDarkTheme) {
-            Color(0xFF433519) // Dark amber
-        } else {
-            Color(0xFFFFFBEB) // Light amber
-        }
+        get() = MaterialTheme.colorScheme.tertiaryContainer
 
     /**
      * Modified state border color.
      */
     val modifiedBorder: Color
         @Composable
-        get() = if (isDarkTheme) {
-            Color(0xFF9D5D00) // Dark amber
-        } else {
-            Color(0xFFFCD34D) // Light amber
-        }
+        get() = MaterialTheme.colorScheme.outline
 
     /**
      * Modified state badge background.
      */
     val modifiedBadgeBackground: Color
         @Composable
-        get() = if (isDarkTheme) {
-            Color(0xFF433519) // Dark amber
-        } else {
-            Color(0xFFFEF3C7) // Light amber
-        }
+        get() = MaterialTheme.colorScheme.tertiaryContainer
 
     /**
      * Modified state text color.
      */
     val modifiedText: Color
         @Composable
-        get() = if (isDarkTheme) {
-            Color(0xFFFCE100) // Dark amber
-        } else {
-            Color(0xFFD97706) // Light amber
-        }
+        get() = MaterialTheme.colorScheme.onTertiaryContainer
 
     /**
      * Icon color for album cover placeholder.

@@ -26,6 +26,7 @@ work = "2.11.2"
 tinypinyin = "2.0.3"
 lottie = "6.7.1"
 zoomable = "2.16.0"
+materialColorUtilities = "6.0.0"
 
 [libraries]
 zoomable = { module = "net.engawapg.lib:zoomable", version.ref = "zoomable" }
@@ -46,6 +47,7 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3", version = "1.5.0-rc01" }
+materialColorUtilities = { group = "com.materialkolor", name = "material-color-utilities", version.ref = "materialColorUtilities" }
 compose-destinations-ksp = { module = "io.github.raamcosta.compose-destinations:ksp", version.ref = "core" }
 lazycolumnscrollbar = { module = "com.github.nanihadesuka:LazyColumnScrollbar", version.ref = "lazycolumnscrollbar" }
 opencc4j = { module = "com.github.houbb:opencc4j", version.ref = "opencc4j" }
