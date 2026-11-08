@@ -2250,8 +2250,9 @@ private fun MetadataInputField(
                 textStyle = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth(),
                 label = fieldLabel,
-                // 与 RatingField / 封面卡一致的语义容器色，恢复字段分类框（阶段4 迁移时丢失）。
-                backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                // 容器底色按官方 color roles 用 surfaceContainer（secondaryContainer 是强调色，
+                // 不应承载信息密集容器）。恢复字段分类框（阶段4 迁移时丢失）。
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
                 lineLimits = TextFieldLineLimits.MultiLine(
                     minHeightInLines = 10,
                     maxHeightInLines = if (limitMultilineLines) {
@@ -2269,8 +2270,9 @@ private fun MetadataInputField(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 6.dp),
             label = fieldLabel,
-            // 与 RatingField / 封面卡一致的语义容器色，恢复字段分类框（阶段4 迁移时丢失）。
-            backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+            // 容器底色按官方 color roles 用 surfaceContainer（secondaryContainer 是强调色，
+            // 不应承载信息密集容器）。恢复字段分类框（阶段4 迁移时丢失）。
+            backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
             actionContent = if (isModified) {
                 {
                     IconButton(onClick = onRevert) {
