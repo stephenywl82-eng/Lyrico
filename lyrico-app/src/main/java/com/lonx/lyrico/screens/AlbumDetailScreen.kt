@@ -165,27 +165,15 @@ fun AlbumDetailScreen(
                 )
             } else null,
             miuixTopBar = {
+                val specs = Motion.contentSpecs()
                 AnimatedContent(
                     targetState = isSelectionMode,
                     label = "AlbumDetailTopBarAnimation",
                     transitionSpec = {
-                        val animationDuration = Motion.contentDuration
-                        val enter = fadeIn(tween(animationDuration)) +
-                                slideInVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    initialOffsetY = { -it / 3 }
-                                )
-                        val exit = fadeOut(tween(animationDuration)) +
-                                slideOutVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    targetOffsetY = { -it / 3 }
-                                )
+                        val enter = fadeIn(specs.effectsFloat) +
+                                slideInVertically(specs.spatialIntOffset) { -it / 3 }
+                        val exit = fadeOut(specs.effectsFloat) +
+                                slideOutVertically(specs.spatialIntOffset) { -it / 3 }
 
                         (enter togetherWith exit).using(null)
                     },

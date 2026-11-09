@@ -30,6 +30,7 @@ internal fun LibraryTopBarTransition(
     alignment: Alignment,
     content: @Composable (LibrarySelectionState?) -> Unit,
 ) {
+    val specs = Motion.contentSpecs()
     AnimatedContent(
         modifier = Modifier.height(40.dp),
         targetState = selection,
@@ -38,11 +39,11 @@ internal fun LibraryTopBarTransition(
         label = "TopBarAnimation",
         transitionSpec = {
             val enter =
-                fadeIn(tween(Motion.contentDuration)) +
-                    slideInVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
+                fadeIn(specs.effectsFloat) +
+                    slideInVertically(specs.spatialIntOffset) { -it / 3 }
             val exit =
-                fadeOut(tween(Motion.contentDuration)) +
-                    slideOutVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
+                fadeOut(specs.effectsFloat) +
+                    slideOutVertically(specs.spatialIntOffset) { -it / 3 }
             // Preserve the native slot anchor; only the explicit Y transition should move content.
             (enter togetherWith exit).using(null)
         },

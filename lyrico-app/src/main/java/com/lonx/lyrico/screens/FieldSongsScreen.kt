@@ -140,17 +140,18 @@ fun FieldSongsScreen(
             onBack = { navigator.popBackStack() },
             selection = selectionState,
             miuixTopBar = {
+                val specs = Motion.contentSpecs()
                 BlurredTopBar(backdrop = backdrop) {
                     Column {
                         AnimatedContent(
                             targetState = isSelectionMode,
                             label = "FieldSongsTopBarAnimation",
                             transitionSpec = {
-                                val enter = fadeIn(tween(Motion.contentDuration)) + slideInVertically(
-                                    tween(Motion.contentDuration, easing = Motion.emphasized), initialOffsetY = { -it / 3 },
+                                val enter = fadeIn(specs.effectsFloat) + slideInVertically(
+                                    specs.spatialIntOffset, initialOffsetY = { -it / 3 },
                                 )
-                                val exit = fadeOut(tween(Motion.contentDuration)) + slideOutVertically(
-                                    tween(Motion.contentDuration, easing = Motion.emphasized), targetOffsetY = { -it / 3 },
+                                val exit = fadeOut(specs.effectsFloat) + slideOutVertically(
+                                    specs.spatialIntOffset, targetOffsetY = { -it / 3 },
                                 )
                                 (enter togetherWith exit).using(SizeTransform(clip = false))
                             },
@@ -188,8 +189,8 @@ fun FieldSongsScreen(
                         }
                         AnimatedVisibility(
                             visible = !isSelectionMode,
-                            enter = expandVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) + fadeIn(tween(Motion.contentDuration)),
-                            exit = shrinkVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) + fadeOut(tween(Motion.contentDuration)),
+                            enter = expandVertically(specs.spatialIntSize) + fadeIn(specs.effectsFloat),
+                            exit = shrinkVertically(specs.spatialIntSize) + fadeOut(specs.effectsFloat),
                         ) {
                             LibraryDetailTabs(
                                 tabs = tabLabels,

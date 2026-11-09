@@ -288,6 +288,7 @@ fun SongsPage(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
+            val specs = Motion.contentSpecs()
             BlurredTopBar(backdrop = topBarBackdrop) {
                 val topBarState = when {
                     isSelectionMode -> TopBarState.Selection
@@ -299,23 +300,10 @@ fun SongsPage(
                     label = "TopBarAnimation",
                     transitionSpec = {
                         // 定义过渡动画：淡入淡出 + 轻微的垂直滑动 + 尺寸自适应平滑过渡
-                        val animationDuration = Motion.contentDuration
-                        val enter = fadeIn(tween(animationDuration)) +
-                                slideInVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    initialOffsetY = { -it / 3 } // 从上方 1/3 处滑入
-                                )
-                        val exit = fadeOut(tween(animationDuration)) +
-                                slideOutVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    targetOffsetY = { -it / 3 } // 向上方 1/3 处滑出
-                                )
+                        val enter = fadeIn(specs.effectsFloat) +
+                                slideInVertically(specs.spatialIntOffset, initialOffsetY = { -it / 3 }) // 从上方 1/3 处滑入
+                        val exit = fadeOut(specs.effectsFloat) +
+                                slideOutVertically(specs.spatialIntOffset, targetOffsetY = { -it / 3 }) // 向上方 1/3 处滑出
 
                         (enter togetherWith exit).using(
                             // SizeTransform 保证了如果搜索栏和默认导航栏高度不同时，高度变化也是平滑的

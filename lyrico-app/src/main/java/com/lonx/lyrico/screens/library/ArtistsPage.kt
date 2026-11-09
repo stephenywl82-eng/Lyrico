@@ -293,12 +293,13 @@ fun ArtistsPage(
     }
     Scaffold(
         topBar = {
+            val specs = Motion.contentSpecs()
             BlurredTopBar(backdrop = topBarBackdrop) {
                 AnimatedContent(
                     targetState = selecting, label = "TopBarAnimation",
                     transitionSpec = {
-                        val enter = fadeIn(tween(Motion.contentDuration)) + slideInVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
-                        val exit = fadeOut(tween(Motion.contentDuration)) + slideOutVertically(tween(Motion.contentDuration, easing = Motion.emphasized)) { -it / 3 }
+                        val enter = fadeIn(specs.effectsFloat) + slideInVertically(specs.spatialIntOffset) { -it / 3 }
+                        val exit = fadeOut(specs.effectsFloat) + slideOutVertically(specs.spatialIntOffset) { -it / 3 }
                         (enter togetherWith exit).using(SizeTransform(clip = false))
                     }
                 ) { selectionMode ->

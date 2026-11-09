@@ -281,27 +281,15 @@ fun FolderManagerScreen(
             onBack = navigateUpAction,
             selection = saltSelectionState,
             miuixTopBar = {
+                val specs = Motion.contentSpecs()
                 AnimatedContent(
                     targetState = isSelectionMode,
                     label = "FolderManagerTopBarAnimation",
                     transitionSpec = {
-                        val animationDuration = Motion.contentDuration
-                        val enter = fadeIn(tween(animationDuration)) +
-                                slideInVertically(
-                                    animationSpec = tween(
-                                        durationMillis = animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    initialOffsetY = { -it / 3 }
-                                )
-                        val exit = fadeOut(tween(animationDuration)) +
-                                slideOutVertically(
-                                    animationSpec = tween(
-                                        durationMillis = animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    targetOffsetY = { -it / 3 }
-                                )
+                        val enter = fadeIn(specs.effectsFloat) +
+                                slideInVertically(specs.spatialIntOffset, initialOffsetY = { -it / 3 })
+                        val exit = fadeOut(specs.effectsFloat) +
+                                slideOutVertically(specs.spatialIntOffset, targetOffsetY = { -it / 3 })
 
                         (enter togetherWith exit).using(SizeTransform(clip = false))
                     },
@@ -621,16 +609,14 @@ private fun FolderPagerSlideContent(
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(1f) }
+    val progressSpec = Motion.contentSpecs().effectsFloat
 
     LaunchedEffect(transition) {
         if (transition != null) {
             progress.snapTo(0f)
             progress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(
-                    durationMillis = Motion.contentDuration,
-                    easing = Motion.emphasized
-                )
+                animationSpec = progressSpec
             )
             onTransitionFinished()
         } else {

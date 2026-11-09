@@ -7,6 +7,12 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.runtime.Composable
 
 /**
  * M3 Expressive 共享动效规格。
@@ -47,4 +53,40 @@ object Motion {
     // 与导航转场同源的 emphasized 曲线，保证全站 M3 Expressive 观感一致；
     // 时长刻意比整页导航转场(640/520ms)更短，内容切换更利落。
     val contentDuration = 300
+
+    /**
+     * [M3 Expressive] 内容级动效规格：从主题注入的 MotionScheme（MaterialExpressiveTheme
+     * 默认 MotionScheme.expressive()）取官方弹簧规格，取代各页面散落的
+     * tween(contentDuration, emphasized) 手写常量，做到「主题定义一次、全站继承」。
+     *
+     * - spatial：位置/尺寸/形状变化（带过冲），用于 slide/expand/animateContentSize
+     * - effects：颜色/透明度变化（不过冲），用于 fade
+     *
+     * 注意：本函数是 @Composable，调用方须在 Composable 作用域先取好返回值，
+     * 再捕获进 transitionSpec 等非 Composable lambda。
+     */
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    @Composable
+    fun contentSpecs(): ContentMotionSpecs {
+        val scheme = MaterialTheme.motionScheme
+        return ContentMotionSpecs(
+            effectsFloat = scheme.defaultEffectsSpec(),
+            effectsColor = scheme.defaultEffectsSpec(),
+            spatialIntOffset = scheme.defaultSpatialSpec(),
+            spatialIntSize = scheme.defaultSpatialSpec(),
+            spatialDp = scheme.defaultSpatialSpec(),
+        )
+    }
 }
+
+/**
+ * 一组按动画值类型分好的官方 MotionScheme 规格。
+ * 各规格是同一个 spring 策略的不同泛型实例，视觉一致、深浅/设备自适应由主题保证。
+ */
+data class ContentMotionSpecs(
+    val effectsFloat: FiniteAnimationSpec<Float>,
+    val effectsColor: FiniteAnimationSpec<Color>,
+    val spatialIntOffset: FiniteAnimationSpec<IntOffset>,
+    val spatialIntSize: FiniteAnimationSpec<IntSize>,
+    val spatialDp: FiniteAnimationSpec<Dp>,
+)

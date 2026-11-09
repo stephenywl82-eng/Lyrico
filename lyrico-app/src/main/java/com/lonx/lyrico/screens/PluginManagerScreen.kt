@@ -1007,10 +1007,7 @@ fun PluginItem(
                 modifier = Modifier
                     .padding(top = 4.dp)
                     .animateContentSize(
-                        animationSpec = tween(
-                            durationMillis = Motion.contentDuration,
-                            easing = Motion.emphasized
-                        )
+                        animationSpec = Motion.contentSpecs().spatialIntSize
                     )
             ) {
                 Text(

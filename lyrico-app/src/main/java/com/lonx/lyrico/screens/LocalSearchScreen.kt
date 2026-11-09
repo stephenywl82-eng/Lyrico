@@ -176,6 +176,7 @@ fun LocalSearchScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
+                val specs = Motion.contentSpecs()
                 Column(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.surface)
@@ -186,23 +187,10 @@ fun LocalSearchScreen(
                         targetState = isSelectionMode,
                         label = "LocalSearchTopBarAnimation",
                         transitionSpec = {
-                            val animationDuration = Motion.contentDuration
-                            val enter = fadeIn(tween(animationDuration)) +
-                                slideInVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    initialOffsetY = { -it / 3 }
-                                )
-                            val exit = fadeOut(tween(animationDuration)) +
-                                slideOutVertically(
-                                    animationSpec = tween(
-                                        animationDuration,
-                                        easing = Motion.emphasized
-                                    ),
-                                    targetOffsetY = { -it / 3 }
-                                )
+                            val enter = fadeIn(specs.effectsFloat) +
+                                slideInVertically(specs.spatialIntOffset, initialOffsetY = { -it / 3 })
+                            val exit = fadeOut(specs.effectsFloat) +
+                                slideOutVertically(specs.spatialIntOffset, targetOffsetY = { -it / 3 })
 
                             (enter togetherWith exit).using(SizeTransform(clip = false))
                         }
@@ -243,30 +231,12 @@ fun LocalSearchScreen(
                     }
                     AnimatedVisibility(
                         visible = !isSelectionMode,
-                        enter = expandVertically(
-                            animationSpec = tween(
-                                durationMillis = Motion.contentDuration,
-                                easing = Motion.emphasized
-                            )
-                        ) + slideInVertically(
-                            animationSpec = tween(
-                                durationMillis = Motion.contentDuration,
-                                easing = Motion.emphasized
-                            ),
-                            initialOffsetY = { -it / 3 }
-                        ) + fadeIn(tween(Motion.contentDuration)),
-                        exit = shrinkVertically(
-                            animationSpec = tween(
-                                durationMillis = Motion.contentDuration,
-                                easing = Motion.emphasized
-                            )
-                        ) + slideOutVertically(
-                            animationSpec = tween(
-                                durationMillis = Motion.contentDuration,
-                                easing = Motion.emphasized
-                            ),
-                            targetOffsetY = { -it / 3 }
-                        ) + fadeOut(tween(Motion.contentDuration))
+                        enter = expandVertically(specs.spatialIntSize) +
+                            slideInVertically(specs.spatialIntOffset, initialOffsetY = { -it / 3 }) +
+                            fadeIn(specs.effectsFloat),
+                        exit = shrinkVertically(specs.spatialIntSize) +
+                            slideOutVertically(specs.spatialIntOffset, targetOffsetY = { -it / 3 }) +
+                            fadeOut(specs.effectsFloat)
                     ) {
                         Column {
                             SearchBar(

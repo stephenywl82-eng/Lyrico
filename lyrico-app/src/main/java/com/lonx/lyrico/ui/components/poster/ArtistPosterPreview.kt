@@ -82,6 +82,8 @@ internal fun ArtistPosterPreview(
     var chromeVisible by remember { mutableStateOf(true) }
     var busy by remember { mutableStateOf(false) }
     val infoProgress = remember { Animatable(0f) }
+    // 内容级动效取官方 MotionScheme token；setInfo 是局部函数，捕获外层取好的 spec。
+    val infoSpec = Motion.contentSpecs().effectsFloat
     var info by remember { mutableStateOf<PosterMediaInfo?>(null) }
     var infoLoading by remember { mutableStateOf(false) }
     var infoError by remember { mutableStateOf(false) }
@@ -95,7 +97,7 @@ internal fun ArtistPosterPreview(
 
     fun setInfo(open: Boolean) {
         chromeVisible = true
-        scope.launch { infoProgress.animateTo(if (open) 1f else 0f, tween(Motion.contentDuration, easing = Motion.emphasized)) }
+        scope.launch { infoProgress.animateTo(if (open) 1f else 0f, infoSpec) }
     }
     fun toggleChrome() {
         if (infoProgress.value > 0f || infoOpen) {
