@@ -4,8 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,6 +40,7 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Icon
+import com.lonx.lyrico.ui.theme.Motion
 
 enum class ExpandableFabMenuPosition {
     BottomEnd,
@@ -121,6 +120,9 @@ private fun MorphExpandableFabMenu(
     menuContent: @Composable ColumnScope.() -> Unit
 ) {
     val expandedHeight = style.expandedHeightFor(itemCount)
+    // morph 展开动效改走官方 MotionScheme：spatial 弹簧驱动宽高形变、
+    // effects 驱动容器色与内容 Crossfade，不再手写 spring(stiffness=600)/tween(120)。
+    val specs = Motion.contentSpecs()
 
     val transition = updateTransition(
         targetState = expanded,
@@ -128,21 +130,21 @@ private fun MorphExpandableFabMenu(
     )
 
     val width by transition.animateDp(
-        transitionSpec = { spring(stiffness = 600f) },
+        transitionSpec = { specs.spatialDp },
         label = "fabMenuWidth"
     ) { isExpanded ->
         if (isExpanded) style.expandedWidth else style.mainFabSize
     }
 
     val height by transition.animateDp(
-        transitionSpec = { spring(stiffness = 600f) },
+        transitionSpec = { specs.spatialDp },
         label = "fabMenuHeight"
     ) { isExpanded ->
         if (isExpanded) expandedHeight else style.mainFabSize
     }
 
     val containerColor by transition.animateColor(
-        transitionSpec = { spring(stiffness = 600f) },
+        transitionSpec = { specs.effectsColor },
         label = "fabMenuContainerColor"
     ) { isExpanded ->
         if (isExpanded) style.expandedContainerColor else style.mainContainerColor
@@ -165,7 +167,7 @@ private fun MorphExpandableFabMenu(
     ) {
         Crossfade(
             targetState = expanded,
-            animationSpec = tween(durationMillis = 120),
+            animationSpec = specs.effectsFloat,
             label = "expandableFabMenuContent"
         ) { isExpanded ->
             if (isExpanded) {

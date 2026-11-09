@@ -36,7 +36,7 @@ data class ExpandableFabMenuStyle(
             return ExpandableFabMenuStyle(
                 mainContainerColor = MaterialTheme.colorScheme.primary,
                 mainContentColor = MaterialTheme.colorScheme.onPrimary,
-                expandedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                expandedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 itemContentColor = MaterialTheme.colorScheme.onSurface,
                 itemDisabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             )
