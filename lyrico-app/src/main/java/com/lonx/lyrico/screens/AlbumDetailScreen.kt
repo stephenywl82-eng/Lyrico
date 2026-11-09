@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -434,7 +433,7 @@ private fun AlbumDetailHeader(
             uri = coverSong?.uri,
             lastModified = coverSong?.fileLastModified ?: 0L,
             modifier = Modifier.size(80.dp),
-            shape = RoundedCornerShape(8.dp)
+            shape = MaterialTheme.shapes.small
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {

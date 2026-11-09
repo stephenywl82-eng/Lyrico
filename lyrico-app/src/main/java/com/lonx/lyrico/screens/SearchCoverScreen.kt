@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TextButton
@@ -485,7 +484,7 @@ fun CoverGridItem(
                         .padding(4.dp)
                         .background(
                             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(4.dp)
+                            shape = MaterialTheme.shapes.extraSmall
                         )
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
@@ -505,7 +504,7 @@ fun CoverGridItem(
                             .padding(4.dp)
                             .background(
                                 color = Color.Black.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(4.dp)
+                                shape = MaterialTheme.shapes.extraSmall
                             )
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {

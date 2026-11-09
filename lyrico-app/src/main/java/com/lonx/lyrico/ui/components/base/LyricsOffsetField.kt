@@ -109,7 +109,7 @@ fun LyricsOffsetField(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 8.dp),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                color = androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
             )
 
             Box(
@@ -164,7 +164,7 @@ fun LyricsOffsetField(
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(vertical = 8.dp),
-                color = androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                color = androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
             )
 
             StepperSideButton(

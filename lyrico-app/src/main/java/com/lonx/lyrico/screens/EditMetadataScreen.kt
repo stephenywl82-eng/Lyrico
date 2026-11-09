@@ -54,7 +54,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -1836,7 +1835,7 @@ private fun PlainLyricsToggleChip(
     Box(
         modifier = Modifier
             .height(30.dp)
-            .clip(RoundedCornerShape(50))
+            .clip(CircleShape)
             .background(background)
             .clickable(onClick = onClick)
             .padding(horizontal = 10.dp),
@@ -2018,7 +2017,7 @@ private fun CoverSection(
                             state = pagerState,
                             modifier = Modifier
                                 .size(160.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(MaterialTheme.shapes.medium)
                                 .background(MaterialTheme.colorScheme.onSurfaceVariant)
                         ) { page ->
                             val item = picturePages[page]
@@ -2145,7 +2144,7 @@ private fun PictureBadge(
     background: Color = Color.Black.copy(alpha = 0.6f),
     fontSize: TextUnit = 10.sp,
 ) {
-    Box(modifier.background(background, RoundedCornerShape(4.dp))
+    Box(modifier.background(background, MaterialTheme.shapes.extraSmall)
         .padding(horizontal = 6.dp, vertical = 2.dp)) {
         PictureBadgeText(text, Color.White, fontSize)
     }

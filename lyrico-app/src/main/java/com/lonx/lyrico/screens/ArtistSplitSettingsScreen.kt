@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -525,14 +524,14 @@ private fun RuleChip(
     val borderColor = if (checked) {
         MaterialTheme.colorScheme.primary.copy(alpha = 0.48f)
     } else {
-        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
+        MaterialTheme.colorScheme.outlineVariant
     }
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(50))
+            .clip(CircleShape)
             .background(background)
-            .border(1.dp, borderColor, RoundedCornerShape(50))
+            .border(1.dp, borderColor, CircleShape)
             .clickable { onCheckedChange(!checked) }
             .padding(start = 8.dp, top = 6.dp, end = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -545,7 +544,7 @@ private fun RuleChip(
                     if (checked) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
+                        MaterialTheme.colorScheme.outlineVariant
                     }
                 )
                 .clickable { onCheckedChange(!checked) },

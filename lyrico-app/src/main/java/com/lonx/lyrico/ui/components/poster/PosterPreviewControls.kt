@@ -96,11 +96,11 @@ internal fun PosterThumbnailStrip(items: List<PosterPreviewMedia>, currentPage: 
                 val selected = index == currentPage
                 val width by animateDpAsState(if (selected) 64.dp else 28.dp, tween(220), label = "poster-thumbnail-width")
                 val gap by animateDpAsState(if (selected) 8.dp else 2.dp, tween(220), label = "poster-thumbnail-gap")
-                Box(Modifier.width(width + gap * 2).height(48.dp).clip(RoundedCornerShape(8.dp))
+                Box(Modifier.width(width + gap * 2).height(48.dp).clip(MaterialTheme.shapes.small)
                     .selectable(selected = selected, enabled = enabled, role = Role.Button, onClick = { onSelect(index) }),
                     contentAlignment = Alignment.Center) {
-                    Box(Modifier.width(width).height(40.dp).clip(RoundedCornerShape(4.dp))
-                        .then(if (selected) Modifier.border(2.dp, Color.White, RoundedCornerShape(4.dp)) else Modifier)
+                    Box(Modifier.width(width).height(40.dp).clip(MaterialTheme.shapes.extraSmall)
+                        .then(if (selected) Modifier.border(2.dp, Color.White, MaterialTheme.shapes.extraSmall) else Modifier)
                         .background(Color(0xFF202020)), contentAlignment = Alignment.Center) {
                         val context = LocalContext.current
                         val request = remember(item) {

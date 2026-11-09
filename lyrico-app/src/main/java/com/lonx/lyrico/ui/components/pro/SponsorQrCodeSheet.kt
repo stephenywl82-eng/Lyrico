@@ -15,7 +15,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -105,7 +105,7 @@ internal fun SponsorQrCodeSheet(show: Boolean, method: SponsorMethod, onDismissR
                     contentDescription = stringResource(method.titleRes),
                     modifier = Modifier.widthIn(max = 280.dp).fillMaxWidth()
                         .aspectRatio(imagePainter.intrinsicSize.width / imagePainter.intrinsicSize.height)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(MaterialTheme.shapes.large)
                         .combinedClickable(
                             enabled = !saving && !permissionPending,
                             onClick = {},

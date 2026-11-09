@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -88,7 +88,7 @@ fun InputField(
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Icon(
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable(
+                    modifier = Modifier.clip(CircleShape).clickable(
                         indication = null,
                         interactionSource = interactionSource,
                     ) { state.clearText() },
@@ -113,11 +113,11 @@ fun InputField(
         interactionSource = interactionSource,
         modifier = modifier.focusRequester(focusRequester),
         decorator = { innerTextField ->
-            val pillShape = RoundedCornerShape(50)
+            val pillShape = CircleShape
             Box(
                 modifier = Modifier
                     .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         shape = pillShape,
                     ),
                 contentAlignment = Alignment.CenterStart,

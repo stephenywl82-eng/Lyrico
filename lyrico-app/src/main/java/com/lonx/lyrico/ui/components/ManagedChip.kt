@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -64,7 +63,7 @@ fun ManagedChip(
 
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(50))
+            .clip(CircleShape)
             .background(
                 if (highlighted) {
                     colorScheme.primary.copy(alpha = 0.12f)
@@ -77,9 +76,9 @@ fun ManagedChip(
                 color = if (highlighted) {
                     colorScheme.primary.copy(alpha = 0.48f)
                 } else {
-                    colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
+                    colorScheme.outlineVariant
                 },
-                shape = RoundedCornerShape(50),
+                shape = CircleShape,
             )
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(
@@ -99,7 +98,7 @@ fun ManagedChip(
                         if (highlighted) {
                             colorScheme.primary
                         } else {
-                            colorScheme.onSurfaceVariant.copy(alpha = 0.16f)
+                            colorScheme.outlineVariant
                         }
                     ),
                 contentAlignment = Alignment.Center,

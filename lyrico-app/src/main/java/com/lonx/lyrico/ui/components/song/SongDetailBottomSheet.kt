@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -134,7 +133,7 @@ fun SongDetailBottomSheet(
                     contentDescription = stringResource(R.string.cd_cover),
                     modifier = Modifier
                         .size(100.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(MaterialTheme.shapes.medium),
                     contentScale = ContentScale.Crop,
                     placeholder = painterResource(R.drawable.ic_album_24dp),
                     error = painterResource(R.drawable.ic_album_24dp)

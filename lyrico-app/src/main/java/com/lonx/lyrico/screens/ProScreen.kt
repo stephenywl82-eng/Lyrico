@@ -7,7 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -204,9 +204,9 @@ private fun ProIdentityContent() {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text("Lyrico Pro", color = goldText, style = titleStyle.copy(fontSize = 20.sp, fontWeight = FontWeight.ExtraBold))
                     Row(
-                        modifier = Modifier.clip(RoundedCornerShape(50))
+                        modifier = Modifier.clip(CircleShape)
                             .background(Color.White.copy(alpha = if (dark) 0.07f else 0.28f))
-                            .border(0.5.dp, Color.White.copy(alpha = if (dark) 0.15f else 0.5f), RoundedCornerShape(50))
+                            .border(0.5.dp, Color.White.copy(alpha = if (dark) 0.15f else 0.5f), CircleShape)
                             .padding(horizontal = 9.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),

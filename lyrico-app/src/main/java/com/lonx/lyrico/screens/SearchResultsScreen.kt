@@ -29,7 +29,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -562,7 +562,7 @@ fun SearchResultItem(
                     Box(
                         modifier = Modifier
                             .size(72.dp)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(MaterialTheme.shapes.small)
                             .background(LyricoColors.coverPlaceholder)
                     ) {
                         AsyncImage(
@@ -772,7 +772,7 @@ private fun SearchResultBadge(
     val salt = false
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(999.dp))
+            .clip(CircleShape)
             .background(
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
@@ -1231,7 +1231,7 @@ private fun SearchResultApplyOptionItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(MaterialTheme.shapes.medium)
             .clickable {
                 if (option.enabled) {
                     onSelectedChange(!selected)
@@ -1245,7 +1245,7 @@ private fun SearchResultApplyOptionItem(
             Box(
                 modifier = Modifier
                     .size(72.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .background(LyricoColors.coverPlaceholder)
             ) {
                 AsyncImage(

@@ -79,7 +79,6 @@ import com.lonx.lyrico.ui.components.library.LibraryDetailPage
 import com.lonx.lyrico.ui.components.plugin.PluginIcon
 import com.lonx.lyrico.ui.components.ItemOrderState
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
-import com.lonx.lyrico.ui.theme.isDarkTheme
 import com.lonx.lyrico.viewmodel.PluginViewModel
 import com.lonx.lyrico.viewmodel.PluginMessage
 import com.ramcosta.composedestinations.annotation.Destination
@@ -885,7 +884,9 @@ fun PluginItem(
     }
 
     val neutralSurface = colorScheme.surfaceContainer.copy(alpha = 0.8f)
-    val actionIconTint = colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.7f else 0.9f)
+    // 低强调图标直接用官方语义角色 onSurfaceVariant（深浅由主题自动适配），
+    // 取代手写 alpha 按深浅模式分别调节的非规范做法。
+    val actionIconTint = colorScheme.onSurfaceVariant
 
     val pluginId = plugin.id
     val pluginName = plugin.displayName
@@ -1075,7 +1076,7 @@ private fun CompactPluginItem(
         .map { stringResource(it.labelRes()) }
         .joinToString(" / ")
     val neutralActionBackground = colorScheme.surfaceContainer.copy(alpha = 0.8f)
-    val neutralActionTint = colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.7f else 0.9f)
+    val neutralActionTint = colorScheme.onSurfaceVariant
 
     Card(
         modifier = modifier,
