@@ -6,6 +6,10 @@
 
 Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理工具。它用于整理本地音乐库、读写音频元数据，并通过插件化搜索源补全歌词、封面和其他歌曲信息。
 
+## 关于本 Fork
+
+本仓库是 [Moriafly/Lyrico](https://github.com/Moriafly/Lyrico) 的个人 fork，会在上游基础上合入改动并加入一些自用调整（例如标准 Material Design 3 主题 `LyricoMaterialTheme`、构建配置适配等）。发布版本仅面向 **arm64-v8a** 架构。如需官方完整功能与支持，请以[上游仓库](https://github.com/Moriafly/Lyrico)为准。
+
 ## 功能特性
 
 - **本地音乐库管理**：扫描本地音乐文件，按歌曲、艺术家、专辑、文件夹等维度浏览与搜索。
@@ -58,7 +62,7 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 - [JDK 21](https://adoptium.net/temurin/releases/?version=21)
 - [Android SDK](https://developer.android.com/studio)
 - [Android NDK 29](https://developer.android.com/ndk/downloads)
-- [CMake 4.1.2](https://cmake.org/download/)
+- [CMake 3.22.1](https://cmake.org/download/)（构建脚本已在 `build.gradle.kts` 中固定该版本）
 - [Git](https://git-scm.com/downloads/)（Windows 使用 [Git for Windows](https://gitforwindows.org/) 附带的 Bash）
 - [GNU Make 4.x](https://community.chocolatey.org/packages/make)
 
@@ -67,6 +71,8 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 ```powershell
 git submodule update --init --recursive
 ```
+
+> 说明：发布构建（release）仅生成 **arm64-v8a** 架构的 APK，不再构建 armeabi-v7a（32 位）。请确保在 64 位 ARM 设备上安装使用。
 
 常用命令：
 
