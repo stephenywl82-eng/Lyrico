@@ -1,10 +1,18 @@
-# Lyrico
+# Lyrico（SDW 修改版）
 
-[![GitHub Release](https://img.shields.io/github/v/release/replica0110/lyrico?style=flat-square)](https://github.com/Replica0110/Lyrico/releases)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/replica0110/lyrico/total?style=flat-square)
-[![License](https://img.shields.io/github/license/Replica0110/Lyrico?style=flat-square)](./LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/stephenywl82-eng/lyrico?style=flat-square)](https://github.com/stephenywl82-eng/Lyrico/releases)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/stephenywl82-eng/lyrico/total?style=flat-square)
+[![License](https://img.shields.io/github/license/stephenywl82-eng/Lyrico?style=flat-square)](./LICENSE)
+
+> 本仓库是 [Replica0110/Lyrico](https://github.com/Replica0110/Lyrico) 的一个 **fork / 个人修改版**。它在原项目基础上把界面替换为 SDW（基于 Material 3 Expressive）风格，并修复、新增了若干功能。原项目的版权、许可证与致谢保持不变，本文档其余章节的描述仍适用于原版能力。
 
 Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理工具。它用于整理本地音乐库、读写音频元数据，并通过插件化搜索源补全歌词、封面和其他歌曲信息。
+
+## 本分支相对原版的改动
+
+- **SDW 界面（Material 3 Expressive）**：移除了原版的 Miuix / SaltUI 双界面，统一为 SDW 主题——跟随壁纸的动态取色、官方 10 级圆角刻度、超大超粗标题排版，以及基于官方 MotionScheme 的流畅动效。文件夹右下角加号菜单也重做为紧凑分组。
+- **批量重命名修复**：改用 MediaStore `DISPLAY_NAME` 更新（兼容 Android 分区存储，不再用必败的 `File.renameTo`），并在执行前统一申请批量写入权限；同时修复了进度条卡在中间的问题（前台通知节流 + 终点强制 100% + 分母安全处理）。
+- **清理缺失文件**：新增「设置 → 扫描设置 → 清理缺失文件」，移除曲库中文件已不存在（含 MediaStore 幽灵记录）的歌曲及其关联歌词 / 标签 / 文件夹计数。
 
 ## 功能特性
 
@@ -15,7 +23,7 @@ Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理�
 - **歌词格式处理**：支持普通 LRC、增强型逐字歌词、TTML 等歌词内容的展示、匹配、转换与写入。
 - **批量整理流程**：支持多选、批量匹配、批量编辑、批量重命名、批量响度分析、批量分享和批量删除。
 - **插件化搜索源**：在线搜索能力由插件提供，应用本体负责运行时、配置界面、结果处理和标签写入。
-- **双界面风格**：内置 Miuix 与 SaltUI 两套界面，切换后立即生效。
+- **SDW 动态主题**：主题色跟随系统壁纸自动派生，支持深浅色；排版与动效遵循 Material 3 Expressive 规范。
 
 ## 插件系统
 
@@ -88,6 +96,8 @@ git submodule update --init --recursive
 
 ## 维护取向
 
+本 fork 为个人修改版，主要服务于自己的使用需求，不追求覆盖所有可能的个性化场景；底层能力与生态仍跟随原项目。原项目的维护取向可供参考：
+
 项目开发主要围绕维护者自身的实际使用需求展开，不追求覆盖所有可能的个性化场景。主线功能通常会优先考虑：
 
 - 对多数用户有实际价值
@@ -103,8 +113,8 @@ git submodule update --init --recursive
 
 - [LDDC](https://github.com/chenmozhijin/LDDC)：简单易用的精准歌词下载匹配工具
 - [any-listen-extension-online-metadata](https://github.com/any-listen/any-listen-extension-online-metadata)：any-listen 音频元数据搜索插件
-- [Miuix](https://github.com/compose-miuix-ui/miuix)：Xiaomi HyperOS 风格的 Compose UI 组件库
-- [SaltUI](https://github.com/Moriafly/SaltUI)：Compose Multiplatform 平台化 UI 组件库
+- [Miuix](https://github.com/compose-miuix-ui/miuix)：Xiaomi HyperOS 风格的 Compose UI 组件库（本 fork 已不再使用其界面）
+- [SaltUI](https://github.com/Moriafly/SaltUI)：Compose Multiplatform 平台化 UI 组件库（本 fork 已不再使用其界面）
 - [音乐标签](https://www.cnblogs.com/vinlxc/p/11932130.html)：音频标签编辑应用
 - [quickjs-ng](https://github.com/quickjs-ng/quickjs)：嵌入式 JavaScript 运行时
 - [TagLib](https://github.com/taglib/taglib)：音频元数据读写库
@@ -112,12 +122,12 @@ git submodule update --init --recursive
 
 ## 捐赠
 
-如果 Lyrico 对你有帮助，可以通过 [爱发电](https://ifdian.net/a/replica0110) 支持项目维护。
+如果 Lyrico 对你有帮助，可以通过原作者的 [爱发电](https://ifdian.net/a/replica0110) 支持项目维护。
 
 [赞助者列表](https://replica0110.github.io/Sponsors/)
 
 ## 许可证
 
-Lyrico 本体代码基于 [Apache License 2.0](./LICENSE) 开源。
+Lyrico 本体代码基于 [Apache License 2.0](./LICENSE) 开源，本 fork 的改动同样以 Apache License 2.0 发布。
 
 项目使用的第三方组件仍遵循各自许可证。Gradle/Android 依赖的许可信息可在应用内“开源许可”页面查看；随源码引入或嵌入构建的组件见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
