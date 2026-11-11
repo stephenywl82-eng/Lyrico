@@ -1,7 +1,9 @@
 package com.lonx.lyrico.ui.theme
 
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ripple
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -9,7 +11,10 @@ import com.lonx.lyrico.data.model.ThemeMode
 import com.lonx.lyrico.data.model.UiEngine
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-/** Both palettes remain available to shared content during the UI migration. */
+/** Authoritative dark-mode flag for the Material3 design system. */
+val LocalIsDark = staticCompositionLocalOf { false }
+
+/** Both legacy palettes remain available to shared content during the UI migration. */
 @Composable
 fun LyricoTheme(
     uiEngine: UiEngine = UiEngine.MIUIX,
@@ -19,13 +24,23 @@ fun LyricoTheme(
     content: @Composable () -> Unit,
 ) {
     val indication = ripple()
+    val dark =
+        when (colorMode) {
+            ThemeMode.AUTO -> isSystemInDarkTheme()
+            ThemeMode.DARK -> true
+            ThemeMode.LIGHT -> false
+        }
     LyricoMiuixTheme(colorMode, keyColor, monetEnabled) {
         LyricoSaltTheme(colorMode, MiuixTheme.colorScheme.primary, monetEnabled, indication) {
             CompositionLocalProvider(
+                LocalIsDark provides dark,
                 LocalUiEngine provides uiEngine,
                 LocalIndication provides indication,
-                content = content,
-            )
+            ) {
+                LyricoMaterialTheme(colorMode, keyColor, monetEnabled) {
+                    content()
+                }
+            }
         }
     }
 }

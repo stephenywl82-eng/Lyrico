@@ -5,11 +5,21 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/configure")
 endif()
 if(CMAKE_HOST_WIN32)
     get_filename_component(git_dir "${GIT_EXECUTABLE}" DIRECTORY)
-    find_program(FFMPEG_BASH bash PATHS "${git_dir}/../bin" "${git_dir}/../usr/bin" NO_DEFAULT_PATH REQUIRED)
+    find_program(FFMPEG_BASH bash
+        PATHS "${git_dir}/../bin" "${git_dir}/../usr/bin"
+              "C:/Program Files/Git/usr/bin" "C:/Program Files/Git/bin"
+              "C:/Program Files (x86)/Git/usr/bin" "C:/Program Files (x86)/Git/bin"
+        NO_DEFAULT_PATH REQUIRED)
+    find_program(FFMPEG_MAKE NAMES gmake make REQUIRED
+        PATHS "${git_dir}/../bin" "${git_dir}/../usr/bin"
+              "E:/Android/Sdk/ndk/29.0.14206865/prebuilt/windows-x86_64/bin"
+              "E:/Android/Sdk/ndk/27.0.12077973/prebuilt/windows-x86_64/bin"
+              "E:/Android/Sdk/ndk/25.1.8937393/prebuilt/windows-x86_64/bin"
+        NO_DEFAULT_PATH)
 else()
     find_program(FFMPEG_BASH bash REQUIRED)
+    find_program(FFMPEG_MAKE NAMES gmake make REQUIRED)
 endif()
-find_program(FFMPEG_MAKE NAMES gmake make REQUIRED)
 execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg"
     OUTPUT_VARIABLE ffmpeg_revision OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)

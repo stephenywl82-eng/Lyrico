@@ -1,29 +1,15 @@
 package com.lonx.lyrico.ui.theme
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import com.lonx.lyrico.R
-import com.lonx.lyrico.data.model.UiEngine
-import com.moriafly.salt.ui.SaltTheme
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode.Dark
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode.Light
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode.MonetDark
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode.MonetLight
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode.MonetSystem
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 
 val isDarkTheme: Boolean
     @Composable
-    get() = when (MiuixTheme.colorSchemeMode) {
-        Dark, MonetDark -> true
-        Light, MonetLight -> false
-        ColorSchemeMode.System, MonetSystem -> isSystemInDarkTheme()
-        null -> false
-    }
+    get() = LocalIsDark.current
 object LyricoColors {
     val emptyIllustrationWarm: Color
         @Composable
@@ -39,11 +25,7 @@ object LyricoColors {
      */
     val coverPlaceholder: Color
         @Composable
-        get() = if (LocalUiEngine.current == UiEngine.SALT) {
-            SaltTheme.colors.subBackground
-        } else {
-            MiuixTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-        }
+        get() = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
 
 
     /**
@@ -97,11 +79,7 @@ object LyricoColors {
      */
     val coverPlaceholderIcon: Color
         @Composable
-        get() = if (LocalUiEngine.current == UiEngine.SALT) {
-            SaltTheme.colors.subText.copy(alpha = 0.5f)
-        } else {
-            MiuixTheme.colorScheme.onSurfaceVariantActions.copy(alpha = 0.5f)
-        }
+        get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
 }
 
 data class KeyColor(
