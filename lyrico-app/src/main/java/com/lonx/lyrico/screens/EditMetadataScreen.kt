@@ -2064,7 +2064,7 @@ private fun CoverSection(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = title.ifEmpty { "未知曲目" },
+                            text = title.ifEmpty { stringResource(R.string.unknown_title) },
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = onSurface,

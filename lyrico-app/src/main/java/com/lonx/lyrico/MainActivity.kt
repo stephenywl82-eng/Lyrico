@@ -72,7 +72,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             if (results[Manifest.permission.POST_NOTIFICATIONS] == false) {
                 Toast.makeText(
                     this,
-                    "通知权限未授予，可能无法接收通知",
+                    getString(R.string.permission_notification_denied),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -81,7 +81,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
                 if (results[audioPermission] == false) {
                     Toast.makeText(
                         this,
-                        "音频访问权限未授予，将无法扫描和管理本地音频文件",
+                        getString(R.string.permission_audio_denied),
                         Toast.LENGTH_LONG
                     ).show()
                 }
@@ -100,7 +100,7 @@ open class MainActivity : AppCompatActivity(), ExternalAudioEditHost {
             if (!isGranted) {
                 Toast.makeText(
                     this,
-                    "未授予音频读取权限，将尝试使用外部应用提供的临时授权",
+                    getString(R.string.permission_audio_temp),
                     Toast.LENGTH_SHORT
                 ).show()
             }

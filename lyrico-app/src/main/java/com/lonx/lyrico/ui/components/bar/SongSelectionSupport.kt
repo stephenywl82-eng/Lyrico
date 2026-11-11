@@ -21,11 +21,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.lonx.lyrico.ui.components.lyrics.LyricsOrganizationMenu
+
 import com.lonx.lyrico.R
 import com.lonx.lyrico.ui.components.icons.LucideIcons
 import com.lonx.lyrico.data.model.ExportDestination
 import com.lonx.lyrico.data.model.BatchTaskType
+import com.lonx.lyrico.data.model.lyrics.LyricsOperation
 import com.lonx.lyrico.data.model.entity.SongEntity
 import com.lonx.lyrico.ui.components.base.YesNoDialog
 import com.lonx.lyrico.ui.components.base.ExportDestinationBottomSheet
@@ -41,7 +42,8 @@ import com.lonx.lyrico.viewmodel.SongSelectionViewModel
 import kotlinx.coroutines.flow.collect
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenu
 import com.lonx.lyrico.ui.components.fab.ExpandableFabMenuStyle
-import com.lonx.lyrico.ui.components.fab.FabMenuItem
+import com.lonx.lyrico.ui.components.fab.FabMenuGroup
+import com.lonx.lyrico.ui.components.fab.FabMenuLeaf
 import com.lonx.lyrico.ui.components.scaffoldTopAppBarInsetsPadding
 import com.lonx.lyrico.viewmodel.BatchExportViewModel
 import com.lonx.lyrico.viewmodel.BatchLyricsFormatViewModel
@@ -365,128 +367,156 @@ ExpandableFabMenu(
     style = ExpandableFabMenuStyle.default().copy(
         mainIcon = LucideIcons.Plus
     ),
-    itemCount = 12,
-    onExpandedChange = onExpandedChange
-) {
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_replay_gain),
-        icon = LucideIcons.Volume2,
-        onClick = {
-            onExpandedChange(false)
-            batchReplayGainViewModel.setSelectionUris(selectedSongUris.toList())
-            batchReplayGainViewModel.openReplayGainConfig()
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.lyrics_convert),
-        icon = LucideIcons.Convert,
-        onClick = {
-            onExpandedChange(false)
-            batchLyricsFormatViewModel.setSelectionUris(selectedSongUris.toList())
-            batchLyricsFormatViewModel.openConfig(batchReplayGainUiState.concurrency)
-        }
-    )
-
-    LyricsOrganizationMenu(onSelect = { operation ->
-        onExpandedChange(false)
-        batchLyricsFormatViewModel.setSelectionUris(selectedSongUris.toList())
-        batchLyricsFormatViewModel.openConfig(batchReplayGainUiState.concurrency, operation)
-    }) { open ->
-        FabMenuItem(label = stringResource(R.string.lyrics_organize), icon = LucideIcons.Sort, onClick = open)
-    }
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_export_lyrics),
-        icon = LucideIcons.FileUp,
-        onClick = {
-            onExpandedChange(false)
-            pendingExportTaskType = BatchTaskType.EXPORT_LYRICS
-            showExportDestinationSheet = true
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_export_cover),
-        icon = LucideIcons.Image,
-        onClick = {
-            onExpandedChange(false)
-            pendingExportTaskType = BatchTaskType.EXPORT_COVER
-            showExportDestinationSheet = true
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_rename),
-        icon = LucideIcons.Type,
-        onClick = {
-            onExpandedChange(false)
-            if (onSetSelectionUris()) {
-                navigator.navigate(BatchRenameDestination)
+    onExpandedChange = onExpandedChange,
+    menuTree = listOf(
+        FabMenuLeaf(
+            key = "batch_edit",
+            label = stringResource(R.string.batch_edit_title),
+            icon = LucideIcons.Pencil,
+            onClick = {
+                onExpandedChange(false)
+                if (onSetSelectionUris()) {
+                    navigator.navigate(BatchEditDestination())
+                }
             }
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.batch_edit_title),
-        icon = LucideIcons.Pencil,
-        onClick = {
-            onExpandedChange(false)
-            if (onSetSelectionUris()) {
-                navigator.navigate(BatchEditDestination())
+        ),
+        FabMenuLeaf(
+            key = "rename",
+            label = stringResource(R.string.action_batch_rename),
+            icon = LucideIcons.Type,
+            onClick = {
+                onExpandedChange(false)
+                if (onSetSelectionUris()) {
+                    navigator.navigate(BatchRenameDestination)
+                }
             }
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_match_cover),
-        icon = LucideIcons.ImageSearch,
-        onClick = {
-            onExpandedChange(false)
-            if (onSetSelectionUris()) {
-                batchMatchViewModel.openBatchMatchConfig(BatchMatchType.COVER)
+        ),
+        FabMenuLeaf(
+            key = "delete",
+            label = stringResource(R.string.action_delete),
+            icon = LucideIcons.Trash,
+            onClick = {
+                onExpandedChange(false)
+                showBatchDeleteDialog = true
             }
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_match_lyrics),
-        icon = LucideIcons.TextSearch,
-        onClick = {
-            onExpandedChange(false)
-            if (onSetSelectionUris()) {
-                batchMatchViewModel.openBatchMatchConfig(BatchMatchType.LYRICS)
+        ),
+        FabMenuGroup(
+            key = "lyrics_organize",
+            label = stringResource(R.string.lyrics_organize),
+            icon = LucideIcons.Sort,
+            children = listOf(
+                LyricsOperation.SORT to LucideIcons.Sort,
+                LyricsOperation.REMOVE_EMPTY to LucideIcons.RemoveLines,
+                LyricsOperation.REMOVE_TAGS to LucideIcons.FilterLyrics
+            ).map { (op, icon) ->
+                FabMenuLeaf(
+                    key = "lyrics_organize_${op.name}",
+                    label = stringResource(op.titleRes),
+                    icon = icon,
+                    onClick = {
+                        onExpandedChange(false)
+                        batchLyricsFormatViewModel.setSelectionUris(selectedSongUris.toList())
+                        batchLyricsFormatViewModel.openConfig(batchReplayGainUiState.concurrency, op)
+                    }
+                )
             }
-        }
+        ),
+        FabMenuGroup(
+            key = "export",
+            label = stringResource(R.string.action_export_lyrics),
+            icon = LucideIcons.FileUp,
+            children = listOf(
+                FabMenuLeaf(
+                    key = "export_lyrics",
+                    label = stringResource(R.string.action_batch_export_lyrics),
+                    icon = LucideIcons.FileUp,
+                    onClick = {
+                        onExpandedChange(false)
+                        pendingExportTaskType = BatchTaskType.EXPORT_LYRICS
+                        showExportDestinationSheet = true
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "export_cover",
+                    label = stringResource(R.string.action_batch_export_cover),
+                    icon = LucideIcons.Image,
+                    onClick = {
+                        onExpandedChange(false)
+                        pendingExportTaskType = BatchTaskType.EXPORT_COVER
+                        showExportDestinationSheet = true
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "lyrics_convert",
+                    label = stringResource(R.string.lyrics_convert),
+                    icon = LucideIcons.Convert,
+                    onClick = {
+                        onExpandedChange(false)
+                        batchLyricsFormatViewModel.setSelectionUris(selectedSongUris.toList())
+                        batchLyricsFormatViewModel.openConfig(batchReplayGainUiState.concurrency)
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "replay_gain",
+                    label = stringResource(R.string.action_batch_replay_gain),
+                    icon = LucideIcons.Volume2,
+                    onClick = {
+                        onExpandedChange(false)
+                        batchReplayGainViewModel.setSelectionUris(selectedSongUris.toList())
+                        batchReplayGainViewModel.openReplayGainConfig()
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "share",
+                    label = stringResource(R.string.action_share),
+                    icon = LucideIcons.Share2,
+                    onClick = {
+                        onExpandedChange(false)
+                        onBatchShare(context, songs)
+                    }
+                )
+            )
+        ),
+        FabMenuGroup(
+            key = "match",
+            label = stringResource(R.string.batch_match),
+            icon = LucideIcons.ImageSearch,
+            children = listOf(
+                FabMenuLeaf(
+                    key = "match_cover",
+                    label = stringResource(R.string.action_batch_match_cover),
+                    icon = LucideIcons.ImageSearch,
+                    onClick = {
+                        onExpandedChange(false)
+                        if (onSetSelectionUris()) {
+                            batchMatchViewModel.openBatchMatchConfig(BatchMatchType.COVER)
+                        }
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "match_lyrics",
+                    label = stringResource(R.string.action_batch_match_lyrics),
+                    icon = LucideIcons.TextSearch,
+                    onClick = {
+                        onExpandedChange(false)
+                        if (onSetSelectionUris()) {
+                            batchMatchViewModel.openBatchMatchConfig(BatchMatchType.LYRICS)
+                        }
+                    }
+                ),
+                FabMenuLeaf(
+                    key = "match_metadata",
+                    label = stringResource(R.string.action_batch_match_metadata),
+                    icon = LucideIcons.Tags,
+                    onClick = {
+                        onExpandedChange(false)
+                        if (onSetSelectionUris()) {
+                            batchMatchViewModel.openBatchMatchConfig(BatchMatchType.METADATA)
+                        }
+                    }
+                )
+            )
+        )
     )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_batch_match_metadata),
-        icon = LucideIcons.Tags,
-        onClick = {
-            onExpandedChange(false)
-            if (onSetSelectionUris()) {
-                batchMatchViewModel.openBatchMatchConfig(BatchMatchType.METADATA)
-            }
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_delete),
-        icon = LucideIcons.Trash,
-        onClick = {
-            onExpandedChange(false)
-            showBatchDeleteDialog = true
-        }
-    )
-
-    FabMenuItem(
-        label = stringResource(R.string.action_share),
-        icon = LucideIcons.Share2,
-        onClick = {
-            onExpandedChange(false)
-            onBatchShare(context, songs)
-        }
-    )
-}
+)
 }

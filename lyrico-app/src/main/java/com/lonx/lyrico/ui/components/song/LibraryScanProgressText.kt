@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -21,6 +25,7 @@ import com.lonx.lyrico.data.song.scan.LibraryScanProgress
 import com.lonx.lyrico.data.song.scan.LibraryScanStage
 import com.lonx.lyrico.utils.LibraryScanState
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun LibraryScanProgressText(
     progress: LibraryScanProgress,
@@ -37,14 +42,25 @@ fun LibraryScanProgressText(
         LibraryScanStage.FINISHED -> stringResource(R.string.scan_progress_finished)
     }
 
-    Text(
-        text = title,
+    Column(
         modifier = modifier
-            .padding(horizontal = 24.dp),
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        textAlign = TextAlign.Center
-    )
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        LoadingIndicator(
+            modifier = Modifier.size(72.dp),
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = title,
+            modifier = Modifier.padding(horizontal = 24.dp),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 /**

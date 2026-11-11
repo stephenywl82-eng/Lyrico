@@ -42,7 +42,7 @@ class SearchSourceConfigViewModel(
             val sourceWithState = searchSourceProvider.getSourceWithState(pluginId)
             if (sourceWithState == null) {
                 _uiState.update {
-                    it.copy(isLoading = false, errorMessage = "无效的搜索源")
+                    it.copy(isLoading = false, errorMessage = "invalid_source")
                 }
                 return@launch
             }
@@ -85,7 +85,7 @@ class SearchSourceConfigViewModel(
         _uiState.update { it.copy(saved = false) }
     }
 
-    fun save(requiredMessage: String = "必填") {
+    fun save(requiredMessage: String = "Required") {
         val state = _uiState.value
         val pluginId = state.pluginId.takeIf { it.isNotBlank() } ?: return
         val valueFieldKeys = state.configFields

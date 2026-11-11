@@ -100,9 +100,9 @@ fun SongDetailBottomSheet(
             } else null
         )
         if (BuildConfig.DEBUG) {
-            add("文件URI" to song.uri)
-            add("文件ID" to song.id.toString())
-            add("文件名" to song.fileName)
+            add(stringResource(R.string.detail_file_uri) to song.uri)
+            add(stringResource(R.string.detail_file_id) to song.id.toString())
+            add(stringResource(R.string.detail_file_name) to song.fileName)
         }
     }
 
@@ -208,7 +208,7 @@ fun SongDetailItem(
                     Icon(
                         modifier = Modifier.size(16.dp),
                         imageVector = LucideIcons.Copy,
-                        contentDescription = "复制"
+                        contentDescription = stringResource(R.string.action_copy)
                     )
                 }
             }

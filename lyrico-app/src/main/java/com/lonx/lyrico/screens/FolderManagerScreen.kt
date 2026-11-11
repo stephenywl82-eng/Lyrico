@@ -551,6 +551,7 @@ fun FolderManagerScreen(
         }
 
         SongBatchSelectionActions(
+            modifier = Modifier.padding(bottom = LocalLibraryBottomContentPadding.current),
             navigator = navigator,
             songs = currentSongs,
             show = isSelectionMode && pagerState.currentPage == 1 && currentSongs.isNotEmpty(),
