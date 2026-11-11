@@ -88,6 +88,20 @@ class AudioFileAccess(
         return DocumentsContract.renameDocument(context.contentResolver, uri, newFileName)
     }
 
+    /**
+     * 将任意音频 uri 解析为规范的 MediaStore audio item uri（content://media/.../audio/media/<id>）。
+     * 当原始 uri 不是标准 MediaStore item（例如带 external_files 段或来自 SAF 但能匹配到库内媒体）时使用，
+     * 以便 MediaStore 的 DISPLAY_NAME 改名为可写路径。无法解析时返回 null。
+     */
+    fun resolveMediaStoreAudioUri(uriString: String): String? {
+        val uri = uriString.toUri()
+        uri.toMediaStoreAudioUri()?.let { return it.toString() }
+        if (uri.scheme == "content") {
+            findMediaStoreAudioUri(uri)?.let { return it.toString() }
+        }
+        return null
+    }
+
     fun isUriMissing(uri: Uri): Boolean {
         return try {
             context.contentResolver.openFileDescriptor(uri, "r")?.use { }

@@ -238,6 +238,7 @@
     <string name="action_batch_match_metadata">批次比對中繼資料</string>
     <string name="action_batch_match_lyrics">批次比對歌詞</string>
     <string name="action_batch_match_cover">批次比對封面</string>
+    <string name="batch_match">比對</string>
 
     <!-- 清單項目 -->
     <string name="unknown_artist">未知演出者</string>
@@ -285,6 +286,9 @@
     <string name="label_date_added">加入時間</string>
     <string name="label_date_modified">修改時間</string>
     <string name="label_file_path">檔案路徑</string>
+    <string name="detail_file_uri">檔案 URI</string>
+    <string name="detail_file_id">檔案 ID</string>
+    <string name="detail_file_name">檔案名稱</string>
     <string name="label_cover">封面</string>
     <string name="label_artist">演出者</string>
     <string name="label_custom">自訂</string>
@@ -397,6 +401,11 @@
 
     <string name="unknown_error">未知錯誤：%1$s</string>
     <string name="clear_songs">清除所有歌曲</string>
+    <string name="permission_notification_denied">未授予通知權限，可能無法接收通知</string>
+    <string name="permission_audio_denied">未授予音訊存取權限，將無法掃描和管理本地音訊檔案</string>
+    <string name="permission_audio_temp">未授予音訊讀取權限，將嘗試使用外部應用提供的臨時授權</string>
+    <string name="toast_database_cleared">已清空資料庫</string>
+    <string name="toast_database_clear_failed">清空資料庫失敗</string>
 
 
 
@@ -657,6 +666,7 @@
     <string name="app_log_empty">尚無日誌</string>
     <string name="action_copy_log">複製日誌</string>
     <string name="action_copy_lyrics">複製歌詞</string>
+    <string name="action_copy">複製</string>
     <string name="action_export_logs">匯出</string>
     <string name="app_log_delete_title">刪除日誌？</string>
     <string name="app_log_delete_message">確認刪除 %d 筆日誌嗎？此操作無法復原</string>

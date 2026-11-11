@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.Alignment
@@ -54,6 +55,7 @@ import com.lonx.lyrico.data.repository.SettingsRepository
 import com.lonx.lyrico.ui.components.base.YesNoBottomSheet
 import com.lonx.lyrico.viewmodel.SettingsEvent
 import com.lonx.lyrico.viewmodel.SettingsViewModel
+import com.lonx.lyrico.domain.song.usecase.CleanupMissingSongsUseCase
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootGraph
 import com.ramcosta.composedestinations.generated.destinations.AboutDestination
@@ -80,6 +82,7 @@ import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 
 @SuppressLint("LocalContextGetResourceValueCall")
 @Composable
@@ -116,6 +119,11 @@ fun SettingsScreen(
     val showClearCacheDialog = remember { mutableStateOf(false) }
     val showRgTargetDialog = remember { mutableStateOf(false) }
     val showLyricLineOrderSheet = remember { mutableStateOf(false) }
+    val showCleanupDialog = remember { mutableStateOf(false) }
+    val cleanupRunning = remember { mutableStateOf(false) }
+    val cleanupChecked = remember { mutableIntStateOf(0) }
+    val cleanupTotal = remember { mutableIntStateOf(0) }
+    val cleanupUseCase = koinInject<CleanupMissingSongsUseCase>()
     val visibleTracks = visibleLyricLineTracks(romaEnabled, translationEnabled, onlyTranslationIfAvailable)
     // 主题模式：一个「跟随系统」开关 + 非常驻时的「深色模式」开关（M3 Expressive 官方双开关范式）。
     val followSystem = themeMode == ThemeMode.AUTO
@@ -370,6 +378,13 @@ fun SettingsScreen(
                             )
                         }
                     )
+                    Action(
+                        icon = LucideIcons.Eraser, tone = PreferenceIconTone.Teal,
+                        title = stringResource(R.string.cleanup_missing_songs),
+                        summary = stringResource(R.string.cleanup_missing_songs_summary),
+                        onClick = { showCleanupDialog.value = true },
+                        holdDownState = showCleanupDialog.value
+                    )
                 }
             }
 
@@ -577,12 +592,12 @@ fun SettingsScreen(
                                 scope.launch {
                                     val success = settingsViewModel.clearSongs()
                                     if (success) {
-                                        Toast.makeText(context, "已清空数据库", Toast.LENGTH_SHORT)
+                                        Toast.makeText(context, context.getString(R.string.toast_database_cleared), Toast.LENGTH_SHORT)
                                             .show()
                                     } else {
                                         Toast.makeText(
                                             context,
-                                            "清空数据库失败",
+                                            context.getString(R.string.toast_database_clear_failed),
                                             Toast.LENGTH_SHORT
                                         )
                                             .show()
@@ -618,6 +633,76 @@ fun SettingsScreen(
         currentLoudness = settingsUiState.replayGainTargetLoudness,
         onDismiss = { showRgTargetDialog.value = false },
         onSave = settingsViewModel::setReplayGainTargetLoudness,
+    )
+    YesNoBottomSheet(
+        show = showCleanupDialog.value,
+        title = stringResource(R.string.cleanup_missing_songs),
+        onDismissRequest = { showCleanupDialog.value = false },
+        onConfirm = {
+            showCleanupDialog.value = false
+            cleanupRunning.value = true
+            cleanupChecked.intValue = 0
+            cleanupTotal.intValue = 0
+            scope.launch {
+                try {
+                    val removed = cleanupUseCase(
+                        onProgress = { checked, total ->
+                            cleanupChecked.intValue = checked
+                            cleanupTotal.intValue = total
+                        }
+                    )
+                    val msg = if (removed > 0) {
+                        context.getString(R.string.cleanup_missing_songs_done, removed)
+                    } else {
+                        context.getString(R.string.cleanup_missing_songs_none)
+                    }
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        e.message ?: context.getString(R.string.unknown_error_simple),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } finally {
+                    cleanupRunning.value = false
+                }
+            }
+        },
+        content = {
+            Text(
+                text = stringResource(R.string.cleanup_missing_songs_confirm),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    )
+    ActionBottomSheet(
+        show = cleanupRunning.value,
+        title = stringResource(R.string.cleanup_missing_songs),
+        allowDismiss = false,
+        onDismissRequest = {},
+        content = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                CircularProgressIndicator()
+                Text(
+                    text = if (cleanupTotal.intValue > 0) {
+                        stringResource(
+                            R.string.cleanup_missing_songs_running,
+                            cleanupChecked.intValue,
+                            cleanupTotal.intValue
+                        )
+                    } else {
+                        stringResource(R.string.cleanup_missing_songs_waiting)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     )
 }
 

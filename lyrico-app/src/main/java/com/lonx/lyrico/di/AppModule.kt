@@ -50,6 +50,7 @@ import com.lonx.lyrico.domain.song.usecase.ReadAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.RenameSongUseCase
 import com.lonx.lyrico.domain.song.usecase.SaveAudioTagsUseCase
 import com.lonx.lyrico.domain.song.usecase.SynchronizeLibraryUseCase
+import com.lonx.lyrico.domain.song.usecase.CleanupMissingSongsUseCase
 import com.lonx.lyrico.plugin.source.PluginSearchSourceManager
 import com.lonx.lyrico.plugin.source.SearchSourceProvider
 import com.lonx.lyrico.plugin.source.ScriptSearchSourceFactory
@@ -249,7 +250,7 @@ val appModule = module {
     single<SongLibraryRepository> { SongLibraryRepositoryImpl(get()) }
     single<SongSearchRepository> { SongSearchRepositoryImpl(get()) }
     single<LibraryScanRepository> {
-        LibraryScanRepositoryImpl(androidContext(), get(), get(), get(), get(), get(), get(), get(), get())
+        LibraryScanRepositoryImpl(androidContext(), get(), get(), get(), get(), get(), get(), get(), get(), get())
     }
     single { ReadAudioTagsUseCase(get(), get()) }
     single { SaveAudioTagsUseCase(get(), get(), get(), get(), get(), get()) }
@@ -259,6 +260,7 @@ val appModule = module {
     single { DeleteSongsUseCase(get(), get(), get(), get()) }
     single { RenameSongUseCase(get(), get(), get(), get()) }
     single { SynchronizeLibraryUseCase(get()) }
+    single { CleanupMissingSongsUseCase(get()) }
     single<SourcePluginRepository> { SourcePluginRepositoryImpl(get()) }
     single<LibraryScanManager> { LibraryScanManagerImpl(get(), androidContext(), get(), get(), get()) }
     single<BatchTaskRepository> { BatchTaskRepositoryImpl(get()) }

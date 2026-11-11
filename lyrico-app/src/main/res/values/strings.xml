@@ -82,6 +82,13 @@
     <string name="folder_found">%1$d folders found</string>
     <string name="folder_ignored">, %1$d ignored</string>
     <string name="ignore_short_audio">Ignore audio shorter than 60 seconds</string>
+    <string name="cleanup_missing_songs">Clean up missing files</string>
+    <string name="cleanup_missing_songs_summary">Remove songs whose files have been deleted or moved from the library</string>
+    <string name="cleanup_missing_songs_confirm">Lyrico will verify every song in the library. Songs whose files no longer exist (e.g. deleted or moved) will be removed. Continue?</string>
+    <string name="cleanup_missing_songs_running">Checking files… %1$d / %2$d</string>
+    <string name="cleanup_missing_songs_waiting">Checking files…</string>
+    <string name="cleanup_missing_songs_done">Removed %1$d missing file(s)</string>
+    <string name="cleanup_missing_songs_none">No missing files found</string>
 
     <string name="batch_match_overwrite_mode">Overwrite mode</string>
     <string name="batch_match_overwrite_mode_summary">Overwrite existing content when enabled; only fill in missing content when disabled</string>
@@ -238,6 +245,7 @@
     <string name="action_batch_match_metadata">Match metadata</string>
     <string name="action_batch_match_lyrics">Match lyrics</string>
     <string name="action_batch_match_cover">Match cover</string>
+    <string name="batch_match">Match</string>
 
     <!-- Song List Item -->
     <string name="unknown_artist">Unknown artist</string>
@@ -285,6 +293,9 @@
     <string name="label_date_added">Date Added</string>
     <string name="label_date_modified">Date Modified</string>
     <string name="label_file_path">File Path</string>
+    <string name="detail_file_uri">File URI</string>
+    <string name="detail_file_id">File ID</string>
+    <string name="detail_file_name">File name</string>
     <string name="label_cover">Cover</string>
     <string name="label_artist">Artist</string>
     <string name="label_custom">Custom</string>
@@ -413,6 +424,11 @@
     <string name="unknown_error">Unknown error: %1$s</string>
     <string name="unknown_error_simple">Unknown error</string>
     <string name="clear_songs">Clear All Songs</string>
+    <string name="permission_notification_denied">Notification permission not granted; you may not receive notifications</string>
+    <string name="permission_audio_denied">Audio access permission not granted; local audio files cannot be scanned or managed</string>
+    <string name="permission_audio_temp">Audio read permission not granted; will try to use the temporary authorization provided by the external app</string>
+    <string name="toast_database_cleared">Database cleared</string>
+    <string name="toast_database_clear_failed">Failed to clear database</string>
 
     <string name="action_reset">Reset</string>
     <string name="action_batch_rename">Rename</string>
@@ -650,6 +666,7 @@
     <string name="app_log_empty">No logs yet</string>
     <string name="action_copy_log">Copy log</string>
     <string name="action_copy_lyrics">Copy lyrics</string>
+    <string name="action_copy">Copy</string>
     <string name="action_export_logs">Export</string>
     <string name="app_log_delete_title">Delete logs?</string>
     <string name="app_log_delete_message">Delete %d log entries? This cannot be undone</string>

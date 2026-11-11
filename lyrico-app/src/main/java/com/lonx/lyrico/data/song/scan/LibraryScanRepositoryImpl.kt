@@ -2,6 +2,7 @@ package com.lonx.lyrico.data.song.scan
 
 import android.content.Context
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.room.withTransaction
 import com.lonx.audiotag.model.CustomTagField
 import com.lonx.lyrico.data.LyricoDatabase
@@ -16,6 +17,7 @@ import com.lonx.lyrico.data.song.mapper.SongMetadataMapper
 import com.lonx.lyrico.data.song.search.LyricFtsIndexer
 import com.lonx.lyrico.data.song.tag.AudioTagReadOptions
 import com.lonx.lyrico.data.song.tag.AudioTagRepository
+import com.lonx.lyrico.data.song.file.AudioFileAccess
 import com.lonx.lyrico.utils.MediaScanner
 import com.lonx.lyrico.utils.MediaStoreScanner
 import com.lonx.lyrico.utils.LyricsSearchTextExtractor
@@ -23,6 +25,7 @@ import com.lonx.lyrico.utils.UriUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.yield
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
@@ -35,7 +38,8 @@ class LibraryScanRepositoryImpl(
     private val songMetadataMapper: SongMetadataMapper,
     private val libraryIndexRepository: LibraryIndexRepository,
     private val appLogRepository: AppLogRepository,
-    private val mediaStoreScanner: MediaStoreScanner
+    private val mediaStoreScanner: MediaStoreScanner,
+    private val audioFileAccess: AudioFileAccess
 ) : LibraryScanRepository {
 
     private val songDao = database.songDao()
@@ -50,6 +54,68 @@ class LibraryScanRepositoryImpl(
             withContext(Dispatchers.IO) {
                 synchronizeLocked(request, onProgress)
             }
+        }
+    }
+
+    override suspend fun cleanupMissingSongs(
+        onProgress: suspend (checked: Int, total: Int) -> Unit
+    ): Int = withContext(Dispatchers.IO) {
+        val allSongs = songDao.getAllSyncInfo()
+        val total = allSongs.size
+        val missingUris = mutableListOf<String>()
+        val impactedFolderIds = mutableSetOf<Long>()
+
+        allSongs.forEachIndexed { index, info ->
+            val uriString = info.uri
+            val isMissing = if (uriString.isBlank()) {
+                true
+            } else {
+                try {
+                    audioFileAccess.isUriMissing(uriString.toUri())
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            if (isMissing) {
+                missingUris.add(uriString)
+                impactedFolderIds.add(info.folderId)
+            }
+            if (index % 50 == 0 || index == total - 1) {
+                onProgress(index + 1, total)
+            }
+            if (index % 200 == 0) yield()
+        }
+
+        if (missingUris.isNotEmpty()) {
+            database.withTransaction {
+                songDao.deleteByUris(missingUris)
+                songDao.deleteLyricFtsByUris(missingUris)
+                database.songCustomTagKeyDao().deleteForSongs(missingUris)
+            }
+            impactedFolderIds.forEach { folderId ->
+                runCatching { folderDao.refreshSongCount(folderId) }
+            }
+            runCatching { folderDao.performPostScanCleanup() }
+            runCatching { libraryIndexRepository.refreshAndPruneIndexes() }
+            logCleanup(missingUris.size, total)
+        }
+        missingUris.size
+    }
+
+    private suspend fun logCleanup(removed: Int, total: Int) {
+        try {
+            appLogRepository.log(
+                level = AppLogLevel.INFO,
+                type = AppLogType.APP,
+                tag = TAG,
+                message = "Cleanup missing songs finished",
+                detail = buildString {
+                    appendLine("total=$total")
+                    appendLine("removed=$removed")
+                }
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to write cleanup log", e)
         }
     }
 
