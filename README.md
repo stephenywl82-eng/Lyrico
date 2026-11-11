@@ -132,8 +132,6 @@ git submodule update --init --recursive
 ### 界面与设计
 
 - [Material 3 Expressive](https://developer.android.com/design/ui/mobile/expression)（Jetpack Compose Material 3）：本 fork 的 SDW 界面即基于其设计语言——跟随壁纸的动态取色、官方圆角刻度与 MotionScheme 动效。
-- [Miuix](https://github.com/compose-miuix-ui/miuix)：Xiaomi HyperOS 风格的 Compose UI 组件库（原项目双界面之一，本 fork 已不再使用其界面）。
-- [SaltUI](https://github.com/Moriafly/SaltUI)：Compose Multiplatform 平台化 UI 组件库（原项目双界面之一，本 fork 已不再使用其界面）。
 
 ### 音频与元数据
 
