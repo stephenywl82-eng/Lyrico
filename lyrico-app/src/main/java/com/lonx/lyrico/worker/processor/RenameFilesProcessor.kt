@@ -10,6 +10,7 @@ import com.lonx.lyrico.domain.song.usecase.RenameSongResult
 import com.lonx.lyrico.domain.song.usecase.RenameSongUseCase
 import com.lonx.lyrico.utils.FileNameSanitizer
 import com.lonx.lyrico.utils.FormatParser
+import java.io.FileNotFoundException
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -44,7 +45,12 @@ class RenameFilesProcessor(
         val song = songLibraryRepository.getSongByUri(item.songUri)
             ?: throw BatchTaskSkippedException("Song not found")
 
-        val tagData = audioTagRepository.read(song.uri, AudioTagReadOptions(strict = true))
+        val tagData = try {
+            audioTagRepository.read(song.uri, AudioTagReadOptions(strict = true))
+        } catch (e: FileNotFoundException) {
+            // 磁盘上已删除、MediaStore 残留的过期记录：无法改名，按跳过处理而非整批失败。
+            throw BatchTaskSkippedException("File missing: ${song.fileName}")
+        }
 
         val tokens = FormatParser.parseFormat(config.renameFormat)
         var newFileName = FormatParser.buildFileName(tokens, tagData)

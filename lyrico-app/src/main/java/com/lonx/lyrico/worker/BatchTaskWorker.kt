@@ -1,5 +1,6 @@
 package com.lonx.lyrico.worker
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -52,6 +53,11 @@ class BatchTaskWorker(
 
     private val taskId: String = inputData.getString(KEY_TASK_ID) ?: ""
 
+    // 限流前台通知刷新：每首歌都 setForeground 会触发系统丢弃大量更新，
+    // 导致进度条卡在中间不前进。间隔刷新既平滑又保证最终 100% 能下发。
+    private var lastForegroundUpdateMs = 0L
+    private val foregroundThrottleMs = 250L
+
     override suspend fun doWork(): Result {
         if (taskId.isEmpty()) return Result.failure()
 
@@ -65,18 +71,19 @@ class BatchTaskWorker(
             val startedAt = System.currentTimeMillis()
             val configSummary = buildConfigSummary(task.type, task.configJson)
 
-            updateForeground(title, 0, total)
-
             taskRepository.markRunning(taskId)
 
             val processor = processorFactory.create(task.type)
             val items = taskRepository.getPendingItems(taskId)
+            val itemTotal = items.size
+
+            updateForeground(title, 0, itemTotal)
 
             if (items.isEmpty()) {
                 taskRepository.markSucceeded(taskId)
                 logBatch(
                     level = AppLogLevel.INFO,
-                    message = "Batch task finished: ${task.type} (0/$total processed)",
+                    message = "Batch task finished: ${task.type} (0/$itemTotal processed)",
                     detail = buildBatchSummary(
                         taskType = task.type,
                         status = "succeeded",
@@ -96,7 +103,6 @@ class BatchTaskWorker(
                 return Result.success()
             }
 
-            val itemTotal = items.size
             val concurrency = parseConcurrency(task.configJson, task.type)
             val semaphore = Semaphore(concurrency)
             val processedCount = AtomicInteger(0)
@@ -113,7 +119,7 @@ class BatchTaskWorker(
                                 if (isStopped) return@async
                                 try {
                                     taskRepository.markItemRunning(item.itemId)
-                                    updateForeground(title, processedCount.get(), itemTotal, item.fileName)
+                                    maybeUpdateForeground(title, processedCount.get(), itemTotal, item.fileName)
                                     logBatch(
                                         level = AppLogLevel.INFO,
                                         message = "处理第 ${index + 1}/$itemTotal 首: ${item.fileName}",
@@ -180,7 +186,7 @@ class BatchTaskWorker(
                                 } finally {
                                     val current = processedCount.incrementAndGet()
                                     taskRepository.updateProgressFromItems(taskId, item.fileName)
-                                    updateForeground(title, current, itemTotal, item.fileName)
+                                    maybeUpdateForeground(title, current, itemTotal, item.fileName)
                                 }
                             }
                         }
@@ -249,6 +255,26 @@ class BatchTaskWorker(
                 }
             }
 
+            // 收尾：把进度与总数对齐到 100%，并把常驻进度通知替换为完成通知，
+            // 避免进度条停在中间不消失。
+            taskRepository.updateProgressFromItems(taskId, null)
+            updateForeground(title, itemTotal, itemTotal)
+            val finishedTask = taskRepository.getTask(taskId)
+            if (finishedTask != null) {
+                try {
+                    val finishedNotification = BatchTaskNotification.buildFinishedNotification(
+                        applicationContext,
+                        title,
+                        finishedTask.successCount,
+                        finishedTask.failureCount
+                    )
+                    (applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+                        .notify(BatchTaskNotification.NOTIFICATION_ID, finishedNotification)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to post finished notification", e)
+                }
+            }
+
             return Result.success()
         } catch (e: Exception) {
             logBatchException(
@@ -304,6 +330,23 @@ class BatchTaskWorker(
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to update foreground notification", e)
             }
+        }
+    }
+
+    /**
+     * 限流版的前台通知刷新。Android 对前台服务通知刷新有严格节流，高频 setForeground 会被丢弃，
+     * 导致进度条卡在中间。这里按 [foregroundThrottleMs] 间隔刷新，既平滑又保证最终 100% 能下发。
+     */
+    private suspend fun maybeUpdateForeground(
+        title: String,
+        current: Int,
+        total: Int,
+        currentFile: String? = null
+    ) {
+        val now = System.currentTimeMillis()
+        if (now - lastForegroundUpdateMs >= foregroundThrottleMs) {
+            lastForegroundUpdateMs = now
+            updateForeground(title, current, total, currentFile)
         }
     }
 

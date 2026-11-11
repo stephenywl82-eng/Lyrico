@@ -186,7 +186,8 @@ class BatchRenameViewModel(
                 if (task == null) return@collect
                 _uiState.update {
                     it.copy(
-                        renameProgress = task.current to task.total,
+                        // 用 max(total, current) 作分母，避免 task.total 比实际处理数大时进度条停在 <100% 的中间。
+                        renameProgress = task.current to maxRenamingDenom(task.total, task.current),
                         successCount = task.successCount,
                         failureCount = task.failureCount,
                         skippedCount = task.skippedCount,
@@ -205,6 +206,8 @@ class BatchRenameViewModel(
                     _uiState.update {
                         it.copy(
                             isRenamingInProgress = false,
+                            // 收尾时把进度对齐到 100%，避免进度条停在中间不消失
+                            renameProgress = 1 to 1,
                             renameTimeMillis = duration
                         )
                     }
@@ -341,6 +344,13 @@ class BatchRenameViewModel(
             resumeObservingTask(taskId)
         }
     }
+
+    private fun maxRenamingDenom(total: Int, current: Int): Int {
+        val m = if (total > current) total else current
+        return if (m < 1) 1 else m
+    }
+
+    fun getSelectedUris(): List<String> = selectionManager.selectedUris.value.toList()
 
     fun abortRename() {
         val taskId = _uiState.value.currentTaskId ?: return

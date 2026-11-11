@@ -47,6 +47,7 @@ import com.lonx.lyrico.ui.components.scaffoldBottomPadding
 import com.lonx.lyrico.ui.components.scaffoldTopHorizontalPadding
 import com.lonx.lyrico.utils.TagField
 import com.lonx.lyrico.viewmodel.BatchRenameViewModel
+import com.lonx.lyrico.ui.permissions.rememberBatchWritePermissionRequester
 import com.lonx.lyrico.ui.components.sdw.SdwBottomSheet
 import com.lonx.lyrico.ui.components.editor.rememberEditorTextFieldState
 import com.ramcosta.composedestinations.annotation.Destination
@@ -104,6 +105,10 @@ fun BatchRenameScreen(
     val tabs = remember { BatchRenameTab.entries }
     val pagerState = rememberPagerState(pageCount = { tabs.size })
     val scope = rememberCoroutineScope()
+    // Android 11+ 分区存储下，非本应用创建的媒体文件改名需先通过 MediaStore 批量授权，
+    // 否则 ContentResolver.update(DISPLAY_NAME) 会抛 RecoverableSecurityException 而静默失败。
+    // 必须先于批处理任务发起授权，因为任务 worker 是无界面的、无法自行弹权限请求。
+    val requestBatchWritePermission = rememberBatchWritePermissionRequester()
     val salt = false
 
     var showPlaceholderInfo by remember { mutableStateOf(false) }
@@ -199,7 +204,11 @@ fun BatchRenameScreen(
                         showPlaceholderInfo = showPlaceholderInfo,
                         onShowPlaceholderInfoChange = { showPlaceholderInfo = it },
                         onFormatChange = viewModel::saveFormat,
-                        onExecuteRename = viewModel::executeRename,
+                        onExecuteRename = {
+                            requestBatchWritePermission(viewModel.getSelectedUris()) {
+                                viewModel.executeRename()
+                            }
+                        },
                         errorMessage = uiState.errorMessage?.asString(context)
                     )
 
@@ -259,8 +268,8 @@ private fun BatchRenameProgressContent(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         uiState.renameProgress?.let { (current, total) ->
-            val progress =
-                if (total > 0) current.toFloat() / total.toFloat() else 0f
+            val safeTotal = if (total > 0) total else 1
+            val progress = (current.toFloat() / safeTotal.toFloat()).coerceIn(0f, 1f)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -288,7 +297,12 @@ private fun BatchRenameProgressContent(
                 )
             }
 
-            LinearProgressIndicator(progress = { progress })
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+            )
         }
     }
 
