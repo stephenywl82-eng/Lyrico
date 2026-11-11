@@ -10,9 +10,33 @@ Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理�
 
 ## 本分支相对原版的改动
 
-- **SDW 界面（Material 3 Expressive）**：移除了原版的 Miuix / SaltUI 双界面，统一为 SDW 主题——跟随壁纸的动态取色、官方 10 级圆角刻度、超大超粗标题排版，以及基于官方 MotionScheme 的流畅动效。文件夹右下角加号菜单也重做为紧凑分组。
-- **批量重命名修复**：改用 MediaStore `DISPLAY_NAME` 更新（兼容 Android 分区存储，不再用必败的 `File.renameTo`），并在执行前统一申请批量写入权限；同时修复了进度条卡在中间的问题（前台通知节流 + 终点强制 100% + 分母安全处理）。
-- **清理缺失文件**：新增「设置 → 扫描设置 → 清理缺失文件」，移除曲库中文件已不存在（含 MediaStore 幽灵记录）的歌曲及其关联歌词 / 标签 / 文件夹计数。
+本 fork 在保留原项目全部底层能力（音乐库管理、标签编辑、插件化搜索、歌词处理等）的基础上，对界面与若干功能做了重写与修复。
+
+### 1. SDW 界面（Material 3 Expressive）
+
+将原版的 Miuix / SaltUI 双界面整体替换为基于 Material 3 Expressive 的 SDW 主题：
+
+- **动态取色**：Android 12+ 跟随系统壁纸自动派生主题色；低版本提供中性黑 / 浅色静态兜底，并支持深浅主题切换。
+- **官方圆角刻度**：严格按 Material 3 的 10 级圆角刻度排版，信息密集的列表卡片回落到 12dp 官方语义间距，只有按钮、播放条等「主角」元素才使用胶囊等大圆角，疏密有致。
+- **SDW 排版体系**：歌单名、专辑标题等使用超大超粗（ExtraBold）字体配合负字距，与普通正文形成强烈的字重落差，扫一眼即可抓住重点。
+- **系统化动效**：内容切换、文件夹加号菜单展开、扫描 / 处理进度条统一走官方 MotionScheme 动效，FAB 为顺滑的 morph 形变而非硬切，进度条采用 Expressive 风格的流畅填充。
+- **文件夹 FAB 紧凑化**：右下角加号展开菜单重做为紧凑分组结构，不再拖出一条长列表遮挡内容。
+
+### 2. 批量重命名修复
+
+针对原版在 Android 分区存储下重命名必败、进度条卡死的问题做了修复：
+
+- **改用 MediaStore 改名**：分区存储下 `File.renameTo` 必然失败，现改用 `ContentResolver.update(DISPLAY_NAME)` 更新媒体库中的显示名来完成改名；当更新影响行数为 0 时，会解析规范 URI 后重试。
+- **批量写权限前置申请**：执行重命名前，在 UI 层通过 `MediaStore.createWriteRequest` 统一申请批量写入权限（处理 `RecoverableSecurityException`）。因为重命名在后台 worker 中执行、无法自行弹窗，所以权限必须在进入任务前由界面预申请。
+- **进度条修复**：修复了进度条卡在中间的问题——前台通知更新过于频繁（约每秒 40 次）会被系统丢弃，现做节流（约 500ms 一次）；应用内进度条分母采用 `max(total, current)` 的安全写法；任务结束时强制将进度置为 100%。
+- **缺失文件降级跳过**：对于 MediaStore 中存在记录但文件已被删除的「幽灵记录」（打开即 `ENOENT`），从「失败」降级为「跳过」，避免误报失败。
+
+### 3. 清理缺失文件
+
+新增「设置 → 扫描设置 → 清理缺失文件」功能：
+
+- **真实存在性判定**：通过 `AudioFileAccess.isUriMissing(uri)` 真正尝试打开文件描述符来判断歌曲对应的文件是否还在，绕过 MediaStore 未刷新导致的「假存在」假象。
+- **联动清理**：移除文件已不存在的歌曲，并同步清理其关联的歌词、标签以及所属文件夹的计数，保证曲库数据一致。
 
 ## 功能特性
 
@@ -43,19 +67,13 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 - [Manifest 参考](https://replica0110.github.io/Lyrico/plugins/manifest.html)
 - [宿主 API](https://replica0110.github.io/Lyrico/plugins/host-api.html)
 
-## 已适配 Lyrico 外部编辑功能的播放器
+## 已搭载 Lyrico 外部编辑功能的播放器
 
-接入方式见 [外部编辑接入指南](https://replica0110.github.io/Lyrico/guide/external-edit.html)。如需加入下方列表，请提交 PR。
+接入方式见 [外部编辑接入指南](https://replica0110.github.io/Lyrico/guide/external-edit.html)。
 
-| 播放器名称                                                       | 适配版本                       |
-|-------------------------------------------------------------|----------------------------|
-| [光锥音乐](https://coneplayer.trantor.ink/#/)                   | 1.1.4+                     |
-| [Halcyon](https://github.com/Kifranei/Halcyon)              | 1.1.0+                     |
-| [棱镜音乐](https://github.com/Ryderwe/PrismMusic-Release)       | 0.1.3+                     |
-| [mica-music](https://github.com/lecoix/mica-music)          | 0.1.9.1+                   |
-| [Raws-Music](https://github.com/QFDY-GZC/RawS-Music)        | 0.9.39-beta+               |
-| [Salt Player](https://github.com/Moriafly/SaltPlayerSource) | 12.4.0-alpha01-2026091601+ |
-| [MD3Music](https://github.com/zzyoxml/md3Music)             | 5.5.0+                     |
+| 播放器名称 | 适配版本 |
+|---|---|
+| [Moto Music](https://github.com/stephenywl82-eng/SDWMP3_CN) | 最新版 |
 
 ## 构建
 
@@ -109,16 +127,28 @@ git submodule update --init --recursive
 
 ## 参考项目与第三方组件
 
-项目在开发过程中参考或使用了以下优秀项目：
+项目在开发过程中参考或使用了以下优秀项目与组件：
+
+### 界面与设计
+
+- [Material 3 Expressive](https://developer.android.com/design/ui/mobile/expression)（Jetpack Compose Material 3）：本 fork 的 SDW 界面即基于其设计语言——跟随壁纸的动态取色、官方圆角刻度与 MotionScheme 动效。
+- [Miuix](https://github.com/compose-miuix-ui/miuix)：Xiaomi HyperOS 风格的 Compose UI 组件库（原项目双界面之一，本 fork 已不再使用其界面）。
+- [SaltUI](https://github.com/Moriafly/SaltUI)：Compose Multiplatform 平台化 UI 组件库（原项目双界面之一，本 fork 已不再使用其界面）。
+
+### 音频与元数据
+
+- [TagLib](https://github.com/taglib/taglib)：音频元数据读写库
+- [libebur128](https://github.com/jiixyj/libebur128)：EBU R128 音频响度标准实现
+- [quickjs-ng](https://github.com/quickjs-ng/quickjs)：嵌入式 JavaScript 运行时（插件系统）
+
+### 歌词与搜索
 
 - [LDDC](https://github.com/chenmozhijin/LDDC)：简单易用的精准歌词下载匹配工具
 - [any-listen-extension-online-metadata](https://github.com/any-listen/any-listen-extension-online-metadata)：any-listen 音频元数据搜索插件
-- [Miuix](https://github.com/compose-miuix-ui/miuix)：Xiaomi HyperOS 风格的 Compose UI 组件库（本 fork 已不再使用其界面）
-- [SaltUI](https://github.com/Moriafly/SaltUI)：Compose Multiplatform 平台化 UI 组件库（本 fork 已不再使用其界面）
+
+### 参考应用
+
 - [音乐标签](https://www.cnblogs.com/vinlxc/p/11932130.html)：音频标签编辑应用
-- [quickjs-ng](https://github.com/quickjs-ng/quickjs)：嵌入式 JavaScript 运行时
-- [TagLib](https://github.com/taglib/taglib)：音频元数据读写库
-- [libebur128](https://github.com/jiixyj/libebur128)：EBU R128 音频响度标准实现
 
 ## 捐赠
 
