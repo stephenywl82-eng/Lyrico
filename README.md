@@ -1,43 +1,166 @@
 # Lyrico
 
-[![GitHub Release](https://img.shields.io/github/v/release/replica0110/lyrico?style=flat-square)](https://github.com/Replica0110/Lyrico/releases)
-![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/replica0110/lyrico/total?style=flat-square)
-[![License](https://img.shields.io/github/license/Replica0110/Lyrico?style=flat-square)](./LICENSE)
+[![GitHub Release](https://img.shields.io/github/v/release/stephenywl82-eng/lyrico?style=flat-square)](https://github.com/stephenywl82-eng/Lyrico/releases)
+![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/stephenywl82-eng/lyrico/total?style=flat-square)
+[![License](https://img.shields.io/github/license/stephenywl82-eng/Lyrico?style=flat-square)](./LICENSE)
 
-Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理工具。它用于整理本地音乐库、读写音频元数据，并通过插件化搜索源补全歌词、封面和其他歌曲信息。
+Lyrico 是一款面向 Android 的开源**本地音乐标签编辑与歌词管理工具**。它帮助你整理本地音乐库、读写音频元数据（标签），并通过插件化的在线搜索源，自动补全歌词、翻译、音译、封面以及候选元数据，再写回本地音频文件。所有整理工作都围绕「本地文件」展开，无需依赖云端账户。
+
+> 官方上游仓库：[Moriafly/Lyrico](https://github.com/Moriafly/Lyrico)
+
+## 目录
+
+- [关于本 Fork](#关于本-fork)
+- [功能特性](#功能特性)
+- [安装](#安装)
+- [构建](#构建)
+- [插件系统](#插件系统)
+- [已适配 Lyrico 外部编辑功能的播放器](#已适配-lyrico-外部编辑功能的播放器)
+- [维护取向](#维护取向)
+- [参考项目与第三方组件](#参考项目与第三方组件)
+- [捐赠](#捐赠)
+- [许可证](#许可证)
 
 ## 关于本 Fork
 
-本仓库是 [Moriafly/Lyrico](https://github.com/Moriafly/Lyrico) 的个人 fork，会在上游基础上合入改动并加入一些自用调整（例如基于 **Material 3 Expressive** 的 SDW 设计语言主题、构建配置适配等）。发布版本仅面向 **arm64-v8a** 架构，预编译 APK 见下方「预编译 Release APK」。如需官方完整功能与支持，请以[上游仓库](https://github.com/Moriafly/Lyrico)为准。
+本仓库是 [Moriafly/Lyrico](https://github.com/Moriafly/Lyrico) 的个人 fork，在追踪上游改动的同时，加入了面向自用需求的调整。与上游的主要差异如下：
 
-## 功能特性
+| 维度 | 上游 Moriafly/Lyrico | 本 Fork |
+| --- | --- | --- |
+| 界面风格 | 标准 Material Design 3，含 Miuix / SaltUI 双界面 | 迁移到 **Material 3 Expressive**，统一为 **SDW 设计语言**组件体系（Miuix / SaltUI 双界面已移除） |
+| 发布架构 | 多架构 | 仅 **arm64-v8a**（不再构建 32 位 armeabi-v7a） |
+| 发布构建 | 标准打包 | 开启 **R8** 代码压缩/混淆，并启用 `shrinkResources` 资源缩减 |
+| 定位 | 官方完整版 | 个人定制版，自用调整优先 |
 
-- **本地音乐库管理**：扫描本地音乐文件，按歌曲、艺术家、专辑、文件夹等维度浏览与搜索。
-- **音频元数据编辑**：读取和修改标题、艺术家、专辑、专辑艺术家、年份、流派、音轨号、歌词、封面、注释和自定义标签等信息。
-- **多格式标签读写**：基于 TagLib 处理 MP3、FLAC、OGG/Opus、M4A/AAC、WAV、APE 等常见音频格式。
-- **歌词与封面补全**：通过插件搜索歌词、翻译、音译、封面和候选元数据，并写入本地音频文件。
-- **歌词格式处理**：支持普通 LRC、增强型逐字歌词、TTML 等歌词内容的展示、匹配、转换与写入。
-- **批量整理流程**：支持多选、批量匹配、批量编辑、批量重命名、批量响度分析、批量分享和批量删除。
-- **插件化搜索源**：在线搜索能力由插件提供，应用本体负责运行时、配置界面、结果处理和标签写入。
-- **SDW 设计语言界面**：统一在 Material 3 Expressive 主题之上，采用 SDW 自定义组件体系（已移除 Miuix / SaltUI 双界面）。
+> **说明**：本 Fork 的界面与上游差异较大，属于个人定制版本。如需官方完整功能、多架构支持与官方支持，请以上游仓库为准。
 
-## 预编译 Release APK
+### 预编译 Release APK
 
-如果不想自行构建，可直接下载预编译的 release APK：
+不想自己构建，可直接下载已编译好的 release 包：
 
 - [Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk](./Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk)
 
-构建说明：
+| 项目 | 说明 |
+| --- | --- |
+| 版本 | 1.7.0（commit `b6ea6f8`，对应「完整对齐官方 M3 Expressive 并清理死代码」） |
+| 包名 | `com.lonx.lyrico` |
+| 架构 | arm64-v8a only |
+| 主题 | Material 3 Expressive（SDW 设计语言） |
+| 压缩 | R8 开启 + `shrinkResources` 资源缩减 |
+| 签名 | debug keystore（非 test-only，普通安装即可） |
+| 体积 | 约 14.5 MB |
 
-- 架构：**arm64-v8a** only（不构建 32 位）
-- 主题：**Material 3 Expressive**（SDW 设计语言组件体系）
-- 混淆/压缩：**R8** 开启，并启用资源缩减（shrinkResources）
-- 签名：debug keystore（安装时若提示 `INSTALL_FAILED_TEST_ONLY`，使用 `adb install -r -t`）
-- 体积：约 14.5 MB
+## 功能特性
+
+### 本地音乐库管理
+
+- 扫描本地音乐文件，按**歌曲 / 艺术家 / 专辑 / 文件夹**等维度浏览与搜索。
+
+### 音频元数据编辑
+
+- 读取与修改标题、艺术家、专辑、专辑艺术家、年份、流派、音轨号、歌词、封面、注释以及自定义标签等。
+
+### 多格式标签读写
+
+- 基于 **TagLib** 处理 MP3、FLAC、OGG/Opus、M4A/AAC、WAV、APE 等常见音频格式。
+
+### 歌词与封面补全
+
+- 通过插件搜索歌词、翻译、音译、封面与候选元数据，并写回本地音频文件。
+
+### 歌词格式处理
+
+- 支持普通 **LRC**、增强型逐字歌词、**TTML** 等歌词内容的展示、匹配、转换与写入。
+
+### 批量整理
+
+- 多选、批量匹配、批量编辑、批量重命名、批量响度分析、批量分享、批量删除。
+
+### 插件化搜索源
+
+- 在线搜索能力由 JavaScript 插件提供，应用本体负责运行时、配置界面、结果处理与标签写入。
+
+### SDW 设计语言界面
+
+- 统一在 **Material 3 Expressive** 主题之上，采用 SDW 自定义组件体系（已移除 Miuix / SaltUI 双界面）：
+  - 圆角遵循官方 MD3 刻度（卡片 `ShapeDefaults.Large`、底部弹层只圆上方两角等）；
+  - Expressive 字阶（放大 display / headline 大档，强化 headline 观感）；
+  - 统一 Motion 与主题令牌（SDWTheme / SDWTokens / Motion）。
+
+## 安装
+
+### 方式一：直接安装 APK
+
+1. 下载上方的预编译 APK；
+2. 将 APK 传到手机，在文件管理器中点击安装；
+3. 若系统拦截，请在「设置 → 安全 → 安装未知应用」中允许对应来源。
+
+### 方式二：ADB 安装
+
+```bash
+adb install -r Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk
+```
+
+> 本包**未标记 test-only**，普通 `adb install -r` 即可安装。若个别环境仍提示 `INSTALL_FAILED_TEST_ONLY`，追加 `-t` 参数即可：
+>
+> ```bash
+> adb install -r -t Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk
+> ```
+
+### 常见问题
+
+- **签名冲突（`INSTALL_FAILED_UPDATE_INCOMPATIBLE`）**：设备上已存在用其他密钥签名的 Lyrico（如官方版、其他构建产物）。请先**卸载**原有的 Lyrico，再安装本包。
+- **架构不符**：本包仅含 arm64-v8a，需在 64 位 ARM 设备上安装（当前绝大多数 Android 设备均满足）。
+- **安装失败无明确原因**：尝试先卸载旧版本，并使用 `adb install -r` 重新安装；仍失败可查看 `adb logcat` 中 `PackageManager` 的报错。
+
+## 构建
+
+推荐使用 **Android Studio** 打开项目，也可以直接通过 Gradle 构建。
+
+### 基础环境
+
+- [JDK 21](https://adoptium.net/temurin/releases/?version=21)
+- [Android SDK](https://developer.android.com/studio)
+- [Android NDK 29](https://developer.android.com/ndk/downloads)
+- [CMake 3.22.1](https://cmake.org/download/)（构建脚本已在 `build.gradle.kts` 中固定该版本）
+- [Git](https://git-scm.com/downloads/)（Windows 使用 [Git for Windows](https://gitforwindows.org/) 附带的 Bash）
+- [GNU Make 4.x](https://community.chocolatey.org/packages/make)
+
+### 初始化子模块
+
+首次构建前需拉取音频标签等底层依赖的源码子模块：
+
+```powershell
+git submodule update --init --recursive
+```
+
+### 常用命令
+
+```powershell
+# Debug 构建
+.\gradlew.bat :lyrico-app:assembleDebug
+
+# Release 构建（仅 arm64-v8a，R8 + 资源缩减）
+.\gradlew.bat :lyrico-app:assembleRelease
+```
+
+仅检查 Kotlin 编译：
+
+```powershell
+.\gradlew.bat :lyrico-app:compileReleaseKotlin
+```
+
+> 发布构建仅生成 **arm64-v8a** 架构的 APK，产物位于 `lyrico-app/build/outputs/apk/release/`。请确保在 64 位 ARM 设备上安装使用。
+
+### 主要模块
+
+- `lyrico-app`：Android 应用主模块，包含 UI、音乐库、搜索、插件运行时与业务逻辑。
+- `lyrico-audiotag`：音频标签读写模块，封装底层音频元数据处理能力（基于 TagLib 等）。
+- `docs`：VitePress 文档站点，覆盖插件使用、插件开发与宿主 API。
 
 ## 插件系统
 
-Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 JavaScript 编写，运行在 Android 端嵌入式 [quickjs-ng](https://github.com/quickjs-ng/quickjs) 运行时中。
+Lyrico 的在线音乐信息搜索采用**插件化架构**。搜索源插件以 JavaScript 编写，运行在 Android 端嵌入式 [quickjs-ng](https://github.com/quickjs-ng/quickjs) 运行时中。
 
 插件可以声明并实现以下能力：
 
@@ -66,45 +189,6 @@ Lyrico 的在线音乐信息搜索采用插件化架构。搜索源插件以 Jav
 | [Raws-Music](https://github.com/QFDY-GZC/RawS-Music)        | 0.9.39-beta+               |
 | [Salt Player](https://github.com/Moriafly/SaltPlayerSource) | 12.4.0-alpha01-2026091601+ |
 | [MD3Music](https://github.com/zzyoxml/md3Music)             | 5.5.0+                     |
-
-## 构建
-
-推荐使用 Android Studio 打开项目，也可以直接通过 Gradle 构建。
-
-基础环境：
-
-- [JDK 21](https://adoptium.net/temurin/releases/?version=21)
-- [Android SDK](https://developer.android.com/studio)
-- [Android NDK 29](https://developer.android.com/ndk/downloads)
-- [CMake 3.22.1](https://cmake.org/download/)（构建脚本已在 `build.gradle.kts` 中固定该版本）
-- [Git](https://git-scm.com/downloads/)（Windows 使用 [Git for Windows](https://gitforwindows.org/) 附带的 Bash）
-- [GNU Make 4.x](https://community.chocolatey.org/packages/make)
-
-首次构建前初始化源码子模块：
-
-```powershell
-git submodule update --init --recursive
-```
-
-> 说明：发布构建（release）仅生成 **arm64-v8a** 架构的 APK，不再构建 armeabi-v7a（32 位）。请确保在 64 位 ARM 设备上安装使用。
-
-常用命令：
-
-```powershell
-.\gradlew.bat :lyrico-app:assembleDebug
-```
-
-仅检查 Kotlin 编译：
-
-```powershell
-.\gradlew.bat :lyrico-app:compileDebugKotlin
-```
-
-主要模块：
-
-- `lyrico-app`：Android 应用主模块，包含 UI、音乐库、搜索、插件运行时和业务逻辑。
-- `lyrico-audiotag`：音频标签读写模块，封装底层音频元数据处理能力。
-- `docs`：VitePress 文档站点，覆盖插件使用、插件开发和宿主 API。
 
 ## 维护取向
 
