@@ -8,7 +8,7 @@ Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理�
 
 ## 关于本 Fork
 
-本仓库是 [Moriafly/Lyrico](https://github.com/Moriafly/Lyrico) 的个人 fork，会在上游基础上合入改动并加入一些自用调整（例如标准 Material Design 3 主题 `LyricoMaterialTheme`、构建配置适配等）。发布版本仅面向 **arm64-v8a** 架构。如需官方完整功能与支持，请以[上游仓库](https://github.com/Moriafly/Lyrico)为准。
+本仓库是 [Moriafly/Lyrico](https://github.com/Moriafly/Lyrico) 的个人 fork，会在上游基础上合入改动并加入一些自用调整（例如基于 **Material 3 Expressive** 的 SDW 设计语言主题、构建配置适配等）。发布版本仅面向 **arm64-v8a** 架构，预编译 APK 见下方「预编译 Release APK」。如需官方完整功能与支持，请以[上游仓库](https://github.com/Moriafly/Lyrico)为准。
 
 ## 功能特性
 
@@ -19,7 +19,21 @@ Lyrico 是一款面向 Android 的开源本地音乐标签编辑与歌词管理�
 - **歌词格式处理**：支持普通 LRC、增强型逐字歌词、TTML 等歌词内容的展示、匹配、转换与写入。
 - **批量整理流程**：支持多选、批量匹配、批量编辑、批量重命名、批量响度分析、批量分享和批量删除。
 - **插件化搜索源**：在线搜索能力由插件提供，应用本体负责运行时、配置界面、结果处理和标签写入。
-- **双界面风格**：内置 Miuix 与 SaltUI 两套界面，切换后立即生效。
+- **SDW 设计语言界面**：统一在 Material 3 Expressive 主题之上，采用 SDW 自定义组件体系（已移除 Miuix / SaltUI 双界面）。
+
+## 预编译 Release APK
+
+如果不想自行构建，可直接下载预编译的 release APK：
+
+- [Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk](./Lyrico-1.7.0-SDW-M3Expressive-arm64-v8a.apk)
+
+构建说明：
+
+- 架构：**arm64-v8a** only（不构建 32 位）
+- 主题：**Material 3 Expressive**（SDW 设计语言组件体系）
+- 混淆/压缩：**R8** 开启，并启用资源缩减（shrinkResources）
+- 签名：debug keystore（安装时若提示 `INSTALL_FAILED_TEST_ONLY`，使用 `adb install -r -t`）
+- 体积：约 14.5 MB
 
 ## 插件系统
 
